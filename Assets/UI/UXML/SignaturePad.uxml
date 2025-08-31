@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/USS/SignaturePad.uss?fileID=7433441132597879392&amp;guid=d634ee19fbc83b04593dab604541f710&amp;type=3#SignaturePad" />
+    <ui:VisualElement name="root" picking-mode="Ignore" style="flex-grow: 1;">
+        <ui:VisualElement name="container" style="width: 1536px; height: 864px; margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto; padding-top: initial; padding-right: initial; padding-bottom: initial; padding-left: initial; align-items: center; justify-content: center; background-color: rgb(35, 29, 29); display: none;">
+            <ui:Label tabindex="-1" text="Sign here" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+            <ui:VisualElement name="input-field" style="flex-grow: 1; width: 80%; margin-top: 20px; margin-bottom: 20px;" />
+            <ui:VisualElement style="flex-direction: row; align-items: center; justify-content: center;">
+                <ui:Button text="Reset" parse-escape-sequences="true" display-tooltip-when-elided="true" name="reset-button" class="button" />
+                <ui:Button text="Save" parse-escape-sequences="true" display-tooltip-when-elided="true" name="save-button" class="button" />
+                <ui:Button text="Close" parse-escape-sequences="true" display-tooltip-when-elided="true" name="close-button" class="button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

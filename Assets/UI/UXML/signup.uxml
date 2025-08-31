@@ -1,0 +1,94 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/USS/Form.uss?fileID=7433441132597879392&amp;guid=72e939f4ea25efa4c8e7b71632c13197&amp;type=3#Form" />
+    <Style src="project://database/Assets/UI/USS/signup.uss?fileID=7433441132597879392&amp;guid=38ff2e2bb3756dd48b148763258b5be1&amp;type=3#signup" />
+    <ui:VisualElement name="root" picking-mode="Ignore" style="align-content: center; background-size: cover; background-position-y: top 0; width: 100%; height: 100%; align-items: center; justify-content: center; display: flex;">
+        <ui:VisualElement name="container" style="background-image: none; width: 100%; height: 100%; max-width: 1920px; padding-top: 20px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px; justify-content: center; align-items: center; display: flex; max-height: 1080px; background-color: rgb(114, 96, 96);">
+            <ui:VisualElement name="form-container" style="flex-grow: 1; width: 100%; max-width: 1536px; justify-content: center; margin-top: 78px; margin-bottom: 78px;">
+                <ui:VisualElement name="basic-info" class="form-wrapper" style="display: none;">
+                    <ui:TextField picking-mode="Ignore" label="Full Name (First &amp; Last) *" name="fullname" />
+                    <ui:TextField picking-mode="Ignore" label="Email *" name="email" style="display: flex;" />
+                    <ui:TextField picking-mode="Ignore" label="Zip code *" name="zip-code" keyboard-type="NumberPad" />
+                    <ui:TextField picking-mode="Ignore" label="City, State *" name="city-state" />
+                </ui:VisualElement>
+                <ui:VisualElement name="gender-race-info" class="form-wrapper" style="display: none;">
+                    <ui:DropdownField label="Gender *" name="gender" />
+                    <ui:TextField picking-mode="Ignore" label="Please specify your Gender *" name="gender-others" style="display: none; width: auto; height: auto;" />
+                    <ui:TextField picking-mode="Ignore" label="Please specify your Race *" name="race-others" style="display: none;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="app-usage-info" class="form-wrapper" style="display: none; opacity: 1;">
+                    <ui:DropdownField label="Do you use an app to manage your blood pressure?" name="appUsage" />
+                    <ui:TextField picking-mode="Ignore" label="What type of app do you use to manage your blood pressure?" name="app-name" style="display: none; width: auto; height: auto;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="pre-survey-questions" class="form-wrapper" style="display: flex;">
+                    <ui:VisualElement style="flex-grow: 1;">
+                        <ui:VisualElement name="form-1" style="display: none;">
+                            <ui:TextField picking-mode="Ignore" label="I decided to start using {appName} app because" name="usageReason" />
+                            <ui:DropdownField label="I would expect {appName} app to be interesting to use. " name="interesting-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I believe {appName} app could improve my life. " name="improve-my-life" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="{appName} app could help me do something important. " name="do-something-important" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-2" style="display: none;">
+                            <ui:DropdownField label="I would want others to know I use {appName} app. " name="others-know" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel bad about myself if I didn&apos;t try {appName} app." name="feel-bad-about-myself" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I think {appName} app would be enjoyable." name="enjoyable" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I am required to use {appName} app (eg. by my job, hospital, family)" name="required-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-3" style="display: none;">
+                            <ui:DropdownField label="{appName} app could be of value to me." name="value-to-me" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="{appName} app would be fun to use." name="fun-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="{appName} app would look good to others if I use it." name="look-good-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel confident that I could use {appName}  app  effectively." name="feel-confident" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-4" style="display: none;">
+                            <ui:DropdownField label="The {appName} app would be easy for me to use." name="easy-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel very capable and effective at using {appName} app." name="capable-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I would feel confident in my ability to use {appName} app." name="look-good-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="Learning how to use {appName} app would be difficult." name="difficult-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-5" style="display: none;">
+                            <ui:DropdownField label="I would find the {appName} app interface and controls confusing." name="interface-confusing" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="It won’t be easy for me to use {appName}  app." name="easy-for-me-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="The {appName} app  would provide me with useful options and choices." name="useful-options" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would be able to get the {appName} app to do what I would want." name="app-to-do-what-i-want" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-6" style="display: none;">
+                            <ui:DropdownField label="I would feel pressured by the use of {appName} app." name="pressured-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would feel intrusive." name="intrusive" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="The {appName} app would feel controlling." name="controlling" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would help me form or sustain fulfilling relationships." name="sustain-fulfilling-relationships" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-7" style="display: none;">
+                            <ui:DropdownField label="The {appName} app would help me feel part of a larger community." name="part-of-large-community" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would make me feel connected to other people." name="connected-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I wouldn’t feel close to other users using {appName} app." name="not-close-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app wouldn’t support meaningful connections to others." name="no-connection-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-8" style="display: none;">
+                            <ui:DropdownField label="It would be easy to use {appName} app Treadmill to help me remember to take my medication on time." name="treadmill" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would find using {appName} app to track blood pressure too challenging." name="track-blood-pressure" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would find using {appName} app too difficult to do regularly." name="difficult-regularly" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I would only use {appName} app to do task because I have to." name="because-i-have-to" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="consent-box" style="display: none; align-items: center; justify-content: space-between;">
+                        <ui:Label text="Please read and provide digital signature to the terms and conditions.&#10;" name="consent-proposal" style="display: none;" />
+                        <ui:Button text="Terms and Conditions" name="terms-and-cond" tooltip="Click to read the consent details" class=" " />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="terms-and-cond-form" style="margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto; padding-top: initial; padding-right: initial; padding-bottom: initial; padding-left: initial; max-height: 864px; background-color: rgb(35, 29, 29); max-width: 1536px; width: 100%; height: 100%; display: none; align-items: center;">
+                    <ui:Label tabindex="-1" text="Terms &amp; Condition" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="popup-title" style="-unity-font-style: bold; margin-top: 20px; margin-right: 20px; margin-bottom: 20px; margin-left: 20px; font-size: 48px;" />
+                    <ui:ScrollView style="padding-top: 20px; padding-right: 36px; padding-bottom: 20px; padding-left: 36px; display: flex; flex-grow: 1; align-items: center; justify-content: flex-end; align-self: center; margin-right: 0;">
+                        <ui:Label tabindex="-1" text="&lt;b&gt;Title:&lt;/b&gt; In-the-wild Study and Further Design of Speech Therapy Game&#10;&lt;b&gt;Principal Investigator:&lt;/b&gt; Jared Duval, PhD&#10;&#10;You are being asked to participate in a research study. Your participation in this research study is voluntary and you do not have to participate.&#10;&#10;&lt;b&gt;Purpose:&lt;/b&gt;&#10;The purpose of the study is to understand and improve SpokeIt, a game for speech therapy.&#10;&#10;&lt;b&gt;What you will do in the study:&lt;/b&gt;&#10;If you decide to take part in this study, here is what will happen:&#10;You may be asked to help us evaluate SpokeIt or help us develop new features or improvements for SpokeIt.&#10;To this end, some activities you may be asked to participate in include playing SpokeIt and filling out voluntary surveys. SpokeIt will automatically collect data when you play including speech recordings, game logs, and the device&apos;s IP address. This data will be used for research and to improve the game.&#10;SpokeIt may ask you to complete a survey or make a diary entry in the game or via a link that will be emailed to you, which we will save for research. We will retain information you provide during registration as part of this research.&#10;&#10;&lt;b&gt;Time required:&lt;/b&gt;&#10;Participation will take approximately 30 minutes per play session and 1 hour for surveys.&#10;&#10;&lt;b&gt;Risks or discomforts:&lt;/b&gt;&#10;There is a risk that your identifiable information could be accidentally disclosed; however, the researchers are taking measures to protect your data.&#10;&#10;&lt;b&gt;Benefits of this study:&lt;/b&gt;&#10;The benefit to the researcher is understanding how to make SpokeIt available to a broader population of people impacted by speech impairments, a better understanding of the technological and accessibility issues faced by our stakeholders, and to learn how to make future therapy games better in general. There will be no direct benefit for you to participate.&#10;&#10;&lt;b&gt;Confidentiality:&lt;/b&gt;&#10;Your name will not be used in any report. Identifiable research data will be encrypted and password protected. While researchers follow procedures to maintain your confidentiality, as with any internet activity, we cannot guarantee confidentiality of interception of data sent via the Internet by any third parties.&#10;&#10;SpokeIt will record audio when it listens for speech targets. These recordings will not be deleted and may be used to improve the accuracy of the game’s speech recognition system.&#10;&#10;The information that you provide in the study will be handled confidentially. However, there may be circumstances where this information must be released or shared as required by law. Northern Arizona University Institutional Review Board may review the research records for monitoring purposes.&#10;&#10;&lt;b&gt;Future Research:&lt;/b&gt; Information that may identify you may be used for future research or shared with another, researcher for future research studies without additional consent.&#10;&#10;&lt;b&gt;Who to Contact:&lt;/b&gt; For questions, concerns, or complaints about the study you may contact Dr. Jared Duval by emailing him at Jared.Duval@nau.edu or by calling him at 928-523-0429. &#10;&#10;For questions about your rights as a participant in this study or to discuss other study-related concerns or complaints with someone who is not part of the research team, you may contact the Human Research Protection Program at 928-523-9551 or online at http://nau.edu/Research/Compliance/Human-Research/Welcome/.&#10;&#10;&lt;b&gt;AGREEMENT TO PARTICIPATE&lt;/b&gt;&#10;I have read (or someone has read to me) this form, and I am aware that I am being asked to participate in a research study. I have had the opportunity to ask questions and have had them answered to my satisfaction. I affirm that I am at least 18 years of age and voluntarily agree to participate in this study. &#10;&#10;I am not giving up any legal rights by signing this form. I will be given a copy of this form." parse-escape-sequences="true" display-tooltip-when-elided="true" name="terms-label" class="popup-message" style="font-size: 30px; -unity-text-align: middle-center; white-space: normal;" />
+                    </ui:ScrollView>
+                    <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+                        <ui:Button text="Accept" parse-escape-sequences="true" display-tooltip-when-elided="true" name="accept" class="button" style="margin-top: 20px; margin-right: 20px; margin-bottom: 20px; margin-left: 20px; width: 400px; height: 80px; font-size: 30px; align-items: center; justify-content: center; align-self: center; -unity-font-style: bold; background-color: rgb(133, 132, 136); display: flex;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="button-group" style="flex-direction: row-reverse; justify-content: space-between; width: 100%; max-width: 1536px; padding-right: 24px; padding-left: 24px;">
+                <ui:Button text="Next" name="next" class="  button" style="background-color: rgb(35, 29, 29);" />
+                <ui:Button text="Back" name="back" class="  button" style="background-color: rgb(35, 29, 29);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
