@@ -18,6 +18,7 @@ namespace Gameplay.UI
         private VisualElement _basicInfoForm;
         private VisualElement _genderRaceInfoForm;
         private VisualElement _appUsageForm;
+        private VisualElement _numberOfPlayerForm;
         private VisualElement _preSurveyQuestionsForm;
         private VisualElement _termsAndConditionsForm;
 
@@ -40,6 +41,9 @@ namespace Gameplay.UI
 
         private DropdownField _appUsageDropdown;
         private TextField _appName;
+        
+        private DropdownField _numberOfPlayersDropdown;
+        private TextField _numberOfPlayersText;
         
         private VisualElement _form1;
         private VisualElement _form2;
@@ -85,6 +89,12 @@ namespace Gameplay.UI
             OtherOption
         };
         
+        private static readonly string[] NumberOfPlayers =
+        {
+            "Single player",
+            "Multiplayer"
+        };
+        
         private static readonly string[] AppUsage =
         {
             "Yes",
@@ -118,6 +128,7 @@ namespace Gameplay.UI
             _basicInfoForm = root.Q<VisualElement>("basic-info");
             _genderRaceInfoForm = root.Q<VisualElement>("gender-race-info");
             _appUsageForm = root.Q<VisualElement>("app-usage-info");
+            _numberOfPlayerForm = root.Q<VisualElement>("number-of-players-info");
             _preSurveyQuestionsForm = root.Q<VisualElement>("pre-survey-questions");
             _termsAndConditionsForm = root.Q<VisualElement>("terms-and-cond-form");
             
@@ -135,6 +146,7 @@ namespace Gameplay.UI
             {
                 _basicInfoForm,
                 _genderRaceInfoForm,
+                _numberOfPlayerForm,
                 _appUsageForm,
                 _form1,
                 _form2,
@@ -169,7 +181,10 @@ namespace Gameplay.UI
 
             #endregion
 
-            #region Personal Info Form
+            #region App Info Form
+            
+            _numberOfPlayersDropdown = _numberOfPlayerForm.Q<DropdownField>("single-multiplayer");
+            _numberOfPlayersText = _numberOfPlayerForm.Q<TextField>("number-of-players");
 
             _appUsageDropdown = _appUsageForm.Q<DropdownField>("appUsage");
             _appName = _appUsageForm.Q<TextField>("app-name");
@@ -192,6 +207,7 @@ namespace Gameplay.UI
             _currentPage.Changed += OnCurrentPageChanged;
 
             _genderDropdown.RegisterValueChangedCallback(OnDropdownChanged);
+            _numberOfPlayersDropdown.RegisterValueChangedCallback(OnDropdownChanged);
             _appUsageDropdown.RegisterValueChangedCallback(OnDropdownChanged);
 
             #endregion
@@ -200,6 +216,7 @@ namespace Gameplay.UI
         private void Start()
         {
             foreach (var e in Genders) _genderDropdown.choices.Add(e);
+            foreach (var e in NumberOfPlayers) _numberOfPlayersDropdown.choices.Add(e);
             foreach (var e in AppUsage) _appUsageDropdown.choices.Add(e);
             
             foreach (var p in _pages) p.style.display = DisplayStyle.None;
@@ -217,6 +234,7 @@ namespace Gameplay.UI
             _currentPage.Changed -= OnCurrentPageChanged;
 
             _genderDropdown.UnregisterValueChangedCallback(OnDropdownChanged);
+            _numberOfPlayersDropdown.UnregisterValueChangedCallback(OnDropdownChanged);
             _appUsageDropdown.UnregisterValueChangedCallback(OnDropdownChanged);
         }
 
@@ -258,7 +276,7 @@ namespace Gameplay.UI
             if (value > 0) _pages[value - 1].style.display = DisplayStyle.None;
             if (value < _pages.Length - 1) _pages[value + 1].style.display = DisplayStyle.None;
 
-            if (value > 2 && value != _pages.Length - 1)
+            if (value > 3 && value != _pages.Length - 1)
             {
                 _pages[value].Query<Label>().ForEach((label) =>
                 {
@@ -290,10 +308,11 @@ namespace Gameplay.UI
 
         private void OnDropdownChanged(ChangeEvent<string> evt)
         {
-            var show = evt.newValue is OtherOption or "Yes";
+            var show = evt.newValue is OtherOption or "Yes" or "Multiplayer";
             var field = (evt.target as DropdownField)?.name switch
             {
                 "gender" => _genderText,
+                "single-multiplayer" => _numberOfPlayersText,
                 "appUsage" => _appName,
                 _ => null
             };
@@ -316,8 +335,9 @@ namespace Gameplay.UI
             {
                 0 => ValidateBasicInfo(),
                 1 => ValidateGenderRaceInfo(),
-                2 => ValidatePersonalInfo(),
-                3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 => ValidatePreSurveyInfo(),
+                2 => ValidateNumberOfPlayersInfo(),
+                3 => ValidateAppUsageInfo(),
+                4 or 5 or 6 or 7 or 8 or 9 or 10 => ValidatePreSurveyInfo(),
                 11 => ValidateTermsAndCondForm(),
                 _ => false
             };
@@ -386,7 +406,25 @@ namespace Gameplay.UI
             return true;
         }
 
-        private bool ValidatePersonalInfo()
+        private bool ValidateNumberOfPlayersInfo()
+        {
+            if (string.IsNullOrEmpty(_numberOfPlayersDropdown.value))
+            {
+                Popup.Instance.Show("Please fill all the required fields.");
+                return false;
+            }
+
+            if (_numberOfPlayersDropdown.value == "Multiplayer" &&
+                string.IsNullOrEmpty(_numberOfPlayersText.value))
+            {
+                Popup.Instance.Show("Please enter the number of player who will participate.");
+                return false;
+            }
+
+            return true;
+        }
+        
+        private bool ValidateAppUsageInfo()
         {
             if (string.IsNullOrEmpty(_appUsageDropdown.value))
             {

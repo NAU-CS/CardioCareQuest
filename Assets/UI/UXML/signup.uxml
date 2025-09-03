@@ -15,6 +15,10 @@
                     <ui:TextField picking-mode="Ignore" label="Please specify your Gender *" name="gender-others" style="display: none; width: auto; height: auto;" />
                     <ui:TextField picking-mode="Ignore" label="Please specify your Race *" name="race-others" style="display: none;" />
                 </ui:VisualElement>
+                <ui:VisualElement name="number-of-players-info" class="form-wrapper" style="display: none; opacity: 1;">
+                    <ui:DropdownField label="Do you plan to use this app as a single-player or multi-player experience?" name="single-multiplayer" />
+                    <ui:TextField picking-mode="Ignore" label="How many players will participate?" name="number-of-players" keyboard-type="NumberPad" style="display: none; width: auto; height: auto;" />
+                </ui:VisualElement>
                 <ui:VisualElement name="app-usage-info" class="form-wrapper" style="display: none; opacity: 1;">
                     <ui:DropdownField label="Do you use an app to manage your blood pressure?" name="appUsage" />
                     <ui:TextField picking-mode="Ignore" label="What type of app do you use to manage your blood pressure?" name="app-name" style="display: none; width: auto; height: auto;" />
