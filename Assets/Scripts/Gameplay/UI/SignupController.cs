@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Player;
 using UnityEngine;
@@ -409,16 +410,6 @@ namespace Gameplay.UI
 
         private bool ValidatePreSurveyInfo()
         {
-            if (_currentPage.Value == 3)
-            {
-                var usageReason = _pages[_currentPage.Value].Q<TextField>("usageReason");
-                if (string.IsNullOrEmpty(usageReason.text))
-                {
-                    Popup.Instance.Show("Please fill all the required fields.");
-                    return false;
-                }
-            }
-            
             var dropDowns = _pages[_currentPage.Value].Query<DropdownField>().ToList();
             foreach (var dropDown in dropDowns)
             {

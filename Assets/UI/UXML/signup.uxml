@@ -22,7 +22,7 @@
                 <ui:VisualElement name="pre-survey-questions" class="form-wrapper" style="display: flex;">
                     <ui:VisualElement style="flex-grow: 1;">
                         <ui:VisualElement name="form-1" style="display: none;">
-                            <ui:TextField picking-mode="Ignore" label="I decided to start using {appName} app because" name="usageReason" />
+                            <ui:DropdownField label="I decided to start using {appName} app because other people want me to use it" name="uasgeReason" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
                             <ui:DropdownField label="I would expect {appName} app to be interesting to use. " name="interesting-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
                             <ui:DropdownField label="I believe {appName} app could improve my life. " name="improve-my-life" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
                             <ui:DropdownField label="{appName} app could help me do something important. " name="do-something-important" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
