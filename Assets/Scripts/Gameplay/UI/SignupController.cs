@@ -53,6 +53,7 @@ namespace Gameplay.UI
         private VisualElement _form6;
         private VisualElement _form7;
         private VisualElement _form8;
+        private VisualElement _form9;
         
         #endregion
         
@@ -141,6 +142,7 @@ namespace Gameplay.UI
             _form6 = _preSurveyQuestionsForm.Q<VisualElement>("form-6");
             _form7 = _preSurveyQuestionsForm.Q<VisualElement>("form-7");
             _form8 = _preSurveyQuestionsForm.Q<VisualElement>("form-8");
+            _form9 = _preSurveyQuestionsForm.Q<VisualElement>("form-9");
 
             _pages = new[]
             {
@@ -156,6 +158,7 @@ namespace Gameplay.UI
                 _form6,
                 _form7,
                 _form8,
+                _form9,
                 _termsAndConditionsForm
             };
 
