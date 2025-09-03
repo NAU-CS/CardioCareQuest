@@ -73,7 +73,7 @@
                             <ui:DropdownField label="I would find using {appName} app too difficult to do regularly." name="difficult-regularly" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
                             <ui:DropdownField label="I would only use {appName} app to do task because I have to." name="because-i-have-to" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
                         </ui:VisualElement>
-                        <ui:VisualElement name="form-9" style="display: flex;">
+                        <ui:VisualElement name="form-9" style="display: none;">
                             <ui:DropdownField label="I would use the {appName} app to help me remember to take my medication on time because other people want me to." name="take-medication-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
                             <ui:DropdownField label="I would feel guilty if I don&apos;t use {appName} app to track my blood pressure." name="feel-guilty" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
                             <ui:DropdownField label="Doing the task of using the {appName} app to help me remember to take my medication on time would help me feel part of a larger community." name="doing-task" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />

@@ -261,6 +261,13 @@ namespace Gameplay.UI
             var ok = ValidatePage();
             if (!ok) return;
             
+            // If on app usage form and value is "No", skip to last page
+            if (_currentPage.Value == 3 && _appUsageDropdown.value == "No")
+            {
+                _currentPage.Value = _pages.Length - 1;
+                return;
+            }
+            
             if (_currentPage.Value < _pages.Length - 1)
             {
                 _currentPage.Value++;
@@ -276,8 +283,11 @@ namespace Gameplay.UI
             if (value < 0 || value >= _pages.Length) return;
 
             // hide previous and next pages
-            if (value > 0) _pages[value - 1].style.display = DisplayStyle.None;
-            if (value < _pages.Length - 1) _pages[value + 1].style.display = DisplayStyle.None;
+            // Hide all pages except the current one
+            for (var i = 0; i < _pages.Length; i++)
+            {
+                _pages[i].style.display = i == value ? DisplayStyle.Flex : DisplayStyle.None;
+            }
 
             if (value > 3 && value != _pages.Length - 1)
             {
