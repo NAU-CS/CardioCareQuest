@@ -350,8 +350,8 @@ namespace Gameplay.UI
                 1 => ValidateGenderRaceInfo(),
                 2 => ValidateNumberOfPlayersInfo(),
                 3 => ValidateAppUsageInfo(),
-                4 or 5 or 6 or 7 or 8 or 9 or 10 => ValidatePreSurveyInfo(),
-                11 => ValidateTermsAndCondForm(),
+                4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 => ValidatePreSurveyInfo(),
+                13 => ValidateTermsAndCondForm(),
                 _ => false
             };
         }

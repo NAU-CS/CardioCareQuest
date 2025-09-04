@@ -11,15 +11,18 @@
 
 .unity-label {
     color: rgb(255, 255, 255);
-    font-size: 40px;
+    font-size: 60px;
+    white-space: normal;
 }
 
 .unity-base-field__input {
     background-color: rgb(224, 221, 221);
     border-radius: 12px;
-    height: 92px;
+    height: 126px;
     -unity-text-align: middle-left;
     justify-content: center;
+    display: flex;
+    font-size: 60px;
 }
 
 .multi-select-dropdown {
@@ -35,6 +38,7 @@
     margin-bottom: 0;
     margin-left: 44px;
     max-height: 352px;
+    font-size: 60px;
 }
 
 .unity-toggle {
@@ -54,7 +58,7 @@
 }
 
 .unity-toggle__label {
-    font-size: 36px;
+    font-size: 60px;
     -unity-font-style: normal;
     color: rgb(0, 0, 0);
     margin-left: 12px;
@@ -105,7 +109,7 @@
     padding-right: 48px;
     padding-bottom: 30px;
     padding-left: 48px;
-    font-size: 40px;
+    font-size: 60px;
     color: rgb(255, 255, 255);
     background-color: rgb(47, 40, 71);
     border-top-left-radius: 16px;
@@ -116,11 +120,12 @@
 
 .dropdown-popup-text {
     color: rgb(0, 0, 0);
+    font-size: 60px;
 }
 
 .unity-toggle__checkmark {
-    width: 36px;
-    height: 36px;
+    width: 60px;
+    height: 60px;
 }
 
 .unity-base-slider--vertical {
