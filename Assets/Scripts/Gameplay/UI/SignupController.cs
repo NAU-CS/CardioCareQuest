@@ -146,19 +146,19 @@ namespace Gameplay.UI
 
             _pages = new[]
             {
-                _basicInfoForm,
-                _genderRaceInfoForm,
-                _numberOfPlayerForm,
-                _appUsageForm,
-                _form1,
-                _form2,
-                _form3,
-                _form4,
-                _form5,
-                _form6,
-                _form7,
-                _form8,
-                _form9,
+                // _basicInfoForm,
+                // _genderRaceInfoForm,
+                // _numberOfPlayerForm,
+                // _appUsageForm,
+                // _form1,
+                // _form2,
+                // _form3,
+                // _form4,
+                // _form5,
+                // _form6,
+                // _form7,
+                // _form8,
+                // _form9,
                 _termsAndConditionsForm
             };
 
