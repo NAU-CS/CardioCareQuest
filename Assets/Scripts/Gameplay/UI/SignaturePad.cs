@@ -264,27 +264,27 @@ namespace Gameplay.UI
 
         private IEnumerator GenerateSignedDocumentCoroutine(string signature)
         {
-            var owner = SignupController.Instance.AccountOwner;
-            var fullName = owner.FullName;
-            var email = owner.Email;
-            var currentDate = DateTime.Now.ToString("dd-MM-yyyy");
-
-            var form = new WWWForm();
-            form.AddField("name", fullName);
-            form.AddField("email", email);
-            form.AddField("date", currentDate);
-            form.AddField("signature", signature);
-
-            var request = UnityWebRequest.Post(BaseUrl + "/document-generation", form);
-            yield return request.SendWebRequest();
-            if (request.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
-            {
-                Debug.LogError(request.error);
-            }
-            else
-            {
-                Debug.Log("Document generated successfully");
-            }
+            // var owner = SignupController.Instance.AccountOwner;
+            // var fullName = owner.FullName;
+            // var email = owner.Email;
+            // var currentDate = DateTime.Now.ToString("dd-MM-yyyy");
+            //
+            // var form = new WWWForm();
+            // form.AddField("name", fullName);
+            // form.AddField("email", email);
+            // form.AddField("date", currentDate);
+            // form.AddField("signature", signature);
+            //
+            // var request = UnityWebRequest.Post(BaseUrl + "/document-generation", form);
+            // yield return request.SendWebRequest();
+            // if (request.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
+            // {
+            //     Debug.LogError(request.error);
+            // }
+            // else
+            // {
+            //     Debug.Log("Document generated successfully");
+            // }
 
             yield return null;
         }
