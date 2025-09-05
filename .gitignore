@@ -100,3 +100,10 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Google Services
+/Assets/GoogleService-Info.plist*
+
+# VSCode
+.DS_Store
+/Assets/.DS_Store

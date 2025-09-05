@@ -107,7 +107,7 @@ namespace Gameplay.UI
                 SignupController.Instance.Show(false);
                 
                 // TODO: show sample scene
-                SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
+                SceneManager.LoadScene("BloodPressureScene", LoadSceneMode.Single);
             }
         }
 
