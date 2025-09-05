@@ -107,3 +107,6 @@ InitTestScene*.unity*
 # VSCode
 .DS_Store
 /Assets/.DS_Store
+
+# Streaming Assets
+/Assets/StreamingAssets*
