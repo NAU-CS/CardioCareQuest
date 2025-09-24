@@ -1,0 +1,22 @@
+.button {
+    -unity-background-scale-mode: scale-to-fit;
+    width: 100px;
+    height: 120px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.pause-icon {
+    background-image: resource('UniversalMedia/UniversalImages/PauseButton');
+}
+
+.play-icon {
+    background-image: resource('UniversalMedia/UniversalImages/PlayButton');
+}
+
+.pause-disabled-icon {
+    background-image: resource('UniversalMedia/UniversalImages/PauseButton_Disabled');
+}

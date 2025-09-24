@@ -1,0 +1,73 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/USS/Form.uss?fileID=7433441132597879392&amp;guid=72e939f4ea25efa4c8e7b71632c13197&amp;type=3#Form" />
+    <Style src="project://database/Assets/UI/USS/signup.uss?fileID=7433441132597879392&amp;guid=38ff2e2bb3756dd48b148763258b5be1&amp;type=3#signup" />
+    <ui:VisualElement name="root" picking-mode="Ignore" style="align-content: center; background-size: cover; background-position-y: top 0; width: 100%; height: 100%; align-items: center; justify-content: center; display: flex;">
+        <ui:VisualElement name="container" style="background-image: none; width: 100%; height: 100%; max-width: none; padding-top: 20px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px; justify-content: center; align-items: center; display: flex; max-height: none; background-color: rgb(114, 96, 96);">
+            <ui:VisualElement name="form-container" style="flex-grow: 1; width: 100%; justify-content: center; margin-top: 136px; margin-bottom: 114px;">
+                <ui:VisualElement name="post-survey-questions" class="form-wrapper" style="display: flex;">
+                    <ui:VisualElement style="flex-grow: 1;">
+                        <ui:VisualElement name="form-1" style="display: none;">
+                            <ui:DropdownField label="I decided to start using {appName} app because other people want me to use it" name="uasgeReason" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I would expect {appName} app to be interesting to use. " name="interesting-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I believe {appName} app could improve my life. " name="improve-my-life" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="{appName} app could help me do something important. " name="do-something-important" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I would want others to know I use {appName} app. " name="others-know" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-2" style="display: none;">
+                            <ui:DropdownField label="I would feel bad about myself if I didn&apos;t try {appName} app." name="feel-bad-about-myself" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I think {appName} app would be enjoyable." name="enjoyable" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I am required to use {appName} app (eg. by my job, hospital, family)" name="required-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="{appName} app could be of value to me." name="value-to-me" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="{appName} app would be fun to use." name="fun-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-3" style="display: none;">
+                            <ui:DropdownField label="{appName} app would look good to others if I use it." name="look-good-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel confident that I could use {appName}  app  effectively." name="feel-confident" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would be easy for me to use." name="easy-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel very capable and effective at using {appName} app." name="capable-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I would feel confident in my ability to use {appName} app." name="look-good-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-4" style="display: none;">
+                            <ui:DropdownField label="Learning how to use {appName} app would be difficult." name="difficult-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would find the {appName} app interface and controls confusing." name="interface-confusing" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="It won’t be easy for me to use {appName}  app." name="easy-for-me-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="The {appName} app  would provide me with useful options and choices." name="useful-options" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would be able to get the {appName} app to do what I would want." name="app-to-do-what-i-want" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-5" style="display: none;">
+                            <ui:DropdownField label="I would feel pressured by the use of {appName} app." name="pressured-to-use" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would feel intrusive." name="intrusive" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="The {appName} app would feel controlling." name="controlling" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would help me form or sustain fulfilling relationships." name="sustain-fulfilling-relationships" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app would help me feel part of a larger community." name="part-of-large-community" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-6" style="display: none;">
+                            <ui:DropdownField label="The {appName} app would make me feel connected to other people." name="connected-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                            <ui:DropdownField label="I wouldn’t feel close to other users using {appName} app." name="not-close-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="The {appName} app wouldn’t support meaningful connections to others." name="no-connection-to-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would find using {appName} app too difficult to do regularly." name="difficult-regularly" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-7" style="display: none;">
+                            <ui:DropdownField label="I would only use {appName} app to do task because I have to." name="because-i-have-to" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would find using {appName} app to track blood pressure too challenging." name="track-blood-pressure" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="It would be easy to use {appName} app to help me remember to take my medication on time." name="take-medication" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="form-8" style="display: none;">
+                            <ui:DropdownField label="I would use the {appName} app to help me remember to take my medication on time because other people want me to." name="take-medication-others" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="I would feel guilty if I don&apos;t use {appName} app to track my blood pressure." name="feel-guilty" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; display: flex;" />
+                            <ui:DropdownField label="Doing the task of using the {appName} app to help me remember to take my medication on time would help me feel part of a larger community." name="doing-task" class="form-inputs-margin" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="consent-box" style="display: none; align-items: center; justify-content: space-between;">
+                        <ui:Label text="Please read and provide digital signature to the terms and conditions.&#10;" name="consent-proposal" style="display: none;" />
+                        <ui:Button text="Terms and Conditions" name="terms-and-cond" tooltip="Click to read the consent details" class=" " />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="button-group" style="flex-direction: row-reverse; justify-content: space-between; width: 100%; max-width: 1536px; padding-right: 24px; padding-left: 24px; padding-bottom: 68px;">
+                <ui:Button text="Next" name="next" class="  button" style="background-color: rgb(35, 29, 29);" />
+                <ui:Button text="Back" name="back" class="  button" style="background-color: rgb(35, 29, 29);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

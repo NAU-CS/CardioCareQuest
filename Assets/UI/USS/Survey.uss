@@ -1,0 +1,61 @@
+.unity-radio-button-group__container {
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.label {
+    -unity-text-align: lower-center;
+    font-size: 30px;
+    color: rgb(255, 255, 255);
+    white-space: normal;
+    width: 184px;
+}
+
+.unity-radio-button__text {
+    display: none;
+}
+
+.unity-radio-button__checkmark-background {
+    width: 48px;
+    height: 48px;
+    border-top-left-radius: 99px;
+    border-top-right-radius: 99px;
+    border-bottom-right-radius: 99px;
+    border-bottom-left-radius: 99px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.unity-radio-button__checkmark {
+    width: 28px;
+    height: 28px;
+    border-top-left-radius: 99px;
+    border-top-right-radius: 99px;
+    border-bottom-right-radius: 99px;
+    border-bottom-left-radius: 99px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.unity-radio-button-group {
+    align-items: center;
+    font-size: 36px;
+    flex-direction: row;
+    color: rgb(255, 255, 255);
+    margin-bottom: 16px;
+    margin-top: 0;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.unity-radio-button-group .unity-base-field__label {
+    width: 510px;
+    white-space: normal;
+    margin-right: 20px;
+}
