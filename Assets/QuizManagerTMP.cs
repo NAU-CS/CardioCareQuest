@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ using Firebase.Auth;
 using Firebase.Database;
 using Firebase.Extensions;
 using TMPro;
+using Gameplay.UI;
 
 public class QuizManagerTMP : MonoBehaviour
 {
@@ -136,23 +138,53 @@ public class QuizManagerTMP : MonoBehaviour
             { "timestamp", DateTime.UtcNow.ToString("o") }
         };
 
-        dbRef.Child("users").Child(uid).Child("quizResults").Push()
-            .SetValueAsync(data).ContinueWithOnMainThread(task =>
-            {
-                if (task.IsCompleted)
+
+            dbRef.Child("users").Child(uid).Child("quizResults").Push()
+                .SetValueAsync(data).ContinueWithOnMainThread(task =>
                 {
-                    Debug.Log("✅ Quiz results saved for user " + uid);
-                    if (Text_Status != null)
-                        Text_Status.text = "Quiz saved successfully!";
-                }
-                else
-                {
-                    Debug.LogError("❌ Firebase save failed: " + task.Exception);
-                    if (Text_Status != null)
-                        Text_Status.text = "Failed to save quiz. Try again.";
-                }
-            });
+                    if (task.IsCompleted)
+                    {
+                        Debug.Log("✅ Quiz results saved for user " + uid);
+
+                        // 🔒 Disable the save button
+                        if (Button_Save != null)
+                            Button_Save.interactable = false;
+                        
+                        if (Text_Status != null)
+                        {
+                            // Start 60-second countdown before loading next scene
+                            Text_Status.text = "Next scene in 60s…";
+                            // Assuming this script is a MonoBehaviour
+                            StartCoroutine(CountdownAndLoadScene(60));
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("❌ Firebase save failed: " + task.Exception);
+                        if (Text_Status != null)
+                            Text_Status.text = "Failed to save quiz. Try again.";
+                    }
+                });
+
+            
     }
+     // Coroutine for countdown
+                 private IEnumerator CountdownAndLoadScene(int delay)
+            {
+                int remaining = delay;
+                while (remaining > 0)
+                {
+                    if (Text_Status != null)
+                        Text_Status.text = $"Next scene in {remaining}s…";
+
+                    yield return new WaitForSeconds(1f);
+                    remaining--;
+                }
+                
+
+                // ✅ Trigger next scene once countdown is done
+                SignaturePad.TriggerNextScene();
+            }
 
     private (string[] answers, bool[] correctness, bool allCorrect) GradeAndColorUI()
     {

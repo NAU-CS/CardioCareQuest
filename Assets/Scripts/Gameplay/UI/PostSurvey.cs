@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Player;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using Firebase;
+using Firebase.Auth;
+using Firebase.Database;
+using Firebase.Extensions;
 using Utility;
 
 namespace Gameplay.UI
@@ -37,6 +42,8 @@ namespace Gameplay.UI
         private bool _firstPaint = true;
 
         public AccountOwner AccountOwner { get; } = new();
+        private string _signupRecordKey = Guid.NewGuid().ToString();
+
 
         private const string PreferNotToSay = "Prefer Not to Say";
         private const string OtherOption = "Other (specify)";
@@ -141,7 +148,9 @@ namespace Gameplay.UI
             }
             else if (_currentPage.Value == _pages.Length - 1)
             {
-                SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
+                // ✅ Last page → Save all responses
+                SaveSurveyToFirebase();
+                SceneManager.LoadScene("LoginScene", LoadSceneMode.Single);
             }
         }
 
@@ -196,5 +205,61 @@ namespace Gameplay.UI
             
             return true;
         }
+		
+				   private void SaveSurveyToFirebase()
+		{
+		    string uid = LoginManager.CurrentUserId; // current signed-in user
+		    if (string.IsNullOrEmpty(uid))
+		    {
+		        Popup.Instance.Show("No logged-in user. Please log in first.");
+		        return;
+		    }
+
+		    if (string.IsNullOrEmpty(_signupRecordKey))
+		    {
+		        Debug.LogError("Signup record key not initialized!");
+		        return;
+		    }
+
+		    // Collect all dropdown responses into a single dictionary
+		    var allResponses = new Dictionary<string, object>();
+		    for (int i = 0; i < _pages.Length; i++)
+		    {
+		        var pageResponses = _pages[i].Query<DropdownField>().ToList();
+		        for (int j = 0; j < pageResponses.Count; j++)
+		        {
+		            string key = $"Q{i + 1}_{j + 1}";
+		            allResponses[key] = pageResponses[j].value;
+		        }
+		    }
+
+		    // Add timestamp
+    		allResponses["timestamp"] = DateTime.UtcNow.ToString("o"); // ISO 8601 UTC
+		    var dbRef = Firebase.Database.FirebaseDatabase.DefaultInstance.RootReference;
+
+		    // ✅ Save everything under the single signup key for the user
+		    dbRef.Child("users").Child(uid).Child("general")
+		         .Child(_signupRecordKey)
+		         .Child("postSurveyResponses")
+		         .UpdateChildrenAsync(allResponses)
+		         .ContinueWithOnMainThread(task =>
+		         {
+		             if (task.IsCompleted)
+		             {
+		                 Debug.Log("✅ Survey responses saved under single signup record.");
+		                 
+		                 // Show success popup and optionally load next scene
+		                 Popup.Instance.Show("🎉 Congratulations on completing the survey!");
+		                 SceneManager.LoadScene("LoginScene", LoadSceneMode.Single);
+		             }
+		             else
+		             {
+		                 Debug.LogError("❌ Failed to save survey: " + task.Exception);
+		                 Popup.Instance.Show("Failed to save survey. Please try again.");
+		             }
+		         });
+		}
+
+
     }
 }

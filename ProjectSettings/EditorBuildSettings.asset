@@ -6,7 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SignUp.unity
+    path: Assets/LoginScene.unity
+    guid: 84a7bd420f2234c7d9b4f689f9bc3395
+  - enabled: 1
+    path: Assets/Scenes/Registration.unity
     guid: c7a4ea4fba348f14094075ed6f8d3b83
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
@@ -14,4 +17,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PostSurvey.unity
     guid: 508e20f685e72054a9b821ea406e9738
+  - enabled: 1
+    path: Assets/BloodPressureScene.unity
+    guid: 3799df95f413e4f829c2f00385f4399f
+  - enabled: 1
+    path: Assets/DASH.unity
+    guid: 2d783843c5d704a32876b91e51cba017
+  - enabled: 1
+    path: Assets/Exercise.unity
+    guid: 207844d602a2542c2bd088175df79f34
+  - enabled: 1
+    path: Assets/Medication&Compliance.unity
+    guid: fa17908c4cab54f4ca00af01e7193ccd
+  - enabled: 1
+    path: Assets/Quiz.unity
+    guid: b411ebe7828be41ae9e9ae73e4a17fa5
   m_configObjects: {}

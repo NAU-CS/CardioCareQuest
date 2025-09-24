@@ -7,6 +7,7 @@ using Firebase.Auth;
 using Firebase.Database;
 using Firebase.Extensions;
 using TMPro;
+using Gameplay.UI;
 
 public class NutritionManagerTMP : MonoBehaviour
 {
@@ -174,9 +175,14 @@ public class NutritionManagerTMP : MonoBehaviour
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompleted)
-                    Debug.Log("✅ Nutrition data saved for user " + uid);
+                    {
+                        Debug.Log("✅ Nutrition data saved for user " + uid);
+                        // Trigger next scene in SignaturePad flow
+                        SignaturePad.TriggerNextScene();
+                    }
                 else
                     Debug.LogError("❌ Failed to save data: " + task.Exception);
             });
+           
     }
 }

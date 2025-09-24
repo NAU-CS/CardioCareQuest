@@ -7,6 +7,7 @@ using Firebase.Auth;
 using Firebase.Database;
 using Firebase.Extensions;
 using TMPro;
+using Gameplay.UI;
 
 public class ExerciseManager : MonoBehaviour
 {
@@ -166,9 +167,14 @@ public class ExerciseManager : MonoBehaviour
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompleted)
-                    Debug.Log("✅ Exercise saved for user " + uid);
+                    {
+                        Debug.Log("✅ Exercise saved for user " + uid);
+                        // Trigger next scene in SignaturePad flow
+                        SignaturePad.TriggerNextScene();
+                    }
                 else
                     Debug.LogError("❌ Failed to save data: " + task.Exception);
             });
+           
     }
 }

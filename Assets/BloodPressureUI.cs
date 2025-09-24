@@ -7,6 +7,7 @@ using Firebase.Auth;
 using Firebase.Database;
 using Firebase.Extensions;
 using TMPro;
+using Gameplay.UI;
 
 public class BloodPressureUI : MonoBehaviour
 {
@@ -157,9 +158,15 @@ public class BloodPressureUI : MonoBehaviour
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompleted)
-                    Debug.Log("✅ Saved BP for user " + uid);
+                    {   
+                        Debug.Log("✅ Saved BP for user " + uid);
+                         // Trigger next scene in SignaturePad flow
+                        SignaturePad.TriggerNextScene();
+                    }
+                    
                 else
                     Debug.LogError("❌ Error saving to Firebase: " + task.Exception);
             });
+          
     }
 }

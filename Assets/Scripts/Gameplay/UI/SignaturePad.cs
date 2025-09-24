@@ -10,10 +10,30 @@ using Utility;
 
 namespace Gameplay.UI
 {
+    [System.Serializable]
+    public class DocumentPayload
+    {
+        public string name;
+        public string email;
+
+        // Handwritten signature + date
+        public string signature;
+        public string date;
+
+        // Audio consent (reusing handwritten for now)
+        public string audioSignature;
+        public string audioDate;
+
+        // Video consent (reusing handwritten for now)
+        public string videoSignature;
+        public string videoDate;
+        
+    }    
+
     [RequireComponent(typeof(UIDocument))]
     public class SignaturePad : Singleton<SignaturePad>
     {
-        public const string BaseUrl = "https://spokelt-gcc-server-573466675705.us-central1.run.app";
+        public const string BaseUrl = "https://consentform-api-35495734440.us-central1.run.app";
 
         private bool _isMouseDown;
 
@@ -82,32 +102,32 @@ namespace Gameplay.UI
                 };
                 _inputField.Add(_image);
             }
-            
+
             _container.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void OnSave()
         {
             var texture = CreateTexture();
-            // var whiteTexture = new Texture2D(_texture.width, _texture.height);
-            // var whitePixels = whiteTexture.GetPixels32();
-            // for (var i = 0; i < whitePixels.Length; i++) whitePixels[i] = Color.white;
-            // whiteTexture.SetPixels32(whitePixels);
-            // whiteTexture.Apply();
+            var whiteTexture = new Texture2D(_texture.width, _texture.height);
+            var whitePixels = whiteTexture.GetPixels32();
+            for (var i = 0; i < whitePixels.Length; i++) whitePixels[i] = Color.white;
+            whiteTexture.SetPixels32(whitePixels);
+            whiteTexture.Apply();
 
             SigningComplete = ComputeTextureHash(_texture) != ComputeTextureHash(texture);
 
             if (SigningComplete)
             {
                 var signatureBase64 = Convert.ToBase64String(_texture.EncodeToPNG());
-                // ClientPrefs.SetConsentSigned();
                 StartCoroutine(GenerateSignedDocumentCoroutine(signatureBase64));
-                
+
                 Show(false);
                 SignupController.Instance.Show(false);
-                
-                // TODO: show sample scene
-                SceneManager.LoadScene("BloodPressureScene", LoadSceneMode.Single);
+
+                // 🎯 Random scene flow
+                PrepareSceneQueue();
+                LoadNextScene();
             }
         }
 
@@ -247,8 +267,7 @@ namespace Gameplay.UI
         {
             if (!_texture || _texture.width <= 0 || _texture.height <= 0)
             {
-                Debug.LogError(
-                    $"signatureTexture dimensions are invalid: width={_texture.width}, height={_texture.height}");
+                Debug.LogError($"signatureTexture dimensions are invalid: width={_texture.width}, height={_texture.height}");
             }
             else
             {
@@ -264,29 +283,97 @@ namespace Gameplay.UI
 
         private IEnumerator GenerateSignedDocumentCoroutine(string signature)
         {
-            // var owner = SignupController.Instance.AccountOwner;
-            // var fullName = owner.FullName;
-            // var email = owner.Email;
-            // var currentDate = DateTime.Now.ToString("dd-MM-yyyy");
-            //
-            // var form = new WWWForm();
-            // form.AddField("name", fullName);
-            // form.AddField("email", email);
-            // form.AddField("date", currentDate);
-            // form.AddField("signature", signature);
-            //
-            // var request = UnityWebRequest.Post(BaseUrl + "/document-generation", form);
-            // yield return request.SendWebRequest();
-            // if (request.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError)
-            // {
-            //     Debug.LogError(request.error);
-            // }
-            // else
-            // {
-            //     Debug.Log("Document generated successfully");
-            // }
+            var owner = SignupController.Instance.AccountOwner;
 
-            yield return null;
+            var payload = new DocumentPayload
+            {
+                name = owner.FullName,
+                email = owner.Email,
+
+                // Handwritten
+                signature = signature,
+                date = DateTime.Now.ToString("dd-MM-yyyy"),
+
+                // Reuse handwritten signature/date for audio
+                audioSignature = signature,
+                audioDate = DateTime.Now.ToString("dd-MM-yyyy"),
+
+                // Reuse handwritten signature/date for video
+                videoSignature = signature,
+                videoDate = DateTime.Now.ToString("dd-MM-yyyy")
+            };
+
+
+
+            string jsonData = JsonUtility.ToJson(payload);
+
+            var request = new UnityWebRequest(BaseUrl + "/document-generation", "POST");
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.ConnectionError ||
+                request.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError($"❌ HTTP Error {request.responseCode}:\n{request.downloadHandler.text}");
+            }
+            else
+            {
+                Debug.Log("✅ PDF request successful:\n" + request.downloadHandler.text);
+
+                var response = JsonUtility.FromJson<ServerResponse>(request.downloadHandler.text);
+                if (response != null && !string.IsNullOrEmpty(response.downloadUrl))
+                {
+                    Debug.Log("📄 Consent form URL: " + response.downloadUrl);
+
+                    string safeEmail = owner.Email.Replace("@", "_at_").Replace(".", "_");
+                    string fileName = $"consent_{safeEmail}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+                    StartCoroutine(DownloadAndSavePdf(response.downloadUrl, fileName));
+                }
+                else
+                {
+                    Debug.LogWarning("⚠️ Server response missing downloadUrl");
+                }
+            }
+        }
+
+        private IEnumerator DownloadAndSavePdf(string url, string fileName)
+        {
+            using (UnityWebRequest pdfRequest = UnityWebRequest.Get(url))
+            {
+                yield return pdfRequest.SendWebRequest();
+
+                if (pdfRequest.result == UnityWebRequest.Result.ConnectionError ||
+                    pdfRequest.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Debug.LogError("❌ Failed to download PDF: " + pdfRequest.error);
+                }
+                else
+                {
+                    byte[] pdfData = pdfRequest.downloadHandler.data;
+                    string filePath = System.IO.Path.Combine(Application.persistentDataPath, fileName);
+                    System.IO.File.WriteAllBytes(filePath, pdfData);
+
+                    Debug.Log("✅ Consent PDF saved locally at: " + filePath);
+
+#if UNITY_ANDROID || UNITY_IOS
+                    Application.OpenURL(filePath);
+#elif UNITY_EDITOR || UNITY_STANDALONE
+                    Application.OpenURL("file:///" + filePath);
+#endif
+                }
+            }
+        }
+
+        [Serializable]
+        private class ServerResponse
+        {
+            public string message;
+            public string downloadUrl;
         }
 
         private static uint ComputeTextureHash(Texture2D texture)
@@ -302,6 +389,95 @@ namespace Gameplay.UI
             }
 
             return hash;
+        }
+
+        private readonly Queue<string> _sceneQueue = new();
+
+        private void PrepareSceneQueue()
+        {
+            _sceneQueue.Clear();
+
+            List<string> allScenes = new()
+            {
+                "BloodPressureScene",
+                "DASH",
+                "Exercise",
+                "Medication&Compliance",
+                "Quiz"
+            };
+
+            for (int i = 0; i < 2; i++)
+            {
+                int index = UnityEngine.Random.Range(0, allScenes.Count);
+                _sceneQueue.Enqueue(allScenes[index]);
+                allScenes.RemoveAt(index);
+            }
+
+            _sceneQueue.Enqueue("PostSurvey");
+        }
+
+        public static void TriggerNextScene()
+        {
+            if (Instance != null)
+            {
+                Instance.OnSceneTaskComplete();
+            }
+            else
+            {
+                Debug.LogError("SignaturePad.Instance not found!");
+            }
+        }
+
+        public void OnSceneTaskComplete()
+        {
+            LoadNextScene();
+        }
+
+        private void LoadNextScene()
+        {
+            if (_sceneQueue.Count > 0)
+            {
+                string next = _sceneQueue.Dequeue();
+                string currentScene = SceneManager.GetActiveScene().name;
+
+                if (currentScene == "Quiz")
+                {
+                    StartCoroutine(LoadSceneWithDelay(next, 0f));
+                }
+                else
+                {
+                    Debug.Log("Loading next scene: " + next);
+                    SceneManager.LoadScene(next, LoadSceneMode.Single);
+                }
+            }
+            else
+            {
+                Debug.Log("Queue empty. Returning to LoginScene.");
+                SceneManager.LoadScene("LoginScene", LoadSceneMode.Single);
+            }
+        }
+
+        private IEnumerator LoadSceneWithDelay(string sceneName, float delay)
+        {
+            Debug.Log($"⏳ Waiting {delay} seconds before moving to {sceneName}...");
+            yield return new WaitForSeconds(delay);
+            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+        }
+
+        private new void Awake()
+        {
+            base.Awake();
+
+            if (transform.parent != null)
+            {
+                GameObject root = new GameObject("PersistentSignaturePadRoot");
+                transform.SetParent(root.transform);
+                DontDestroyOnLoad(root);
+            }
+            else
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
     }
 }

@@ -15,6 +15,9 @@ public class LoginManager : MonoBehaviour
 
     private FirebaseAuth auth;
 
+    // ✅ Static property to store current logged-in user ID
+    public static string CurrentUserId { get; private set; }
+
     void Start()
     {
         auth = FirebaseAuth.DefaultInstance;
@@ -32,8 +35,9 @@ public class LoginManager : MonoBehaviour
                 return;
             }
 
-            Debug.Log("✅ Logged in: " + task.Result.User.UserId);
-            SceneManager.LoadScene("Registration");
+            CurrentUserId = task.Result.User.UserId; // ✅ Store logged-in user ID
+            Debug.Log("✅ Logged in: " + CurrentUserId);
+            SceneManager.LoadScene("Registration"); // or whatever your signup scene is called
         });
     }
 
@@ -46,7 +50,8 @@ public class LoginManager : MonoBehaviour
                 return;
             }
 
-            Debug.Log("✅ Registered: " + task.Result.User.UserId);
+            CurrentUserId = task.Result.User.UserId; // ✅ Store logged-in user ID
+            Debug.Log("✅ Registered: " + CurrentUserId);
             SceneManager.LoadScene("Registration");
         });
     }
