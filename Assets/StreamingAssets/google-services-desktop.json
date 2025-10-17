@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_id": "cardiocare-quest-telemetry",
+    "project_number": "35495734440",
+    "name": "cardiocare-quest-telemetry",
+    "firebase_url": "https://cardiocare-quest-telemetry-default-rtdb.firebaseio.com",
+    "storage_bucket": "cardiocare-quest-telemetry.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:35495734440:web:4a6309b63f913f0014e69d",
+        "android_client_info": {
+          "package_name": "com.yourcompany.cardiocare"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHeb_7j8fqnlgFOIc244xuCre8kFV9IXg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
