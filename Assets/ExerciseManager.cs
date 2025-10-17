@@ -15,6 +15,7 @@ public class ExerciseManager : MonoBehaviour
     public TMP_InputField Input_Type;
     public TMP_InputField Input_Date;
     public TMP_InputField Input_Time;
+    public TMP_InputField Input_Calories;
     public TMP_Dropdown Dropdown_Duration;
     public TMP_Dropdown Dropdown_HeartRate;
     public Button Button_FetchHealthKit;
@@ -160,6 +161,7 @@ public class ExerciseManager : MonoBehaviour
             { "time", Input_Time.text },
             { "duration", Dropdown_Duration.options[Dropdown_Duration.value].text },
             { "heartRate", Dropdown_HeartRate.options[Dropdown_HeartRate.value].text },
+            { "calories", Input_Calories.text },
             { "timestamp", DateTime.UtcNow.ToString("o") }
         };
 
