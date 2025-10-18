@@ -43,6 +43,8 @@ namespace Gameplay.UI
         #endregion
 
         private bool _firstPaint = true;
+        private bool _hasShownPopupOnce;
+        private int _lastPopupPage = -1;
         public AccountOwner AccountOwner { get; } = new();
 
         private const string PreferNotToSay = "Prefer Not to Say";
@@ -329,16 +331,27 @@ namespace Gameplay.UI
         }
 
         #region Validation Methods
-        private bool ValidatePage() => _currentPage.Value switch
+        private bool ValidatePage()
         {
-            0 => ValidateBasicInfo(),
-            1 => ValidateGenderRaceInfo(),
-            2 => ValidateNumberOfPlayersInfo(),
-            3 => ValidateAppUsageInfo(),
-            >= 4 and <= 11 => ValidatePreSurveyInfo(),
-            12 => ValidateTermsAndCondForm(),
-            _ => false
-        };
+            if (_currentPage.Value != _lastPopupPage)
+                _hasShownPopupOnce = false;
+
+            var result = _currentPage.Value switch
+            {
+                0 => ValidateBasicInfo(),
+                1 => ValidateGenderRaceInfo(),
+                2 => ValidateNumberOfPlayersInfo(),
+                3 => ValidateAppUsageInfo(),
+                >= 4 and <= 11 => ValidatePreSurveyInfo(),
+                12 => ValidateTermsAndCondForm(),
+                _ => false
+            };
+
+            // Update last popup page after validation
+            _lastPopupPage = _currentPage.Value;
+
+            return result;
+        }
 
         private bool ValidateBasicInfo()
         {
@@ -408,13 +421,22 @@ namespace Gameplay.UI
         private bool ValidatePreSurveyInfo()
         {
             var dropDowns = _pages[_currentPage.Value].Query<DropdownField>().ToList();
-            foreach (var dropDown in dropDowns)
+
+            var hasEmpty = dropDowns.Any(d => string.IsNullOrEmpty(d.value));
+
+            if (hasEmpty)
             {
-                if (string.IsNullOrEmpty(dropDown.value))
+                if (!_hasShownPopupOnce)
                 {
-                    Popup.Instance.Show("Please fill all the required fields."); return false;
+                    Popup.Instance.Show("Please fill all the required fields.");
+                    _hasShownPopupOnce = true;
+                    return false;
                 }
+                
+                return true;
             }
+            
+            _hasShownPopupOnce = false;
             return true;
         }
 

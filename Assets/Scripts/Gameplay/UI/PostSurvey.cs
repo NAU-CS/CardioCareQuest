@@ -40,6 +40,8 @@ namespace Gameplay.UI
         #endregion
         
         private bool _firstPaint = true;
+        private bool _hasShownPopupOnce;
+        private int _lastPopupPage = -1;
 
         public AccountOwner AccountOwner { get; } = new();
         private string _signupRecordKey = Guid.NewGuid().ToString();
@@ -139,19 +141,23 @@ namespace Gameplay.UI
 
         private void OnNextButtonClicked()
         {
-            var ok = ValidatePostSurveyInfo();
-            if (!ok) return;
-            
-            if (_currentPage.Value < _pages.Length - 1)
-            {
-                _currentPage.Value++;
-            }
-            else if (_currentPage.Value == _pages.Length - 1)
-            {
-                // ✅ Last page → Save all responses
-                SaveSurveyToFirebase();
-                SceneManager.LoadScene("LoginScene", LoadSceneMode.Single);
-            }
+	        if (_currentPage.Value != _lastPopupPage)
+		        _hasShownPopupOnce = false;
+
+	        var ok = ValidatePostSurveyInfo();
+	        _lastPopupPage = _currentPage.Value;
+
+	        if (!ok) return;
+
+	        if (_currentPage.Value < _pages.Length - 1)
+	        {
+		        _currentPage.Value++;
+	        }
+	        else if (_currentPage.Value == _pages.Length - 1)
+	        {
+		        SaveSurveyToFirebase();
+		        SceneManager.LoadScene("LoginScene", LoadSceneMode.Single);
+	        }
         }
 
         private void OnCurrentPageChanged(int value)
@@ -193,20 +199,27 @@ namespace Gameplay.UI
         
         private bool ValidatePostSurveyInfo()
         {
-            var dropDowns = _pages[_currentPage.Value].Query<DropdownField>().ToList();
-            foreach (var dropDown in dropDowns)
-            {
-                if (string.IsNullOrEmpty(dropDown.value))
-                {
-                    Popup.Instance.Show("Please fill all the required fields.");
-                    return false;
-                }
-            }
+	        var dropDowns = _pages[_currentPage.Value].Query<DropdownField>().ToList();
+
+	        var hasEmpty = dropDowns.Any(d => string.IsNullOrEmpty(d.value));
+
+	        if (hasEmpty)
+	        {
+		        if (!_hasShownPopupOnce)
+		        {
+			        Popup.Instance.Show("Please fill all the required fields.");
+			        _hasShownPopupOnce = true;
+			        return false;
+		        }
+                
+		        return true;
+	        }
             
-            return true;
+	        _hasShownPopupOnce = false;
+	        return true;
         }
 		
-				   private void SaveSurveyToFirebase()
+	    private void SaveSurveyToFirebase()
 		{
 		    string uid = LoginManager.CurrentUserId; // current signed-in user
 		    if (string.IsNullOrEmpty(uid))
