@@ -26,7 +26,7 @@ namespace Gameplay.UI
         private VisualElement[] _pages;
         private readonly CallbackValue<int> _currentPage = new();
 
-        private TextField _fullNameText, _emailText, _zipCodeText, _cityStateText;
+        private TextField _firstNameText, _lastNameText, _zipCodeText, _stateText, _cityText;
         private DropdownField _genderDropdown;
         private TextField _genderText;
         private MultiSelectDropdown _raceDropdown;
@@ -97,10 +97,11 @@ namespace Gameplay.UI
             };
 
             // Basic Info
-            _fullNameText = _basicInfoForm.Q<TextField>("fullname");
-            _emailText = _basicInfoForm.Q<TextField>("email");
+            _firstNameText = _basicInfoForm.Q<TextField>("first-name");
+            _lastNameText = _basicInfoForm.Q<TextField>("last-name");
             _zipCodeText = _basicInfoForm.Q<TextField>("zip-code");
-            _cityStateText = _basicInfoForm.Q<TextField>("city-state");
+            _stateText = _basicInfoForm.Q<TextField>("state");
+            _cityText = _basicInfoForm.Q<TextField>("city");
 
             // Gender/Race
             _genderDropdown = _genderRaceInfoForm.Q<DropdownField>("gender");
@@ -220,10 +221,11 @@ namespace Gameplay.UI
             switch (pageIndex)
             {
                 case 0: // Basic Info
-                    pageData["FullName"] = _fullNameText.value;
-                    pageData["Email"] = _emailText.value;
+                    pageData["FirstName"] = _firstNameText.value;
+                    pageData["LastName"] = _lastNameText.value;
                     pageData["ZipCode"] = _zipCodeText.value;
-                    pageData["CityState"] = _cityStateText.value;
+                    pageData["State"] = _stateText.value;
+                    pageData["City"] = _cityText.value;
                     break;
                 case 1: // Gender/Race
                     pageData["Gender"] = _genderDropdown.value == OtherOption ? _genderText.value : _genderDropdown.value;
@@ -263,10 +265,11 @@ namespace Gameplay.UI
         {
             var fullData = new Dictionary<string, object>
             {
-                { "FullName", _fullNameText.value },
-                { "Email", _emailText.value },
+                { "FirstName", _firstNameText.value },
+                { "LastName", _lastNameText.value },
                 { "ZipCode", _zipCodeText.value },
-                { "CityState", _cityStateText.value },
+                { "State", _stateText.value },
+                { "City", _cityText.value },
                 { "Gender", _genderDropdown.value == OtherOption ? _genderText.value : _genderDropdown.value },
                 { "Race", _raceDropdown.SelectedOptions.Contains(OtherOption)
                             ? _raceDropdown.SelectedOptions.Concat(new[] { _raceText.value }).ToList()
@@ -339,25 +342,19 @@ namespace Gameplay.UI
 
         private bool ValidateBasicInfo()
         {
-            if (string.IsNullOrEmpty(_fullNameText.value) ||
-                string.IsNullOrEmpty(_emailText.value) ||
+            if (string.IsNullOrEmpty(_firstNameText.value) ||
+                string.IsNullOrEmpty(_lastNameText.value) ||
                 string.IsNullOrEmpty(_zipCodeText.value) ||
-                string.IsNullOrEmpty(_cityStateText.value))
+                string.IsNullOrEmpty(_stateText.value) ||
+                string.IsNullOrEmpty(_cityText.value))
             {
                 Popup.Instance.Show("Please fill all the required fields."); return false;
             }
-            if(!Regex.IsMatch(_emailText.value, @"^\S+@\S+\.\S+$"))
-            {
-                Popup.Instance.Show("Please enter a valid email."); return false;
-            }
+            
             if(!Regex.IsMatch(_zipCodeText.value, @"^\d+(-\d+)?$"))
             {
                 Popup.Instance.Show("Please enter a valid zip code."); return false;
             }
-            AccountOwner.FullName = _fullNameText.value;
-            AccountOwner.Email = _emailText.value;
-            AccountOwner.ZipCode = _zipCodeText.value;
-            AccountOwner.CityState = _cityStateText.value;
             return true;
         }
 
