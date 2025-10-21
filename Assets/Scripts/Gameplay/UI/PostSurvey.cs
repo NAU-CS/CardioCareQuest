@@ -36,6 +36,8 @@ namespace Gameplay.UI
         private VisualElement _form6;
         private VisualElement _form7;
         private VisualElement _form8;
+
+        private ProgressBar _progressBar;
         
         #endregion
         
@@ -83,6 +85,8 @@ namespace Gameplay.UI
             _form6 = _preSurveyQuestionsForm.Q<VisualElement>("form-6");
             _form7 = _preSurveyQuestionsForm.Q<VisualElement>("form-7");
             _form8 = _preSurveyQuestionsForm.Q<VisualElement>("form-8");
+            
+            _progressBar = _container.Q<ProgressBar>("progress-bar");
 
             _pages = new[]
             {
@@ -163,6 +167,9 @@ namespace Gameplay.UI
         private void OnCurrentPageChanged(int value)
         {
             if (value < 0 || value >= _pages.Length) return;
+            
+            _progressBar.value = _currentPage.Value / (float)_pages.Length * 100f;
+            
 
             // hide previous and next pages
             // Hide all pages except the current one

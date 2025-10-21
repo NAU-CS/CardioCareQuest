@@ -39,6 +39,8 @@ namespace Gameplay.UI
         private TextField _numberOfPlayersText;
 
         private VisualElement _form1, _form2, _form3, _form4, _form5, _form6, _form7, _form8;
+        
+        private ProgressBar _progressBar;
 
         #endregion
 
@@ -91,6 +93,8 @@ namespace Gameplay.UI
             _form6 = _preSurveyQuestionsForm.Q<VisualElement>("form-6");
             _form7 = _preSurveyQuestionsForm.Q<VisualElement>("form-7");
             _form8 = _preSurveyQuestionsForm.Q<VisualElement>("form-8");
+            
+            _progressBar = _container.Q<ProgressBar>("progress-bar");
 
             _pages = new[]
             {
@@ -185,6 +189,8 @@ namespace Gameplay.UI
         private void OnCurrentPageChanged(int value)
         {
             if (value < 0 || value >= _pages.Length) return;
+            
+            _progressBar.value = _currentPage.Value / (float)_pages.Length * 100f;
 
             for (var i = 0; i < _pages.Length; i++)
                 _pages[i].style.display = i == value ? DisplayStyle.Flex : DisplayStyle.None;
