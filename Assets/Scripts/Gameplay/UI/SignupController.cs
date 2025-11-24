@@ -206,7 +206,18 @@ namespace Gameplay.UI
             _nextButton.text = "Next";
         }
 
-        private void OnAcceptButtonClicked() => SignaturePad.Instance.Show();
+        private void OnAcceptButtonClicked()
+        {
+            // Populate AccountOwner with full name and email before showing signature pad
+            AccountOwner.FullName = $"{_firstNameText.value} {_lastNameText.value}";
+            AccountOwner.Email = LoginManager.CurrentUserEmail;
+
+
+
+            // Show the signature pad
+            SignaturePad.Instance.Show();
+        }
+
 
         private void OnDropdownChanged(ChangeEvent<string> evt)
         {

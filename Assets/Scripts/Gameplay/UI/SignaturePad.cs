@@ -44,6 +44,7 @@ namespace Gameplay.UI
         private Button _resetButton;
         private Button _closeButton;
 
+
         private Texture2D _texture;
         private readonly List<Vector2> _points = new();
 
@@ -433,7 +434,7 @@ namespace Gameplay.UI
             LoadNextScene();
         }
 
-        private void LoadNextScene()
+private void LoadNextScene()
         {
             if (_sceneQueue.Count > 0)
             {
@@ -463,6 +464,16 @@ namespace Gameplay.UI
             yield return new WaitForSeconds(delay);
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
+
+
+
+
+
+
+
+
+
+
 
         private new void Awake()
         {

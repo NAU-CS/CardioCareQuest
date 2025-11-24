@@ -14,6 +14,8 @@ public class QuizManagerTMP : MonoBehaviour
 {
     [Header("UI Elements (Assign in Inspector)")]
     public Button Button_Save;
+    public Button Button_Next;
+
     public TMP_Dropdown Dropdown_Q1;
     public TMP_Dropdown Dropdown_Q2;
     public TMP_Dropdown Dropdown_Q3;
@@ -24,19 +26,18 @@ public class QuizManagerTMP : MonoBehaviour
     public TMP_Dropdown Dropdown_Q8;
     public TMP_Dropdown Dropdown_Q9;
     public TMP_Dropdown Dropdown_Q10;
-    public TMP_Text Text_Status; // optional status text
+
+    public TMP_Text Text_Status;
 
     private TMP_Dropdown[] allDropdowns;
     private DatabaseReference dbRef;
     private FirebaseAuth auth;
 
-    // Colors
-    private readonly Color btnEnabled = new Color(0.18f, 0.70f, 0.24f, 1f); 
-    private readonly Color btnDisabled = new Color(0.55f, 0.55f, 0.55f, 1f); 
-    private readonly Color correctColor = new Color(0.20f, 0.70f, 0.20f, 1f); 
-    private readonly Color wrongColor   = new Color(0.85f, 0.20f, 0.20f, 1f); 
+    private readonly Color btnEnabled = new Color(0.18f, 0.70f, 0.24f, 1f);
+    private readonly Color btnDisabled = new Color(0.55f, 0.55f, 0.55f, 1f);
+    private readonly Color correctColor = new Color(0.20f, 0.70f, 0.20f, 1f);
+    private readonly Color wrongColor = new Color(0.85f, 0.20f, 0.20f, 1f);
 
-    // Expected answers
     private readonly string[] correctAnswers = new string[]
     {
         "(C) The rest of their life",
@@ -61,12 +62,25 @@ public class QuizManagerTMP : MonoBehaviour
 
         SetSaveButtonState(false);
 
-        foreach (var dd in allDropdowns)
+        // Disable NEXT button at start
+        if (Button_Next != null)
         {
-            if (dd != null) dd.onValueChanged.AddListener(delegate { UpdateSaveButtonState(); });
+            Button_Next.interactable = false;
+            var nextGraphic = Button_Next.targetGraphic as Graphic;
+            if (nextGraphic != null) nextGraphic.color = btnDisabled;
         }
 
-        if (Button_Save != null) Button_Save.onClick.AddListener(OnClickSave);
+        foreach (var dd in allDropdowns)
+        {
+            if (dd != null)
+                dd.onValueChanged.AddListener(delegate { UpdateSaveButtonState(); });
+        }
+
+        if (Button_Save != null)
+            Button_Save.onClick.AddListener(OnClickSave);
+
+        if (Button_Next != null)
+            Button_Next.onClick.AddListener(OnClickNext);
     }
 
     void Start()
@@ -86,17 +100,14 @@ public class QuizManagerTMP : MonoBehaviour
         });
     }
 
-    // Enable/disable Save button
     private void SetSaveButtonState(bool enabled)
     {
         if (Button_Save == null) return;
 
         Button_Save.interactable = enabled;
+
         var g = Button_Save.targetGraphic as Graphic;
         if (g != null) g.color = enabled ? btnEnabled : btnDisabled;
-
-        var img = Button_Save.GetComponent<Image>();
-        if (img != null) img.color = enabled ? btnEnabled : btnDisabled;
     }
 
     private void UpdateSaveButtonState()
@@ -121,7 +132,6 @@ public class QuizManagerTMP : MonoBehaviour
 
         if (auth == null || auth.CurrentUser == null)
         {
-            Debug.LogError("❌ No logged-in user. Make sure Firebase login is working.");
             if (Text_Status != null)
                 Text_Status.text = "Please log in before saving.";
             return;
@@ -134,57 +144,49 @@ public class QuizManagerTMP : MonoBehaviour
             { "answers", userAnswers },
             { "correctness", correctness },
             { "score", CountTrue(correctness) + "/10" },
-            //{ "finalResult", allCorrect ? "Excellent!!!" : "Good, try again" },
             { "timestamp", DateTime.UtcNow.ToString("o") }
         };
 
-
-            dbRef.Child("users").Child(uid).Child("quizResults").Push()
-                .SetValueAsync(data).ContinueWithOnMainThread(task =>
-                {
-                    if (task.IsCompleted)
-                    {
-                        Debug.Log("✅ Quiz results saved for user " + uid);
-
-                        // 🔒 Disable the save button
-                        if (Button_Save != null)
-                            Button_Save.interactable = false;
-                        
-                        if (Text_Status != null)
-                        {
-                            // Start 60-second countdown before loading next scene
-                            Text_Status.text = "Next scene in 60s…";
-                            // Assuming this script is a MonoBehaviour
-                            StartCoroutine(CountdownAndLoadScene(60));
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("❌ Firebase save failed: " + task.Exception);
-                        if (Text_Status != null)
-                            Text_Status.text = "Failed to save quiz. Try again.";
-                    }
-                });
-
-            
-    }
-     // Coroutine for countdown
-                 private IEnumerator CountdownAndLoadScene(int delay)
+        dbRef.Child("users").Child(uid).Child("quizResults").Push()
+            .SetValueAsync(data).ContinueWithOnMainThread(task =>
             {
-                int remaining = delay;
-                while (remaining > 0)
+                if (task.IsCompleted)
+                {
+                    Debug.Log("✅ Quiz results saved for user " + uid);
+
+                    // Disable save button
+                    Button_Save.interactable = false;
+
+                    // ENABLE NEXT BUTTON AFTER SAVE SUCCESS
+                    if (Button_Next != null)
+                    {
+                        Button_Next.interactable = true;
+                        var nextGraphic = Button_Next.targetGraphic as Graphic;
+                        if (nextGraphic != null) nextGraphic.color = btnEnabled;
+                    }
+
+                    if (Text_Status != null)
+                        Text_Status.text = "Click on 'Next'";
+                }
+                else
                 {
                     if (Text_Status != null)
-                        Text_Status.text = $"Next scene in {remaining}s…";
-
-                    yield return new WaitForSeconds(1f);
-                    remaining--;
+                        Text_Status.text = "Failed to save quiz. Try again.";
                 }
-                
+            });
+    }
 
-                // ✅ Trigger next scene once countdown is done
-                SignaturePad.TriggerNextScene();
-            }
+    private void OnClickNext()
+    {
+        Debug.Log("➡️ Button_Next clicked...");
+        StartCoroutine(CountdownAndLoadScene(0));
+    }
+
+    private IEnumerator CountdownAndLoadScene(int delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SignaturePad.TriggerNextScene();
+    }
 
     private (string[] answers, bool[] correctness, bool allCorrect) GradeAndColorUI()
     {
@@ -204,8 +206,6 @@ public class QuizManagerTMP : MonoBehaviour
 
             var bg = dd.GetComponent<Image>();
             if (bg != null) bg.color = isCorrect ? correctColor : wrongColor;
-
-            Debug.Log($"Q{i+1}: Selected='{selectedText}' | Expected='{correctAnswers[i]}' | Correct={isCorrect}");
         }
 
         return (userAnswers, correctness, allCorrect);
@@ -213,6 +213,8 @@ public class QuizManagerTMP : MonoBehaviour
 
     private int CountTrue(bool[] arr)
     {
-        int c = 0; foreach (var b in arr) if (b) c++; return c;
+        int c = 0;
+        foreach (var b in arr) if (b) c++;
+        return c;
     }
 }

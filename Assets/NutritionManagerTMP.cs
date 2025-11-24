@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Database;
+using Firebase.Storage;
 using Firebase.Extensions;
 using TMPro;
 using Gameplay.UI;
@@ -27,39 +29,51 @@ public class NutritionManagerTMP : MonoBehaviour
     public Button Button_FetchHealthKit;
     public Button Button_Save;
 
+    [Header("Meal Photo Upload")]
+    public Button Button_UploadPhoto;
+    public RawImage ImagePreview; // optional preview
+    private string mealPhotoUrl = null;
+
+    [Header("Ingredients System")]
+    public TMP_InputField Input_NewIngredient;
+    public Button Button_AddIngredient;
+    public Transform IngredientListContainer;
+    public GameObject IngredientItemPrefab;
+    private List<string> ingredients = new List<string>();
+
     private DatabaseReference dbRef;
     private FirebaseAuth auth;
-
-    private bool dataFetched = false;  // true if HealthKit provided protein data
+    private bool dataFetched = false;  
     private bool firebaseReady = false;
 
-    // Colors for Save button states
     private Color colorEnabled = Color.green;
     private Color colorDisabled = Color.gray;
 
     void Awake()
     {
-        // Disable Save button at startup
         SetSaveButtonState(false);
 
-        // Watch manual entry changes
         if (Input_MealDescription != null)
             Input_MealDescription.onValueChanged.AddListener(delegate { UpdateSaveButtonState(); });
 
         if (Input_Protein != null)
             Input_Protein.onValueChanged.AddListener(delegate { UpdateSaveButtonState(); });
 
-        // Hook up button listeners
         if (Button_FetchHealthKit != null)
             Button_FetchHealthKit.onClick.AddListener(FetchFromHealthKit);
 
         if (Button_Save != null)
             Button_Save.onClick.AddListener(SaveNutritionData);
+
+        if (Button_UploadPhoto != null)
+            Button_UploadPhoto.onClick.AddListener(OnUploadPhotoClicked);
+
+        if (Button_AddIngredient != null)
+            Button_AddIngredient.onClick.AddListener(AddIngredient);
     }
 
     void Start()
     {
-        // Initialize Firebase
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             if (task.Result == DependencyStatus.Available)
@@ -67,17 +81,17 @@ public class NutritionManagerTMP : MonoBehaviour
                 dbRef = FirebaseDatabase.DefaultInstance.RootReference;
                 auth = FirebaseAuth.DefaultInstance;
                 firebaseReady = true;
-
-                Debug.Log("✅ Firebase ready");
+                Debug.Log("Firebase ready");
                 UpdateSaveButtonState();
             }
             else
             {
-                Debug.LogError("❌ Firebase not available: " + task.Result);
+                Debug.LogError("Firebase not available: " + task.Result);
             }
         });
     }
 
+    // ---------------- SAVE BUTTON ----------------
     private void SetSaveButtonState(bool enabled)
     {
         if (Button_Save == null) return;
@@ -96,7 +110,7 @@ public class NutritionManagerTMP : MonoBehaviour
 
     private void UpdateSaveButtonState()
     {
-        if (!firebaseReady || Button_Save == null || auth == null)
+        if (!firebaseReady || auth == null || Button_Save == null)
         {
             SetSaveButtonState(false);
             return;
@@ -112,49 +126,123 @@ public class NutritionManagerTMP : MonoBehaviour
         bool hasDescription = !string.IsNullOrEmpty(Input_MealDescription.text.Trim());
         bool hasProtein = !string.IsNullOrEmpty(Input_Protein.text.Trim());
 
-        // Enable Save if (HealthKit fetched) OR (user typed both fields)
         SetSaveButtonState(dataFetched || (hasDescription && hasProtein));
     }
 
+    // ---------------- HEALTHKIT ----------------
     private void FetchFromHealthKit()
     {
 #if UNITY_IOS && !UNITY_EDITOR
-        // Call into native HealthKit bridge
         HealthKitManager.FetchLatestProtein((proteinValue) =>
         {
             if (!string.IsNullOrEmpty(proteinValue))
             {
                 Input_Protein.text = proteinValue;
-                dataFetched = true; // Mark that data has been fetched
-                Debug.Log("✅ HealthKit protein data fetched");
+                dataFetched = true;
                 UpdateSaveButtonState();
             }
             else
             {
-                Debug.LogWarning("⚠️ No HealthKit protein data found. Enter manually.");
+                Debug.LogWarning("No HealthKit protein data found.");
             }
         });
 #else
-        Debug.LogWarning("⚠️ Simulated HealthKit fetch in Editor. Enter manually on device.");
+        Debug.LogWarning("Simulated HealthKit fetch in Editor.");
 #endif
     }
 
+    // ---------------- PHOTO UPLOAD ----------------
+    private void OnUploadPhotoClicked()
+    {
+        StartCoroutine(SelectPhoto());
+    }
+
+    private IEnumerator SelectPhoto()
+    {
+        yield return PhotoPicker.PickImage((path) =>
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                Debug.Log("Picked image: " + path);
+                StartCoroutine(UploadMealPhoto(path));
+            }
+        });
+    }
+
+    private IEnumerator UploadMealPhoto(string localPath)
+    {
+        if (!firebaseReady || auth.CurrentUser == null)
+        {
+            Debug.LogError("Cannot upload – no signed-in user.");
+            yield break;
+        }
+
+        var storage = FirebaseStorage.DefaultInstance;
+        var storageRef = storage.GetReference("mealPhotos");
+        string fileName = $"{auth.CurrentUser.UserId}_{Guid.NewGuid()}.jpg";
+        var fileRef = storageRef.Child(fileName);
+
+        var uploadTask = fileRef.PutFileAsync(localPath);
+        yield return new WaitUntil(() => uploadTask.IsCompleted);
+
+        if (uploadTask.Exception != null)
+        {
+            Debug.LogError("Upload failed: " + uploadTask.Exception);
+            yield break;
+        }
+
+        fileRef.GetDownloadUrlAsync().ContinueWithOnMainThread(task =>
+        {
+            if (!task.IsFaulted && !task.IsCanceled)
+            {
+                mealPhotoUrl = task.Result.ToString();
+                Debug.Log("Photo uploaded: " + mealPhotoUrl);
+                if (ImagePreview != null)
+                    StartCoroutine(LoadImagePreview(mealPhotoUrl));
+            }
+            else
+            {
+                Debug.LogError("Failed to get download URL: " + task.Exception);
+            }
+        });
+    }
+
+    private IEnumerator LoadImagePreview(string url)
+    {
+        WWW www = new WWW(url);
+        yield return www;
+        if (ImagePreview != null)
+            ImagePreview.texture = www.texture;
+    }
+
+    // ---------------- INGREDIENT LIST ----------------
+    private void AddIngredient()
+    {
+        string ingredient = Input_NewIngredient.text.Trim();
+        if (string.IsNullOrEmpty(ingredient)) return;
+
+        ingredients.Add(ingredient);
+
+        if (IngredientItemPrefab != null && IngredientListContainer != null)
+        {
+            GameObject item = Instantiate(IngredientItemPrefab, IngredientListContainer);
+            TMP_Text textComp = item.GetComponentInChildren<TMP_Text>();
+            if (textComp != null) textComp.text = ingredient;
+        }
+
+        Input_NewIngredient.text = "";
+    }
+
+    // ---------------- SAVE NUTRITION DATA ----------------
     private void SaveNutritionData()
     {
-        if (!firebaseReady || dbRef == null || auth == null)
+        if (!firebaseReady || auth.CurrentUser == null || dbRef == null)
         {
-            Debug.LogWarning("❌ Firebase not ready.");
+            Debug.LogError("Cannot save – Firebase not ready or no signed-in user.");
             return;
         }
 
-        FirebaseUser user = auth.CurrentUser;
-        if (user == null)
-        {
-            Debug.LogError("❌ No user logged in.");
-            return;
-        }
-
-        string uid = user.UserId;
+        string uid = auth.CurrentUser.UserId;
 
         var nutritionData = new Dictionary<string, object>
         {
@@ -168,21 +256,23 @@ public class NutritionManagerTMP : MonoBehaviour
             { "fat", Dropdown_Fat.options[Dropdown_Fat.value].text },
             { "cholesterol", Dropdown_Cholesterol.options[Dropdown_Cholesterol.value].text },
             { "mealType", Dropdown_Meal.options[Dropdown_Meal.value].text },
-            { "timestamp", DateTime.UtcNow.ToString("o") }
+            { "timestamp", DateTime.UtcNow.ToString("o") },
+            { "mealPhotoUrl", mealPhotoUrl ?? "" },
+            { "ingredients", ingredients }
         };
 
         dbRef.Child("users").Child(uid).Child("nutrition").Push().SetValueAsync(nutritionData)
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompleted)
-                    {
-                        Debug.Log("✅ Nutrition data saved for user " + uid);
-                        // Trigger next scene in SignaturePad flow
-                        SignaturePad.TriggerNextScene();
-                    }
+                {
+                    Debug.Log("Nutrition data saved for user " + uid);
+                    SignaturePad.TriggerNextScene();
+                }
                 else
-                    Debug.LogError("❌ Failed to save data: " + task.Exception);
+                {
+                    Debug.LogError("Failed to save nutrition data: " + task.Exception);
+                }
             });
-           
     }
 }
