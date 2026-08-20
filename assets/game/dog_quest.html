@@ -942,9 +942,9 @@ window.resumeWalk = function (currentDistance, targetDistance) {
   var rounded = Math.round(targetDistance);
   var title = "Dog Walk";
   var desc  = "Resuming your walk in progress.";
-  if (rounded === 500)  { title = "Keep going";          desc = "EASY- Quick walk- 500 steps- 30 pts"; }
-  else if (rounded === 1000) { title = "Travel to a village"; desc = "MEDIUM- Maintenance walk- 1000 steps- 60 pts"; }
-  else if (rounded === 1500) { title = "Beat a boss!!";       desc = "HARD- Challenge yourself- 1500 steps- 100 pts"; }
+  if (rounded === 500)  { title = "Keep going";          desc = "EASY- Quick walk- 500 steps"; }
+  else if (rounded === 1000) { title = "Travel to a village"; desc = "MEDIUM- Maintenance walk- 1000 steps"; }
+  else if (rounded === 1500) { title = "Beat a boss!!";       desc = "HARD- Challenge yourself- 1500 steps"; }
 
   try {
     if (window.SugarCube && SugarCube.State) {
@@ -1110,28 +1110,28 @@ Each yellow button sets state vars + calls CCQ.startTracking($targetDistance)
   &lt;/div&gt;
 
   &lt;div class=&quot;button-stack&quot;&gt;
-    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Keep going&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;EASY- Quick walk- 500 steps- 30 pts&lt;/div&gt;&#39;&gt;&gt;
+    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Keep going&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;EASY- Quick walk- 500 steps&lt;/div&gt;&#39;&gt;&gt;
       &lt;&lt;set $targetDistance to 500&gt;&gt;
       &lt;&lt;set $currentTitle to &quot;Keep going&quot;&gt;&gt;
-      &lt;&lt;set $currentDesc to &quot;EASY- Quick walk- 500 steps- 30 pts&quot;&gt;&gt;
+      &lt;&lt;set $currentDesc to &quot;EASY- Quick walk- 500 steps&quot;&gt;&gt;
       &lt;&lt;set $questStartTime to (new Date()).getTime()&gt;&gt;
       &lt;&lt;set $currentDistance to 0&gt;&gt;
       &lt;&lt;run if (window.CCQ &amp;&amp; typeof window.CCQ.startTracking === &quot;function&quot;) { window.CCQ.startTracking(500); }&gt;&gt;
       &lt;&lt;goto &quot;Active Walk&quot;&gt;&gt;
     &lt;&lt;/link&gt;&gt;
-    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Travel to a village&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;MEDIUM- Maintenance walk- 1000 steps- 60 pts&lt;/div&gt;&#39;&gt;&gt;
+    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Travel to a village&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;MEDIUM- Maintenance walk- 1000 steps&lt;/div&gt;&#39;&gt;&gt;
       &lt;&lt;set $targetDistance to 1000&gt;&gt;
       &lt;&lt;set $currentTitle to &quot;Travel to a village&quot;&gt;&gt;
-      &lt;&lt;set $currentDesc to &quot;MEDIUM- Maintenance walk- 1000 steps- 60 pts&quot;&gt;&gt;
+      &lt;&lt;set $currentDesc to &quot;MEDIUM- Maintenance walk- 1000 steps&quot;&gt;&gt;
       &lt;&lt;set $questStartTime to (new Date()).getTime()&gt;&gt;
       &lt;&lt;set $currentDistance to 0&gt;&gt;
       &lt;&lt;run if (window.CCQ &amp;&amp; typeof window.CCQ.startTracking === &quot;function&quot;) { window.CCQ.startTracking(1000); }&gt;&gt;
       &lt;&lt;goto &quot;Active Walk&quot;&gt;&gt;
     &lt;&lt;/link&gt;&gt;
-    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Beat a boss!!&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;HARD- Challenge yourself- 1500 steps- 100 pts&lt;/div&gt;&#39;&gt;&gt;
+    &lt;&lt;link &#39;&lt;div class=&quot;quest-title&quot;&gt;Beat a boss!!&lt;/div&gt;&lt;div class=&quot;quest-desc&quot;&gt;HARD- Challenge yourself- 1500 steps&lt;/div&gt;&#39;&gt;&gt;
       &lt;&lt;set $targetDistance to 1500&gt;&gt;
       &lt;&lt;set $currentTitle to &quot;Beat a boss!!&quot;&gt;&gt;
-      &lt;&lt;set $currentDesc to &quot;HARD- Challenge yourself- 1500 steps- 100 pts&quot;&gt;&gt;
+      &lt;&lt;set $currentDesc to &quot;HARD- Challenge yourself- 1500 steps&quot;&gt;&gt;
       &lt;&lt;set $questStartTime to (new Date()).getTime()&gt;&gt;
       &lt;&lt;set $currentDistance to 0&gt;&gt;
       &lt;&lt;run if (window.CCQ &amp;&amp; typeof window.CCQ.startTracking === &quot;function&quot;) { window.CCQ.startTracking(1500); }&gt;&gt;
@@ -1248,10 +1248,6 @@ CCQ.goHome() → host pops the Flutter route.
     &lt;/p&gt;
 
     &lt;div class=&quot;celebration-stats&quot;&gt;
-      &lt;div class=&quot;celebration-points-row&quot;&gt;
-        &lt;div class=&quot;celebration-points-label&quot;&gt;Points Earned&lt;/div&gt;
-        &lt;div class=&quot;celebration-points-value&quot; id=&quot;final-points-text&quot;&gt;+$pointsEarned points&lt;/div&gt;
-      &lt;/div&gt;
       &lt;div class=&quot;celebration-grid&quot;&gt;
         &lt;div&gt;
           &lt;div class=&quot;label&quot;&gt;Distance&lt;/div&gt;
