@@ -51,6 +51,7 @@ class CustomGamesRepository {
       gameType: draft.gameType,
       questions: draft.questions,
       scenes: draft.scenes,
+      segments: draft.segments,
       prompt: draft.prompt,
       options: draft.options,
       targetDistance: draft.targetDistance,

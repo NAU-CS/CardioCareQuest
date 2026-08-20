@@ -5,14 +5,19 @@ import 'package:flutter/material.dart';
 
 import '../game_stories.dart';
 
+// journey = a sequence of native mini-games (walk, plate, water, meds, ...),
+// each a real playable step wired to its own health hook. This is the type the
+// "build your own game" screen creates now.
 // walk = GPS-tracked walk (like Dog Quest); quiz = answer some questions;
 // story = a multi-step branching Twine story generated from the scenes below.
-enum CustomGameType { story, walk, quiz }
+enum CustomGameType { journey, story, walk, quiz }
 
 // Helpers: display name, tagline, and icon for each game type.
 extension CustomGameTypeX on CustomGameType {
   String get label {
     switch (this) {
+      case CustomGameType.journey:
+        return 'Health journey';
       case CustomGameType.story:
         return 'Story game';
       case CustomGameType.walk:
@@ -24,6 +29,8 @@ extension CustomGameTypeX on CustomGameType {
 
   String get tagline {
     switch (this) {
+      case CustomGameType.journey:
+        return 'A run of little games, one for each healthy thing you pick.';
       case CustomGameType.story:
         return 'A few steps that can branch based on your answers, like the catalog games.';
       case CustomGameType.walk:
@@ -35,6 +42,8 @@ extension CustomGameTypeX on CustomGameType {
 
   IconData get icon {
     switch (this) {
+      case CustomGameType.journey:
+        return Icons.map_outlined;
       case CustomGameType.story:
         return Icons.auto_stories_outlined;
       case CustomGameType.walk:
@@ -43,6 +52,45 @@ extension CustomGameTypeX on CustomGameType {
         return Icons.quiz_outlined;
     }
   }
+}
+
+// One playable step in a health journey. `kind` picks which native mini-game
+// runs and which health hook it fires:
+//   walk    - GPS walk with a progress bar, logs exercise + movement
+//   plate   - build-a-healthy-plate, logs a meal
+//   water   - fill-the-glass, logs water and can set a drink reminder
+//   pill    - take-your-medicine check-in, logs medication
+//   bp      - blood-pressure entry, logs a reading
+//   breathe - paced breathing, a calm break (no log)
+//   mood    - a simple yes/no wellbeing check-in (no log)
+// `goal` means meters for walk, glasses for water, and breathing rounds for
+// breathe; it is ignored for the others.
+class GameSegment {
+  final String kind;
+  final String label;
+  final String emoji;
+  final int goal;
+
+  const GameSegment({
+    required this.kind,
+    required this.label,
+    this.emoji = '',
+    this.goal = 0,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'kind': kind,
+        'label': label,
+        'emoji': emoji,
+        'goal': goal,
+      };
+
+  static GameSegment fromMap(Map<dynamic, dynamic> m) => GameSegment(
+        kind: (m['kind'] as String?) ?? 'mood',
+        label: (m['label'] as String?) ?? '',
+        emoji: (m['emoji'] as String?) ?? '',
+        goal: (m['goal'] as num?)?.toInt() ?? 0,
+      );
 }
 
 // One answer choice in a story scene. `nextScene` is the index of the scene to
@@ -148,6 +196,9 @@ class CustomGame {
   // Story scenes. Empty for walk/quiz games. Used to generate the Twine story.
   final List<StoryScene> scenes;
 
+  // Journey steps. One native mini-game each. Empty for other game types.
+  final List<GameSegment> segments;
+
   // Legacy single-question fields kept for backward compatibility.
   final String prompt;
   final List<String> options;
@@ -167,6 +218,7 @@ class CustomGame {
     this.gameType = CustomGameType.quiz,
     this.questions = const <QuizQuestion>[],
     this.scenes = const <StoryScene>[],
+    this.segments = const <GameSegment>[],
     this.prompt = '',
     this.options = const <String>[],
     this.targetDistance = 0,
@@ -196,6 +248,7 @@ class CustomGame {
         'gameType': gameType.name,
         'questions': questions.map((q) => q.toMap()).toList(),
         'scenes': scenes.map((s) => s.toMap()).toList(),
+        'segments': segments.map((s) => s.toMap()).toList(),
         // Also write old-style fields so older app versions can still open it.
         'prompt': questions.isNotEmpty ? questions.first.prompt : prompt,
         'options': questions.isNotEmpty
@@ -231,6 +284,13 @@ class CustomGame {
             .map(StoryScene.fromMap)
             .toList()
         : const <StoryScene>[];
+    final rawSegments = data['segments'];
+    final segments = (rawSegments is List)
+        ? rawSegments
+            .whereType<Map>()
+            .map(GameSegment.fromMap)
+            .toList()
+        : const <GameSegment>[];
     return CustomGame(
       id: doc.id,
       title: (data['title'] as String?) ?? 'Untitled goal',
@@ -239,6 +299,7 @@ class CustomGame {
       gameType: _gameTypeFromName(data['gameType'] as String?),
       questions: questions,
       scenes: scenes,
+      segments: segments,
       prompt: (data['prompt'] as String?) ?? '',
       options: options,
       targetDistance: (data['targetDistance'] as num?)?.toInt() ?? 0,

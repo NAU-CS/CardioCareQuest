@@ -16,6 +16,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/twine_questionnaire_host.dart';
 import 'custom_game.dart';
 import 'custom_games_repository.dart';
+import 'custom_journey_player.dart';
 import 'custom_twine_builder.dart';
 import 'custom_walk_game.dart';
 
@@ -26,6 +27,8 @@ class CustomGamePlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (game.gameType) {
+      case CustomGameType.journey:
+        return CustomJourneyPlayer(game: game);
       case CustomGameType.story:
         return _StoryPlayer(game: game);
       case CustomGameType.walk:

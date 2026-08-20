@@ -13,6 +13,7 @@ import 'core/hooks/pair_hooks.dart';
 import 'core/services/session_manager.dart';
 import 'core/services/session_settings_service.dart';
 import 'core/services/pair_resume_service.dart';
+import 'features/games/custom_games/water_reminder_service.dart';
 import 'features/splash/splash_screen.dart';
 
 // ─── CARDIO CARE IMPORTS ───
@@ -107,6 +108,8 @@ class _CardioCareQuestState extends State<CardioCareQuest>
     return MaterialApp(
       title: 'Cardio Care Quest',
       debugShowCheckedModeBanner: false,
+      // Lets the in-app water reminder show a SnackBar on any screen.
+      scaffoldMessengerKey: WaterReminderService.instance.messengerKey,
       theme: AppTheme.lightTheme,
       // textScaler multiplies every Text widget; defaults to 1.0 until
       // a paired session picks a larger size.

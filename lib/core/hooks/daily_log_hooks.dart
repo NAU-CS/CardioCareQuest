@@ -199,6 +199,57 @@ abstract class DailyLogHooks {
     ]);
   }
 
+  // Save a water/hydration entry (glasses drunk in this sitting).
+  static Future<void> logWater({
+    required String uid,
+    required int glasses,
+  }) {
+    if (uid.isEmpty || glasses <= 0) return Future.value();
+    final today = _today();
+    final eventId = _uuid.v4();
+    final waterEntryId = _uuid.v4();
+
+    return _queue.enqueueBatch([
+      PendingOp.set(
+        '${FirestorePaths.userData}/$uid/${FirestorePaths.dailyLogs}/$today/'
+        '${FirestorePaths.water}/$waterEntryId',
+        {
+          'id': waterEntryId,
+          'glasses': glasses,
+          'timestamp': OfflineFieldValue.nowTimestamp(),
+          'date': today,
+        },
+      ),
+      PendingOp.set(
+        '${FirestorePaths.userData}/$uid/${FirestorePaths.dailyLogs}/$today',
+        {
+          'date': today,
+          'lastWaterGlasses': glasses,
+          'lastWaterTimestamp': OfflineFieldValue.nowTimestamp(),
+          'dailyWaterGlasses': OfflineFieldValue.increment(glasses),
+          'dailyWaterCount': OfflineFieldValue.increment(1),
+        },
+        merge: true,
+      ),
+      PendingOp.update('${FirestorePaths.userData}/$uid', {
+        'waterGlassesLogged': OfflineFieldValue.increment(glasses),
+        'lastLogDate': today,
+      }),
+      PendingOp.set(
+        '${FirestorePaths.events}/$eventId',
+        {
+          'id': eventId,
+          'userId': uid,
+          'event': 'water_logged',
+          'glasses': glasses,
+          'waterEntryId': waterEntryId,
+          'timestamp': OfflineFieldValue.nowTimestamp(),
+          'syncedAt': OfflineFieldValue.nowTimestamp(),
+        },
+      ),
+    ]);
+  }
+
   // Save a medication check-in.
   // Pass the current streak; the new streak is calculated here.
   static Future<void> logMedication({

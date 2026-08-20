@@ -29,6 +29,7 @@ class FirestorePaths {
   static const exercises = 'exercises';
   static const bpReadings = 'bpReadings';
   static const meals = 'meals';
+  static const water = 'water';
 
   static const baselineSurvey = 'baseline_survey';
 
