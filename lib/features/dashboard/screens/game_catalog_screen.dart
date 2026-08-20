@@ -90,12 +90,11 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
 
           final tiles = <Widget>[
             for (final cat in categories)
-              _CatalogTile(
+              _CatalogRow(
+                image: cat.image,
                 icon: cat.icon,
                 label: cat.label,
                 count: byCategory[cat]!.length,
-                iconColor: AppColors.primary,
-                iconBg: AppColors.primary.withValues(alpha: 0.1),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -104,12 +103,11 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
                 ),
               ),
             if (customGames.isNotEmpty)
-              _CatalogTile(
+              _CatalogRow(
+                image: null,
                 icon: Icons.auto_awesome_outlined,
                 label: 'Your Goals',
                 count: customGames.length,
-                iconColor: const Color(0xFFb88616),
-                iconBg: const Color(0xFFfde725).withValues(alpha: 0.2),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -119,15 +117,10 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
               ),
           ];
 
-          return GridView.builder(
+          return ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1,
-            ),
             itemCount: tiles.length,
+            separatorBuilder: (context, i) => const SizedBox(height: 14),
             itemBuilder: (context, i) => tiles[i],
           );
         },
@@ -136,26 +129,26 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
   }
 }
 
-// Square tile: icon, label, game count. Whole tile is tappable; screen reader reads as one line.
-class _CatalogTile extends StatelessWidget {
+// A wide row: photo on the left, topic name and game count on the right.
+// The whole row is tappable; screen reader reads it as one line.
+class _CatalogRow extends StatelessWidget {
+  final String? image; // Photo asset path, or null to fall back to the icon.
   final IconData icon;
   final String label;
   final int count;
-  final Color iconColor;
-  final Color iconBg;
   final VoidCallback onTap;
 
-  const _CatalogTile({
+  const _CatalogRow({
+    required this.image,
     required this.icon,
     required this.label,
     required this.count,
-    required this.iconColor,
-    required this.iconBg,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    const rowHeight = 96.0;
     return Semantics(
       button: true,
       label: '$label, $count ${count == 1 ? "game" : "games"}',
@@ -166,7 +159,7 @@ class _CatalogTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            height: rowHeight,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.cardBorder),
@@ -178,43 +171,80 @@ class _CatalogTile extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(16),
+                // Left: the topic photo, filling a rounded square.
+                ClipRRect(
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(20),
                   ),
-                  child: Icon(icon, color: iconColor, size: 36),
+                  child: SizedBox(
+                    width: rowHeight,
+                    height: rowHeight,
+                    child: image == null
+                        ? _IconTile(icon: icon)
+                        : Image.asset(
+                            image!,
+                            fit: BoxFit.cover,
+                            // If the photo is missing, show the icon instead of
+                            // a broken image so the list still works.
+                            errorBuilder: (context, error, stack) =>
+                                _IconTile(icon: icon),
+                          ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.title,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                // Right: the factor name and game count.
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.title,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$count ${count == 1 ? "game" : "games"}',
+                        style: const TextStyle(
+                          color: AppColors.subtitle,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '$count ${count == 1 ? "game" : "games"}',
-                  style: const TextStyle(
-                    color: AppColors.subtitle,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                const Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: Icon(Icons.chevron_right, color: AppColors.subtitle),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// Fallback shown when a topic has no photo (or the photo fails to load).
+class _IconTile extends StatelessWidget {
+  final IconData icon;
+  const _IconTile({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.1),
+      child: Icon(icon, color: AppColors.primary, size: 36),
     );
   }
 }

@@ -42,6 +42,22 @@ extension GameCategoryX on GameCategory {
         return Icons.school;
     }
   }
+
+  // Photo shown on the left of each catalog row.
+  String get image {
+    switch (this) {
+      case GameCategory.exercise:
+        return 'assets/game/categories/exercise.jpg';
+      case GameCategory.diet:
+        return 'assets/game/categories/diet.jpg';
+      case GameCategory.medication:
+        return 'assets/game/categories/medication.jpg';
+      case GameCategory.measurements:
+        return 'assets/game/categories/measurements.jpg';
+      case GameCategory.education:
+        return 'assets/game/categories/education.jpg';
+    }
+  }
 }
 
 // All display info for a single game. Just data, no logic.
