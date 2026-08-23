@@ -1,0 +1,66 @@
+:: StoryTitle
+Learn the Basics
+
+:: StoryData
+{
+  "ifid": "C1A2B3D4-5555-4A55-8555-A00000000005",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: Start [nobr]
+<div class="phone">
+  <div class="header"><span>Learn the Basics</span></div>
+  <h1>Understanding helps you stay well</h1>
+  <p class="lead">
+    Understanding how blood pressure works makes it easier to take care of
+    yourself. When you know why a habit helps, it is easier to keep it up.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Why">>
+    <</button>>
+  </div>
+</div>
+
+:: Why [nobr]
+<div class="phone">
+  <div class="header"><span>Learn the Basics</span></div>
+  <p class="lead">
+    High blood pressure often has no symptoms, which is why it is called the
+    silent condition. Learning the signs, the numbers, and the habits puts you
+    in control.
+  </p>
+  <p class="lead">
+    These games turn the science into something you can see and play with, so it
+    sticks.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Play">>
+    <</button>>
+  </div>
+</div>
+
+:: Play [nobr]
+<div class="phone">
+  <div class="header"><span>Learn the Basics</span></div>
+  <h1>How to play</h1>
+  <p class="lead">❤️ <b>Know the numbers</b> — what a healthy reading looks like.</p>
+  <p class="lead">🏘️ <b>See the effects</b> — how pressure touches the whole body.</p>
+  <p class="lead">🎯 <b>Test yourself</b> — quick questions to lock it in.</p>
+  <p class="lead"><i>Answer questions and make choices. Each round teaches one heart-healthy idea.</i></p>
+  <div class="primary-cta">
+    <<button "See the games">>
+      <<run
+        try {
+          if (window.FlutterBridge && window.FlutterBridge.postMessage) {
+            window.FlutterBridge.postMessage(JSON.stringify({ type: "CCQ_OPEN_GAMES" }));
+          }
+        } catch (e) {}
+      >>
+    <</button>>
+  </div>
+</div>

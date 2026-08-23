@@ -1,0 +1,66 @@
+:: StoryTitle
+Eat for Your Heart
+
+:: StoryData
+{
+  "ifid": "C1A2B3D4-2222-4A22-8222-A00000000002",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: Start [nobr]
+<div class="phone">
+  <div class="header"><span>Eat for Your Heart</span></div>
+  <h1>Food and your blood pressure</h1>
+  <p class="lead">
+    What you eat has a direct effect on your blood pressure. Two things matter
+    most: eating less salt and eating more potassium-rich foods.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Why">>
+    <</button>>
+  </div>
+</div>
+
+:: Why [nobr]
+<div class="phone">
+  <div class="header"><span>Eat for Your Heart</span></div>
+  <p class="lead">
+    Salt makes your body hold on to water, which raises the pressure inside your
+    arteries. Potassium, found in many fruits and vegetables, helps your body
+    flush that extra salt out.
+  </p>
+  <p class="lead">
+    You do not need a perfect diet. Small swaps, made often, add up to real
+    change.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Play">>
+    <</button>>
+  </div>
+</div>
+
+:: Play [nobr]
+<div class="phone">
+  <div class="header"><span>Eat for Your Heart</span></div>
+  <h1>How to play</h1>
+  <p class="lead">🥦 <b>Broccoli</b> — high in potassium, helps clear salt.</p>
+  <p class="lead">🐟 <b>Salmon</b> — heart-healthy and low in sodium.</p>
+  <p class="lead">🧂 <b>Salty snacks</b> — raise pressure, keep them small.</p>
+  <p class="lead"><i>Each round you choose between two foods. Better choices clear the sludge building up inside your artery.</i></p>
+  <div class="primary-cta">
+    <<button "See the games">>
+      <<run
+        try {
+          if (window.FlutterBridge && window.FlutterBridge.postMessage) {
+            window.FlutterBridge.postMessage(JSON.stringify({ type: "CCQ_OPEN_GAMES" }));
+          }
+        } catch (e) {}
+      >>
+    <</button>>
+  </div>
+</div>

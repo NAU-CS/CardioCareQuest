@@ -1,0 +1,66 @@
+:: StoryTitle
+Take Your Medicine
+
+:: StoryData
+{
+  "ifid": "C1A2B3D4-3333-4A33-8333-A00000000003",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: Start [nobr]
+<div class="phone">
+  <div class="header"><span>Take Your Medicine</span></div>
+  <h1>One small daily habit</h1>
+  <p class="lead">
+    Taking your blood pressure medicine every day is the single most helpful
+    thing you can do to keep your pressure under control.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Why">>
+    <</button>>
+  </div>
+</div>
+
+:: Why [nobr]
+<div class="phone">
+  <div class="header"><span>Take Your Medicine</span></div>
+  <p class="lead">
+    These medicines work quietly in the background. You may not feel a
+    difference day to day, but they are protecting your heart, brain, and
+    kidneys over time.
+  </p>
+  <p class="lead">
+    The goal is honest, steady tracking. If you miss a day, you simply pick up
+    again the next.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Play">>
+    <</button>>
+  </div>
+</div>
+
+:: Play [nobr]
+<div class="phone">
+  <div class="header"><span>Take Your Medicine</span></div>
+  <h1>How to play</h1>
+  <p class="lead">💊 <b>Mark your pill</b> — tap when you take today's dose.</p>
+  <p class="lead">🤝 <b>Caregiver help</b> — a helper can mark it with you.</p>
+  <p class="lead">🗓️ <b>Build the path</b> — each day adds a step forward.</p>
+  <p class="lead"><i>Each day you mark your medicine and your path grows. A gentle celebration plays when the week is complete.</i></p>
+  <div class="primary-cta">
+    <<button "See the games">>
+      <<run
+        try {
+          if (window.FlutterBridge && window.FlutterBridge.postMessage) {
+            window.FlutterBridge.postMessage(JSON.stringify({ type: "CCQ_OPEN_GAMES" }));
+          }
+        } catch (e) {}
+      >>
+    <</button>>
+  </div>
+</div>

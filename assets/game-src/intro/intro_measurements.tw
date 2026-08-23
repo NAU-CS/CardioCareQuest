@@ -1,0 +1,66 @@
+:: StoryTitle
+Know Your Numbers
+
+:: StoryData
+{
+  "ifid": "C1A2B3D4-4444-4A44-8444-A00000000004",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: Start [nobr]
+<div class="phone">
+  <div class="header"><span>Know Your Numbers</span></div>
+  <h1>Why regular readings matter</h1>
+  <p class="lead">
+    Checking your blood pressure regularly is how you and your care team know if
+    things are on track. A single reading is a snapshot; readings over time tell
+    the real story.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Why">>
+    <</button>>
+  </div>
+</div>
+
+:: Why [nobr]
+<div class="phone">
+  <div class="header"><span>Know Your Numbers</span></div>
+  <p class="lead">
+    Your numbers are most accurate when you are calm and rested. Sitting quietly
+    and breathing slowly for a couple of minutes before you measure makes a real
+    difference.
+  </p>
+  <p class="lead">
+    There are no readings to be ashamed of. Every number is useful information.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Play">>
+    <</button>>
+  </div>
+</div>
+
+:: Play [nobr]
+<div class="phone">
+  <div class="header"><span>Know Your Numbers</span></div>
+  <h1>How to play</h1>
+  <p class="lead">🧘 <b>Rest first</b> — a short calming pause to settle.</p>
+  <p class="lead">🩺 <b>Take the reading</b> — measure when you feel ready.</p>
+  <p class="lead">🔢 <b>Enter your numbers</b> — they save to your history.</p>
+  <p class="lead"><i>The game guides you through a short calming pause, then you enter your reading and it saves to your history.</i></p>
+  <div class="primary-cta">
+    <<button "See the games">>
+      <<run
+        try {
+          if (window.FlutterBridge && window.FlutterBridge.postMessage) {
+            window.FlutterBridge.postMessage(JSON.stringify({ type: "CCQ_OPEN_GAMES" }));
+          }
+        } catch (e) {}
+      >>
+    <</button>>
+  </div>
+</div>

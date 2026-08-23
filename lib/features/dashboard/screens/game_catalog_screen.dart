@@ -13,8 +13,11 @@ import '../../../core/theme/app_colors.dart';
 import '../../games/custom_games/custom_game.dart';
 import '../../games/custom_games/custom_games_repository.dart';
 import '../../games/game_stories.dart';
-import 'category_games_screen.dart';
+import 'category_intro_screen.dart';
 import 'custom_games_screen.dart';
+
+// "1 game" / "3 games" for the row subtitle.
+String _gameCountLabel(int count) => '$count ${count == 1 ? "game" : "games"}';
 
 class GameCatalogScreen extends StatefulWidget {
   const GameCatalogScreen({super.key});
@@ -94,11 +97,15 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
                 image: cat.image,
                 icon: cat.icon,
                 label: cat.label,
-                count: byCategory[cat]!.length,
+                // Diet and Education are one game with chapters; the rest count
+                // their games directly.
+                subtitle: GameCatalog.chapterGameFor(cat) != null
+                    ? '${byCategory[cat]!.length} chapters'
+                    : _gameCountLabel(byCategory[cat]!.length),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => CategoryGamesScreen(category: cat),
+                    builder: (_) => CategoryIntroScreen(category: cat),
                   ),
                 ),
               ),
@@ -107,7 +114,7 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
                 image: null,
                 icon: Icons.auto_awesome_outlined,
                 label: 'Your Goals',
-                count: customGames.length,
+                subtitle: _gameCountLabel(customGames.length),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -135,14 +142,14 @@ class _CatalogRow extends StatelessWidget {
   final String? image; // Photo asset path, or null to fall back to the icon.
   final IconData icon;
   final String label;
-  final int count;
+  final String subtitle; // e.g. "2 chapters" or "1 game".
   final VoidCallback onTap;
 
   const _CatalogRow({
     required this.image,
     required this.icon,
     required this.label,
-    required this.count,
+    required this.subtitle,
     required this.onTap,
   });
 
@@ -151,7 +158,7 @@ class _CatalogRow extends StatelessWidget {
     const rowHeight = 96.0;
     return Semantics(
       button: true,
-      label: '$label, $count ${count == 1 ? "game" : "games"}',
+      label: '$label, $subtitle',
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -212,7 +219,7 @@ class _CatalogRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$count ${count == 1 ? "game" : "games"}',
+                        subtitle,
                         style: const TextStyle(
                           color: AppColors.subtitle,
                           fontSize: 13,

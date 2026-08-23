@@ -51,6 +51,74 @@ String buildStoryHtml(CustomGame game, {required String template}) {
       .replaceFirst(_passagesMarker, passages.join());
 }
 
+// Builds a page from hand-authored Twine source (a .tw file), rather than from
+// the patient's form. Used for the short intro stories shown before a factor's
+// games. We parse the `::`-delimited passages ourselves, escape each body, and
+// splice them into the same engine shell. Special passages (StoryTitle,
+// StoryData) are dropped; the SugarCube "Start" passage becomes the start node.
+String buildStoryHtmlFromTw(
+  String twSource, {
+  required String template,
+  required String title,
+}) {
+  final parsed = _parseTwPassages(twSource);
+
+  final passages = StringBuffer();
+  var pid = 0;
+  var startNode = 1;
+  for (final p in parsed) {
+    pid++;
+    if (p.name == 'Start') startNode = pid;
+    passages.write(_passage(pid: pid, name: p.name, body: p.body));
+  }
+
+  return template
+      .replaceFirst(_nameMarker, _escapeAttr(_sanitize(title)))
+      .replaceFirst(_startNodeMarker, '$startNode')
+      .replaceFirst(_passagesMarker, passages.toString());
+}
+
+class _TwPassage {
+  final String name;
+  final String body;
+  _TwPassage(this.name, this.body);
+}
+
+// Splits Twine source into passages. A passage header is a line starting with
+// `::`; its name runs up to an optional `[tags]` or `{metadata}` marker. The
+// body is every line until the next header. Skips Twine's special passages
+// (StoryTitle, StoryData, StoryAuthor, etc.), which carry no playable content.
+List<_TwPassage> _parseTwPassages(String source) {
+  final lines = source.replaceAll('\r\n', '\n').split('\n');
+  final out = <_TwPassage>[];
+  String? name;
+  final body = StringBuffer();
+
+  void flush() {
+    final n = name;
+    if (n == null) return;
+    if (!n.startsWith('Story')) {
+      out.add(_TwPassage(n, body.toString().trim()));
+    }
+    body.clear();
+  }
+
+  for (final line in lines) {
+    if (line.startsWith('::')) {
+      flush();
+      var header = line.substring(2).trim();
+      // Strip any [tag] or {metadata} suffix from the passage name.
+      final cut = header.indexOf(RegExp(r'[\[{]'));
+      if (cut != -1) header = header.substring(0, cut).trim();
+      name = header;
+    } else {
+      body.writeln(line);
+    }
+  }
+  flush();
+  return out;
+}
+
 // ---- passage builders (raw SugarCube source, escaped by _passage) ----
 
 String _welcomePassage(int pid, String title, String description) {

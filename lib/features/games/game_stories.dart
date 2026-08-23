@@ -58,6 +58,24 @@ extension GameCategoryX on GameCategory {
         return 'assets/game/categories/education.jpg';
     }
   }
+
+  // Twine source (.tw) for the short intro story shown before a factor's games.
+  // Authored in Twine, bundled as an asset, and turned into a playable page at
+  // load time by buildStoryHtmlFromTw.
+  String get introTwAsset {
+    switch (this) {
+      case GameCategory.exercise:
+        return 'assets/game-src/intro/intro_exercise.tw';
+      case GameCategory.diet:
+        return 'assets/game-src/intro/intro_diet.tw';
+      case GameCategory.medication:
+        return 'assets/game-src/intro/intro_medication.tw';
+      case GameCategory.measurements:
+        return 'assets/game-src/intro/intro_measurements.tw';
+      case GameCategory.education:
+        return 'assets/game-src/intro/intro_education.tw';
+    }
+  }
 }
 
 // All display info for a single game. Just data, no logic.
@@ -93,8 +111,55 @@ class GameStory {
   });
 }
 
+// A factor whose two games are stitched together into one game with a chapter
+// menu. The chapters are the existing games, played in order; nothing about the
+// individual games changes, they're just presented as parts of one whole.
+class ChapterGame {
+  final String id;
+  final String title;
+  final String shortDescription;
+  final IconData iconData;
+  final GameCategory category;
+  // Underlying GameStory ids, in the order they appear as Chapter 1, 2, ...
+  final List<String> chapterIds;
+
+  const ChapterGame({
+    required this.id,
+    required this.title,
+    required this.shortDescription,
+    required this.iconData,
+    required this.category,
+    required this.chapterIds,
+  });
+}
+
 // Master list of every game, with helpers to filter by status or visibility.
 class GameCatalog {
+  // Factors whose two games are combined into a single chapter game. Only diet
+  // and education have two games; the rest have one and are played directly.
+  static const Map<GameCategory, ChapterGame> chapterGames = {
+    GameCategory.diet: ChapterGame(
+      id: 'diet_quest',
+      title: 'Diet Quest',
+      shortDescription: 'Two chapters on eating for a healthier heart',
+      iconData: Icons.restaurant,
+      category: GameCategory.diet,
+      chapterIds: ['dash_diet_game', 'salt_sludge'],
+    ),
+    GameCategory.education: ChapterGame(
+      id: 'heart_smarts',
+      title: 'Heart Smarts',
+      shortDescription: 'Two chapters that make the science stick',
+      iconData: Icons.school,
+      category: GameCategory.education,
+      chapterIds: ['bingo_bash', 'vascular_village'],
+    ),
+  };
+
+  // The chapter game for a factor, or null if the factor has a single game.
+  static ChapterGame? chapterGameFor(GameCategory category) =>
+      chapterGames[category];
+
   static final Map<String, GameStory> games = {
     'dog_quest': GameStory(
       id: 'dog_quest',

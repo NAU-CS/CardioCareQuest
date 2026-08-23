@@ -87,6 +87,9 @@ flutter:
     - assets/game/custom_game_template.html
     # Photos shown next to each health topic in the game catalog list.
     - assets/game/categories/
+    # Twine source for the short intro story shown before each factor's games.
+    # Loaded at runtime and spliced into custom_game_template.html.
+    - assets/game-src/intro/
     # Atkinson Hyperlegible — bundled locally so the font ships in
     # the APK / IPA and works fully offline. The Twine games' CSS
     # (@font-face declarations injected by `ccq_bridge.js`) loads
