@@ -16,6 +16,56 @@ import '../../games/game_stories.dart';
 import 'category_intro_screen.dart';
 import 'custom_games_screen.dart';
 
+// Row height limits. The minimum keeps the photo and two lines of text
+// comfortable; the maximum stops a row looking stretched on a tall screen.
+const double kMinCatalogRowHeight = 96.0;
+
+// Phones and tablets get different ceilings. A single low cap left a tablet
+// with most of a row's worth of empty space under the last tile — the very gap
+// this layout exists to remove — while a single high cap would have made a
+// phone row look like a banner.
+const double kMaxCatalogRowHeightPhone = 150.0;
+const double kMaxCatalogRowHeightTablet = 220.0;
+
+// Width at which the layout starts treating the screen as a tablet.
+const double kTabletWidth = 600.0;
+
+double maxCatalogRowHeight(double viewportWidth) =>
+    viewportWidth >= kTabletWidth
+        ? kMaxCatalogRowHeightTablet
+        : kMaxCatalogRowHeightPhone;
+
+// Vertical padding around the list and the gap between rows. Named so the
+// height calculation and the widget that lays the rows out cannot drift apart.
+const EdgeInsets kCatalogPadding = EdgeInsets.fromLTRB(20, 16, 20, 24);
+const double kCatalogRowGap = 14.0;
+
+// How tall each row should be so the tiles share the screen instead of
+// leaving a gap under the last one. Returns the clamped height; callers use
+// catalogRowsFit to decide whether the list still needs to scroll.
+double catalogRowHeight({
+  required double viewportHeight,
+  required double viewportWidth,
+  required int tileCount,
+}) {
+  if (tileCount <= 0) return kMinCatalogRowHeight;
+  final gaps = kCatalogRowGap * (tileCount - 1);
+  final free = viewportHeight - kCatalogPadding.vertical - gaps;
+  return (free / tileCount)
+      .clamp(kMinCatalogRowHeight, maxCatalogRowHeight(viewportWidth));
+}
+
+// True when the rows fit at the height above, so scrolling can be switched off.
+bool catalogRowsFit({
+  required double viewportHeight,
+  required int tileCount,
+  required double rowHeight,
+}) {
+  final gaps = kCatalogRowGap * (tileCount - 1);
+  return rowHeight * tileCount + gaps + kCatalogPadding.vertical <=
+      viewportHeight;
+}
+
 // "1 game" / "3 games" for the row subtitle.
 String _gameCountLabel(int count) => '$count ${count == 1 ? "game" : "games"}';
 
@@ -124,11 +174,46 @@ class _GameCatalogScreenState extends State<GameCatalogScreen> {
               ),
           ];
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            itemCount: tiles.length,
-            separatorBuilder: (context, i) => const SizedBox(height: 14),
-            itemBuilder: (context, i) => tiles[i],
+          // The five factors should fill the screen rather than sit in a short
+          // stack with dead space underneath. Each row grows to share whatever
+          // height is going, within limits: never shorter than the photo needs,
+          // never so tall it looks stretched on a big phone or tablet. If the
+          // rows cannot fit even at their minimum (a small phone, or once
+          // "Your Goals" appears), the list scrolls as before.
+          // Because the rows are sized to fill rather than scroll, the last one
+          // would otherwise sit under the home indicator on a gesture-nav
+          // phone. SafeArea takes that strip out of the height first.
+          return SafeArea(
+            top: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+              final rowHeight = catalogRowHeight(
+                viewportHeight: constraints.maxHeight,
+                viewportWidth: constraints.maxWidth,
+                tileCount: tiles.length,
+              );
+              final fits = catalogRowsFit(
+                viewportHeight: constraints.maxHeight,
+                tileCount: tiles.length,
+                rowHeight: rowHeight,
+              );
+
+              return ListView.separated(
+                padding: kCatalogPadding,
+                physics: fits
+                    ? const NeverScrollableScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics(),
+                itemCount: tiles.length,
+                separatorBuilder: (context, i) =>
+                    const SizedBox(height: kCatalogRowGap),
+                itemBuilder: (context, i) => SizedBox(
+                  height: rowHeight,
+                  child: tiles[i],
+                ),
+              );
+
+              },
+            ),
           );
         },
       ),
@@ -155,7 +240,6 @@ class _CatalogRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rowHeight = 96.0;
     return Semantics(
       button: true,
       label: '$label, $subtitle',
@@ -166,7 +250,6 @@ class _CatalogRow extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            height: rowHeight,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.cardBorder),
@@ -185,9 +268,8 @@ class _CatalogRow extends StatelessWidget {
                   borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(20),
                   ),
-                  child: SizedBox(
-                    width: rowHeight,
-                    height: rowHeight,
+                  child: AspectRatio(
+                    aspectRatio: 1,
                     child: image == null
                         ? _IconTile(icon: icon)
                         : Image.asset(
