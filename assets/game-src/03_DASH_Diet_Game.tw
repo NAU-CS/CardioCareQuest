@@ -35,10 +35,11 @@ You do not need to edit this.
 <<set $lastFood to "">>
 <<set $lastCorrect to false>>
 <<set $meal to []>>
-/* Food-pool state (UPDATE6/7/8): seenFoods tracks which pool ids have
-   already been shown this play-through; currentFood is the object the
-   generic Food Card / Food Result render. Reset here so PLAY AGAIN
-   starts from a full, unshuffled-order pool. */
+/* Food-pool state: seenFoods tracks which pool ids have already been
+   shown today; currentFood is the object the generic Food Card / Food
+   Result render. This empty list is only the starting point — the
+   script below replaces it with today's saved list when there is one,
+   so the daily limit counts a whole day rather than a single launch. */
 <<set $seenFoods to []>>
 <<set $currentFood to null>>
 /* Meal-builder random subset: null here so each fresh game (and PLAY
@@ -59,7 +60,17 @@ You do not need to edit this.
    date differs, the gate falls off, and a fresh round is available. */
 <<set $dashDone to false>>
 <<script>>
-State.variables.todayDate = (new Date()).toISOString().slice(0, 10);
+/* Local calendar date, not UTC. toISOString() reports UTC, so in
+   Arizona (UTC-7) every play after 5pm was stamped with tomorrow's
+   date. That let the gate lock a participant out for a whole real
+   day: finish at 6pm, and the next morning still matched the saved
+   date. Build the string from the local-time parts instead. */
+State.variables.todayDate = (function () {
+  var d = new Date();
+  var mo = d.getMonth() + 1;
+  var day = d.getDate();
+  return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
+}());
 try {
   var ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
   var m = ua.match(/CCQApp\/([^\s]+)/);
@@ -72,7 +83,22 @@ try {
       State.variables.dashDone = true;
     }
   }
-} catch (e) { /* keep $dashDone false */ }
+
+  /* Carry today's foods across launches. seenFoods used to start empty
+     every time the game opened, so quitting part-way and coming back
+     handed out another ten foods and repeated ones already answered.
+     The list is stored per participant per day: a different person or a
+     new day starts fresh, the same person on the same day carries on. */
+  var dayRaw = window.localStorage.getItem("dash_day");
+  if (dayRaw) {
+    var day = JSON.parse(dayRaw);
+    var dayPid = (day.pid || "") === State.variables.currentPid;
+    var dayToday = day.date === State.variables.todayDate;
+    if (dayPid && dayToday && day.seen instanceof Array) {
+      State.variables.seenFoods = day.seen;
+    }
+  }
+} catch (e) { /* keep $dashDone false and today's food list empty */ }
 <</script>>
 <<if $dashDone>><<goto "Already Today">><<else>><<goto "Welcome">><</if>>
 
@@ -1530,5 +1556,14 @@ setup.dash.pickFood = function () {
   seen.push(chosen.id);
   State.variables.seenFoods = seen;
   State.variables.currentFood = chosen;
+  /* Write straight away rather than at the end of the round: a player who
+     closes the app mid-question should still have used up that food. */
+  try {
+    window.localStorage.setItem("dash_day", JSON.stringify({
+      date: State.variables.todayDate,
+      pid: State.variables.currentPid,
+      seen: seen
+    }));
+  } catch (e) { /* Firestore is the canonical record */ }
   return chosen;
 };

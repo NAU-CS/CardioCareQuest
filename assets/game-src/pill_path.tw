@@ -795,7 +795,17 @@ setup.pillPath = (function () {
       State.variables.entries = [];
       State.variables.pathNum = 1;
     }
-    State.variables.todayDate = (new Date()).toISOString().slice(0, 10);
+    /* Local calendar date, not UTC — see the note in the DASH game.
+       toISOString() rolls over at 5pm Arizona time, which stamped an
+       evening entry with tomorrow's date and pushed the path a stone
+       ahead. Stored dates stay plain YYYY-MM-DD strings, so the UTC
+       arithmetic in backfillMissedDays still lines up. */
+    State.variables.todayDate = (function () {
+      var d = new Date();
+      var mo = d.getMonth() + 1;
+      var day = d.getDate();
+      return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
+    }());
     State.variables.justCelebrated = false;
   }
 
