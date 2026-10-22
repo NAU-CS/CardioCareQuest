@@ -4,13 +4,7 @@ library;
 import 'package:flutter/material.dart';
 
 // Health topic a game belongs to. Used to group games in the catalog.
-enum GameCategory {
-  exercise,
-  diet,
-  medication,
-  measurements,
-  education,
-}
+enum GameCategory { exercise, diet, medication, measurements, education }
 
 extension GameCategoryX on GameCategory {
   String get label {
@@ -135,8 +129,8 @@ class ChapterGame {
 
 // Master list of every game, with helpers to filter by status or visibility.
 class GameCatalog {
-  // Factors whose two games are combined into a single chapter game. Only diet
-  // and education have two games; the rest have one and are played directly.
+  // Factors whose two games are combined into a single chapter game.
+  // Diet, education, and measurements have two games; the rest have one and are played directly.
   static const Map<GameCategory, ChapterGame> chapterGames = {
     GameCategory.diet: ChapterGame(
       id: 'diet_quest',
@@ -153,6 +147,14 @@ class GameCatalog {
       iconData: Icons.school,
       category: GameCategory.education,
       chapterIds: ['bingo_bash', 'vascular_village'],
+    ),
+    GameCategory.measurements: ChapterGame(
+      id: 'measurements',
+      title: 'Measurements',
+      shortDescription: 'Two chapters that calm you',
+      iconData: Icons.school,
+      category: GameCategory.education,
+      chapterIds: ['control_daily_checkin', 'while_you_wait'],
     ),
   };
 
@@ -382,6 +384,22 @@ Sixteen slow breaths over a calm landscape. The scene shifts as you breathe - cl
       status: 'active',
       showInCatalog: false,
       category: GameCategory.medication,
+    ),
+    'while_you_wait': GameStory(
+      id: 'while_you_wait',
+      title: 'While You Wait',
+      shortDescription: 'Play with fidgets',
+      narrative: '''
+Play with fidgets while you relax and bring yourself to a state where you can get an accurate blood pressure reading.
+      ''',
+      medicalContext:
+          'It is recomnneded to wait at least 5 minutes while sitting down and relaxing before taking your bloop pressure.',
+      benefits: ['Relax your body', 'Relax your mind'],
+      emoji: '🕛',
+      iconData: Icons.wind_power_sharp,
+      color: '#2d7d6d',
+      status: 'active',
+      category: GameCategory.measurements,
     ),
   };
 
