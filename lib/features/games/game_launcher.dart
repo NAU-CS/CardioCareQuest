@@ -17,6 +17,7 @@ import 'quiet_minute.dart';
 import 'salt_sludge.dart';
 import 'vascular_village_game.dart';
 import 'while_you_wait.dart';
+import 'zombie_chase.dart';
 
 // Opens the right game screen. Unknown ids fall back to "Coming Soon".
 void launchGameStory(BuildContext context, GameStory game) {
@@ -53,6 +54,9 @@ void launchGameStory(BuildContext context, GameStory game) {
       break;
     case 'while_you_wait':
       screen = const WhileYouWaitGame();
+      break;
+    case 'Zombie-chase':
+      screen = const ZombieChaseGame(targetDistance: 500);
       break;
   }
   // Capture navigator before the game opens (context may be gone when it closes).

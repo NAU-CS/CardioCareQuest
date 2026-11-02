@@ -156,6 +156,14 @@ class GameCatalog {
       category: GameCategory.education,
       chapterIds: ['control_daily_checkin', 'while_you_wait'],
     ),
+    GameCategory.exercise: ChapterGame(
+      id: 'exercise',
+      title: 'Exercise',
+      shortDescription: 'Two chapters that help you train',
+      iconData: Icons.school,
+      category: GameCategory.education,
+      chapterIds: ['dog_quest', 'Zombie-chase'],
+    ),
   };
 
   // The chapter game for a factor, or null if the factor has a single game.
@@ -400,6 +408,22 @@ Play with fidgets while you relax and bring yourself to a state where you can ge
       color: '#2d7d6d',
       status: 'active',
       category: GameCategory.measurements,
+    ),
+    'Zombie-chase': GameStory(
+      id: 'Zombie-chase',
+      title: 'Zombie Chase',
+      shortDescription: 'Run from Zombies!',
+      narrative: '''
+Get your steps in by running from zombies.
+      ''',
+      medicalContext:
+          'It is recomnneded to walk 7,000 to 10,000 steps per day.',
+      benefits: ['Train your body', 'Raise your endurance'],
+      emoji: '🏃',
+      iconData: Icons.run_circle_outlined,
+      color: '#2d7d6d',
+      status: 'active',
+      category: GameCategory.exercise,
     ),
   };
 

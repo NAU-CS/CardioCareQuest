@@ -83,6 +83,7 @@ flutter:
     - assets/game/pill_path.html
     - assets/game/quiet_landscape.html
     - assets/game/while_you_wait.html
+    - assets/game/Zombie-chase.html
     # Engine shell (SugarCube + shared stylesheet, passages stripped) that
     # custom_twine_builder.dart fills in at runtime to play user-made story games.
     - assets/game/custom_game_template.html
