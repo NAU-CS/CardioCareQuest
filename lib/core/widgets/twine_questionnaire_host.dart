@@ -23,7 +23,6 @@ import 'package:cardio_care_quest/features/games/game_completion_signal.dart';
 // straight from the id. A few don't, so list those exceptions here.
 const Map<String, String> _launchGameAssetOverrides = {
   'control_daily_checkin': 'assets/game/control_game.html',
-  'while_you_wait': 'assets/game/while_you_wait.html',
 };
 
 // Turn a game id into its HTML asset path, using the overrides above when the

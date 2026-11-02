@@ -104,23 +104,7 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
 		<div id="init-lacking"><p>Browser lacks capabilities required to play.</p><p>Upgrade or switch to another browser.</p></div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://637D0CD9-6182-4ACE-9AF0-B6FB94AB090A// --><tw-storydata name="While You Wait" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="637D0CD9-6182-4ACE-9AF0-B6FB94AB090A" zoom="1" format="SugarCube" format-version="2.37.3" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* ============================================================
-   Daily archer — visual stylesheet
-   Arial font, click handler on cells (no passage refresh on
-   click), compact phone height.
-
-   CardioCareQuest viridis palette (canonical across all games):
-     #440154  deep purple   — phone gradient stop 1
-     #3b528b  blue          — phone gradient stop 2
-     #21918c  teal          — phone gradient stop 3 / marked cell
-     #5ec962  green          — win banner / success
-     #fde725  yellow         — title / FREE / primary CTA
-     #f4f1d8  cream          — page background
-   2026-05-10: phone gradient + dark-text accent (#1a1a1a) replaced
-   to align with viridis anchor stops.
-   ============================================================ */
-
-* { box-sizing: border-box; }
+	<!-- UUID://637D0CD9-6182-4ACE-9AF0-B6FB94AB090A// --><tw-storydata name="While You Wait" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="637D0CD9-6182-4ACE-9AF0-B6FB94AB090A" zoom="1" format="SugarCube" format-version="2.37.3" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">* { box-sizing: border-box; }
 
 body {
   font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -147,10 +131,31 @@ body {
   color: white;
   position: relative;
   min-height: 660px;
+  height: 660px;
   max-height: 100px;
   width: 100%;
   max-width: 100%;
   font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.library {
+  display: grid;
+  grid-template-columns: auto auto auto auto ;
+  gap: 18px;
+  max-width: 300px;
+  margin: 5% -2%;
+}
+
+.library button{ 
+  border-radius:12px;
+  background: snow;
+  border: 2px solid darkgrey;
+}
+
+.fidgetIcon {
+  width: 120px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
 }
 
 .flButton {
@@ -159,7 +164,7 @@ body {
 }
 
 .fidgetInterface {
-  background: lightgrey;
+  background: snow;
   border-radius: 12px;
   border: 1px solid black;
   padding: 8px;
@@ -168,123 +173,606 @@ body {
   text-align: center;
 }
 
+/*Drums */
+.drums img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+  image-rendering: pixelated;
+}
+
+.drums {
+  background:transparent;
+  border: none;
+}
+
+.drums:active {
+  transform: scale(1.1);
+}
+
+/* Bass Drum (Bottom Center) */
+.bass {
+  position: absolute;
+  border-radius: 50%;
+  width: 136px;
+  height: 65px;
+  top: 47%;
+  left: 30%;
+}
+
+/* Snare (Bottom Left) */
+.snare {
+  position: absolute;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  top: 46%;
+  left: 12.5%;
+}
+
+/* Hi-Hat (Top Left) */
+.hihat {
+  position: absolute;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  top: 35%;
+  left: 17%;
+}
+
+/* Top Tom (Upper-Mid Left) */
+.topTom {
+  position: absolute;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  top: 38%;
+  left: 36%;
+}
+
+/* Med Tom (Upper-Mid Right) */
+.medTom {
+  position: absolute;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  top: 37%;
+  left: 50.5%;
+}
+
+/* Low Tom / Floor Tom (Bottom Right) */
+.lowTom {
+  position: absolute;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  top: 43%;
+  left: 65%;
+}
+
+/* Crash Cymbal (Top Right) */
+.crash {
+  position: absolute;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  top: 32%;
+  left: 67%;
+}
+
+/*Bubble Wrap */
 .bubble {
   border-radius: 32px;
   min-width: 25px;
   min-height: 25px
 }
 
+/*Light Switch */
 .switch {
-  
-  padding: 100px;
   background-color: darkgrey;
-  border-radius: 100px;
-  min-width: 75px;
-  min-height: 75px
-
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">SimpleAudio.tracks.add("bub1", "audio/bub1.mp3");
-/*I don't like two*/SimpleAudio.tracks.add("bub2", "audio/bub2.mp3");
-SimpleAudio.tracks.add("bub3", "audio/bub3.mp3");
-SimpleAudio.tracks.add("bub4", "audio/bub4.mp3");
-/*I can change this*/SimpleAudio.tracks.add("bub5", "audio/bub5.mp3");
-SimpleAudio.tracks.add("bub6", "audio/bub6.mp3");
-SimpleAudio.tracks.add("bub7", "audio/bub7.mp3");
-/*Feels too long*/SimpleAudio.tracks.add("bub8", "audio/bub8.mp3");
-
-setup.prevRand = -1
-setup.currentFidget = "switch"
-
-setup.respond = function respond(name, obj) {
-	if (obj.id == "popped") {
-		return
-	}
-	switch (name) {
-		case "bubbleWrap":
-			let random = setup.prevRand
-			do {
-				random = Math.floor(Math.random() * 7) + 1
-			} while (random == setup.prevRand)
-			setup.prevRand = random
-			SimpleAudio.select(`bub${random}`).play();
-			obj.style.backgroundColor = "white";
-			obj.id = "popped"
-			break;
-		case "switch":
-			SimpleAudio.select(`bub7`).stop();
-			SimpleAudio.select(`bub7`).play();
-			if (obj.id == "on") {
-				obj.style.backgroundColor = "#2B2B2B";
-				obj.id = "off"
-			} else {
-				obj.style.backgroundColor = "#5C5C5C";
-				obj.id = "on"
-			}
-	}
+  height: 10px;
+  width: 10px;
+  
 }
+
+.switchImg {
+  width: 45%;
+  height: 55%;
+  position: absolute;
+  left: 27%;
+  top: 24%;
+  padding: -20px;
+}
+
+/*Control Panel */
+
+
+.row{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding: 14px;
+  justify-items: center; 
+  
+  
+}
+
+.light {
+  border-radius: 50px;
+  background-color: white;
+  border: 1px solid black;
+  box-shadow: 
+  0px 0px 10px rgba(255, 255, 255, 1),
+  4px 4px 10px rgba(255, 255, 255, 1),
+  -4px -4px 10px rgba(255, 255, 255, 1);
+  width: 40%;
+  aspect-ratio: 1 / 1;
+  text-align: center;
+}
+
+.lightButton {
+  border-radius: 50%;
+  background-color: red;
+  border: 3px double darkred;
+  width: 65%;
+  aspect-ratio: 1 / 1;
+  
+}
+
+.flip {
+  display: block;
+  background:transparent;
+  border: none;
+
+  height: .1px;
+  width: .1px;
+  padding:20px;
+}
+
+.flip:hover {
+  background:transparent;
+  border: none;
+}
+
+.flipImg {
+  position: relative;
+  left: -12px;
+  top: -12px;
+  transition: filter 0.1s ease;
+}
+
+.flipImg:hover {
+  filter: brightness(60%);
+}
+
+.flipImg:active {
+  transform: translate(0px, 2px);
+}
+
+.flipped {
+  position: relative;
+  left: -12px;
+  top: -12px;
+  transition: filter 0.1s ease;
+  transform: scaleY(-1);
+}
+
+.flipped:hover {
+  filter: brightness(60%);
+}
+
+.flipped:active {
+  transform: scaleY(-1) translate(0px, -2px);
+
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "script.js" */
+setup.prevRand = -1
+setup.currentFidget = "drums"
+
+setup.isMouseDown = false;
+setup.light = [0, 0, 0, 0]
+
+
+document.addEventListener('mousedown', () => { setup.isMouseDown = true; });
+document.addEventListener('mouseup', () => { setup.isMouseDown = false; });
 
 setup.swapFidget = function swapFidget(id) {
 	setup.currentFidget = id
-	setTimeout(function () { Engine.play("Home") }, 600);
+	Engine.play("Home")
+}
+
+
+/*This function allows for clicking and dragging to pop bubbles */
+setup.bubbleRespondDrag = function bubbleRespond(obj) {
+	if (setup.isMouseDown) {
+		if (obj.id == "popped") {
+			return
+		}
+		let random = setup.prevRand
+		do {
+			random = Math.floor(Math.random() * 7) + 1
+		} while (random == setup.prevRand)
+		setup.prevRand = random
+		SimpleAudio.select(`bub${random}`).play();
+		obj.style.backgroundColor = "white";
+		obj.id = "popped"
+	}
+}
+
+setup.bubbleRespond = function bubbleRespond(obj) {
+	if (obj.id == "popped") {
+		return
+	}
+	let random = setup.prevRand
+	do {
+		random = Math.floor(Math.random() * 7) + 1
+	} while (random == setup.prevRand)
+	setup.prevRand = random
+	SimpleAudio.select(`bub${random}`).play();
+	obj.style.backgroundColor = "white";
+	obj.id = "popped"
+}
+
+setup.switchRespond = function switchRespond(obj, img) {
+	if (obj.id == "on") {
+		obj.style.backgroundColor = "#2B2B2B";
+		obj.id = "off"
+		img.style.transform = 'scaleY(1)';
+		SimpleAudio.select(`off`).stop();
+		SimpleAudio.select(`off`).play();
+	} else {
+		obj.style.backgroundColor = "#5C5C5C";
+		obj.id = "on"
+		img.style.transform = 'scaleY(-1)';
+		SimpleAudio.select(`on`).stop();
+		SimpleAudio.select(`on`).play();
+	}
+}
+
+setup.toggleLight = function toggleLight(light) {
+
+	/*light is an array, that looks like:
+	[obj, int1, int2] where 
+	obj is the html element,
+	int1 is whether its on or off,
+	int2 is the current color it is*/
+
+	/*1 means on, 0 means off */
+	SimpleAudio.select("buttonClick").stop();
+	SimpleAudio.select("buttonClick").play();
+	if (light[1] == 1) {
+		light[0].style.boxShadow = `none`
+		light[0].style.backgroundColor = 'transparent'
+		light[1] = 0
+	} else {
+		light[0].style.boxShadow = setup.lightColors[light[2]][0]
+		light[0].style.backgroundColor = setup.lightColors[light[2]][1]
+		light[1] = 1
+	}
+}
+
+setup.playLight = function playLight(light) {
+	if (light[1] == 0) {
+		return
+	}
+	SimpleAudio.select(`${light[2]}`).stop();
+	SimpleAudio.select(`${light[2]}`).play();
+}
+
+setup.incLight = function incLight(light) {
+	light[1] = 1
+	if (light[2] == 8) {
+		light[2] = 1
+		SimpleAudio.select("1").stop();
+		SimpleAudio.select("1").play();
+	} else {
+		light[2] += 1
+		SimpleAudio.select(`${light[2]}`).stop();
+		SimpleAudio.select(`${light[2]}`).play();
+	}
+
+	light[0].style.boxShadow = setup.lightColors[light[2]][0]
+	light[0].style.backgroundColor = setup.lightColors[light[2]][1]
+}
+
+setup.decLight = function decLight(light) {
+	light[1] = 1
+	if (light[2] == 1) {
+		light[2] = 8
+		SimpleAudio.select("8").stop();
+		SimpleAudio.select("8").play();
+	} else {
+		light[2] -= 1
+		SimpleAudio.select(`${light[2]}`).stop();
+		SimpleAudio.select(`${light[2]}`).play();
+	}
+
+	light[0].style.boxShadow = setup.lightColors[light[2]][0]
+	light[0].style.backgroundColor = setup.lightColors[light[2]][1]
+}
+
+setup.drumPlay = function drumPlay(item) {
+	console.log(item)
+	let newAudio = SimpleAudio.tracks.get(item);
+	newAudio.clone().play();
 }
 
 setup.populateFidget = function populateFidget() {
 	let container = document.getElementById("container");
+	let blankSpace = document.getElementById("blankSpace");
 	let postContainer = document.getElementById("postContainer");
 	let fidgetLabel = document.getElementById("currentFidget");
 	container.replaceChildren();
 	postContainer.replaceChildren();
+	container.style.backgroundColor = 'snow'
 	switch (setup.currentFidget) {
 		case "bubbleWrap":
+			blankSpace.style.height = '0'
 			fidgetLabel.textContent = "Bubble Wrap"
 			/*Do math here based on size of screen to know how many bubbles to make */
 			for (let i = 0; i < (13 * 12); i++) {
 				let newButton = document.createElement('button');
 				newButton.id = "notPopped"
-				newButton.addEventListener('click', () => setup.respond(setup.currentFidget, newButton));
+				newButton.addEventListener('mouseover', () => setup.bubbleRespondDrag(newButton));
+				newButton.addEventListener('click', () => setup.bubbleRespond(newButton));
 				newButton.classList.add("bubble");
 				container.appendChild(newButton);
 			}
+
 			let refreshButton = document.createElement('button');
 			refreshButton.addEventListener('click', () => setup.populateFidget(setup.currentFidget));
 			refreshButton.classList.add("refreshButton");
 			refreshButton.textContent = "Refresh Bubble Wrap"
 			postContainer.appendChild(refreshButton);
+
 			break;
+
 		case "switch":
-			fidgetLabel.textContent = "Switch"
+			blankSpace.style.height = '1%'
+			container.style.height = '72%'
+			fidgetLabel.textContent = "Light Switch"
+
+			let newImg = document.createElement('img');
+			newImg.src = "../../img/measurement/switch2.png"
+			newImg.classList.add("switchImg")
+			newImg.style.transform = 'scaleY(-1)';
+
 			let newButton = document.createElement('button');
-			newButton.addEventListener('click', () => setup.respond(setup.currentFidget, newButton));
+			newButton.addEventListener('click', () => setup.switchRespond(newButton, newImg));
+			newButton.appendChild(newImg)
 			newButton.classList.add("switch");
 			newButton.style.backgroundColor = "#5C5C5C";
 			newButton.id = "on"
 			container.appendChild(newButton);
+
 			break;
+
+		case "controlPanel":
+			blankSpace.style.height = '5%'
+			container.style.height = '50%'
+			container.style.backgroundColor = 'gainsboro'
+
+			fidgetLabel.textContent = "Control Panel"
+			let newDiv = document.createElement('div');
+			newDiv.classList.add("controlPanel");
+
+
+			let buttonRow = document.createElement('div');
+			buttonRow.classList.add("row");
+
+			let lightRow = document.createElement('span');
+			lightRow.classList.add("row");
+
+			let flipRow = document.createElement('div');
+			flipRow.classList.add("row");
+
+			for (let i = 0; i < 4; i++) {
+				let newLight = document.createElement('button');
+				newLight.classList.add("light");
+				setup.light[i] = [newLight, 1, 1]
+				newLight.addEventListener('click', () => setup.playLight(setup.light[i]));
+				lightRow.appendChild(newLight);
+
+				let newButton = document.createElement('button');
+				newButton.classList.add("lightButton");
+				newButton.addEventListener('click', () => setup.toggleLight(setup.light[i]));
+				buttonRow.appendChild(newButton);
+
+				let flipCol = document.createElement('div');
+				flipCol.classList.add("flipCol");
+				for (let k = 0; k < 2; k++) {
+					let newFlip = document.createElement('button');
+					newFlip.id = "flip"
+					newFlip.classList.add("flip");
+					if (k == 0) {
+						let newImg = document.createElement('img');
+						newImg.src = "../../img/measurement/arrow.png"
+						newImg.classList.add("flipImg")
+						newFlip.appendChild(newImg)
+						newFlip.addEventListener('click', () => setup.incLight(setup.light[i]));
+					} else {
+						newFlip.addEventListener('click', () => setup.decLight(setup.light[i]));
+						let newImg = document.createElement('img');
+						newImg.src = "../../img/measurement/arrow.png"
+						newImg.classList.add("flipped");
+						newFlip.appendChild(newImg)
+					}
+					flipCol.appendChild(newFlip)
+				}
+				flipRow.appendChild(flipCol);
+			}
+
+			newDiv.appendChild(lightRow)
+			newDiv.appendChild(flipRow)
+			newDiv.appendChild(buttonRow)
+			container.appendChild(newDiv);
+
+			break;
+
+		case "drums":
+			blankSpace.style.height = '5%'
+			container.style.height = '50%'
+			fidgetLabel.textContent = "Drum Kit"
+			console.log(setup.instruments)
+
+			/*For unique drum parts: bass, hihat, crash, and lowTom */
+			setup.createUniqueDrums(container, "lowTom");
+			setup.createUniqueDrums(container, "crash");
+			setup.createUniqueDrums(container, "hihat");
+			setup.createUniqueDrums(container, "bass");
+
+
+			for (let drum in setup.instruments) {
+				let newButton = document.createElement('button');
+				newButton.classList.add(setup.instruments[drum], "drums");
+				let newImg = document.createElement('img');
+				newImg.src = "../../img/measurement/drumSnareNoTag.png"
+				newButton.appendChild(newImg)
+
+				newButton.addEventListener('click', () => {
+					setup.drumPlay(setup.instruments[drum])
+				});
+				container.appendChild(newButton);
+			}
+			break;
+
 		default:
-			console.log("Something went wrong when populating fidget")
+			console.log(`Something went wrong when populating fidget, given ${setup.currentFidget}`)
 	}
 }
 
-setup.totalSeconds = 0;
+/*For unique drum parts: bass, hihat, crash, and lowTom */
+setup.createUniqueDrums = function createUniqueDrums(container, which) {
+	let drum = document.createElement('button');
+	drum.classList.add(which, "drums");
+	let drumImg = document.createElement('img');
+
+	switch (which) {
+		case "bass":
+			drumImg.src = `../../img/measurement/bassDrum.png`
+			drum.appendChild(drumImg)
+			break;
+		case "crash":
+			drumImg.src = `../../img/measurement/brassDrum2.png`
+			drum.appendChild(drumImg)
+			break;
+		case "hihat":
+			drumImg.src = `../../img/measurement/brassDrum2.png`
+			drum.appendChild(drumImg)
+			break;
+		case "lowTom":
+			drumImg.src = `../../img/measurement/drumSnare.png`
+			drum.appendChild(drumImg)
+			break;
+
+	}
+
+	drum.addEventListener('click', () => {
+		setup.drumPlay(which)
+	});
+	container.appendChild(drum);
+}
+
+setup.totalSeconds = 120;
 
 setup.updateTimer = function updateTimer() {
-	setup.totalSeconds++;
+	setup.totalSeconds--;
 
 	const hours = Math.floor(setup.totalSeconds / 3600);
 	const minutes = Math.floor((setup.totalSeconds % 3600) / 60);
 	const seconds = setup.totalSeconds % 60;
 
 	setup.formattedTime =
-		String(hours).padStart(2, '0') + ':' +
 		String(minutes).padStart(2, '0') + ':' +
 		String(seconds).padStart(2, '0');
 
+	if (setup.totalSeconds <= 0) {
+		setup.formattedTime = "00:00"
+	}
 	document.getElementById('timer').textContent = setup.formattedTime;
+
 }
-</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;set $zombieDistance = 10000&gt;&gt;
-&lt;&lt;set $currentFidget = &quot;bubbleWrap&quot;&gt;&gt;
-&lt;&lt;run setInterval(setup.updateTimer, 1000)&gt;&gt;
-&lt;&lt;=setup.formattedTime = &quot;00:00:00&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Home" tags="" position="225,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Time Spent: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
+/* twine-user-script #2: "variables.js" */
+/*Audio for Bubble Wrap */
+
+SimpleAudio.tracks.add("bub1", "audio/bub1.mp3");
+SimpleAudio.tracks.add("bub2", "audio/bub2.mp3");
+SimpleAudio.tracks.add("bub3", "audio/bub3.mp3");
+SimpleAudio.tracks.add("bub4", "audio/bub4.mp3");
+SimpleAudio.tracks.add("bub5", "audio/bub5.mp3");
+SimpleAudio.tracks.add("bub6", "audio/bub6.mp3");
+SimpleAudio.tracks.add("bub7", "audio/bub7.mp3");
+SimpleAudio.tracks.add("bub8", "audio/bub8.mp3");
+
+/*Audio for Light Switch */
+SimpleAudio.tracks.add("on", "audio/lightOn.mp3");
+SimpleAudio.tracks.add("off", "audio/lightOff.mp3");
+
+/*Array For drums, makes code look cleaner */
+/*For unique drum parts: bass, hihat, crash, and lowTom */
+setup.instruments = ["snare", "medTom", "topTom"]
+
+/*Audio for drums*/
+SimpleAudio.tracks.add("bass", "audio/bass.wav");
+SimpleAudio.tracks.add("hihat", "audio/hihat.wav");
+SimpleAudio.tracks.add("lowTom", "audio/floorTom.wav");
+SimpleAudio.tracks.add("medTom", "audio/MedTom.wav");
+SimpleAudio.tracks.add("snare", "audio/Snare.wav");
+SimpleAudio.tracks.add("topTom", "audio/highTom.wav");
+SimpleAudio.tracks.add("crash", "audio/crash2.wav");
+
+/*Audio for control panel*/
+SimpleAudio.tracks.add("1", "audio/C.wav");
+SimpleAudio.tracks.add("2", "audio/D.wav");
+SimpleAudio.tracks.add("3", "audio/E.wav");
+SimpleAudio.tracks.add("4", "audio/F.wav");
+SimpleAudio.tracks.add("5", "audio/G.wav");
+SimpleAudio.tracks.add("6", "audio/A.wav");
+SimpleAudio.tracks.add("7", "audio/B.wav");
+SimpleAudio.tracks.add("8", "audio/C2.wav");
+SimpleAudio.tracks.add("buttonClick", "audio/buttonClick.wav");
+
+
+/*Color dictionary for Control panel */
+setup.lightColors = {
+	"1": [`0px 0px 10px rgba(255, 255, 255, 1),
+  		4px 4px 10px rgba(255, 255, 255, 1),
+  		-4px -4px 10px rgba(255, 255, 255, 1)`, 'white'],
+
+	"2": [`0px 0px 10px rgba(255, 0, 0, 1),
+  		4px 4px 10px rgba(255, 0, 0, 1),
+  		-4px -4px 10px rgba(255, 0, 0, 1)`, 'red'],
+
+	"3": [`0px 0px 10px rgba(255, 145, 0, 1),
+  		4px 4px 10px rgba(255, 145, 0, 1),
+  		-4px -4px 10px rgba(255, 145, 0, 1)`, 'orange'],
+
+	"4": [`0px 0px 10px rgba(255, 255, 0, 1),
+  		4px 4px 10px rgba(255, 255, 0, 1),
+  		-4px -4px 10px rgba(255, 255, 0, 1)`, 'yellow'],
+
+	"5": [`0px 0px 10px rgba(0, 255, 0, 1),
+  		4px 4px 10px rgba(0, 255, 0, 1),
+  		-4px -4px 10px rgba(0, 255, 0, 1)`, 'lightGreen'],
+
+	"6": [`0px 0px 10px rgba(0, 0, 255, 1),
+  		4px 4px 10px rgba(0, 0, 255, 1),
+  		-4px -4px 10px rgba(0, 0, 255, 1)`, 'blue'],
+
+	"7": [`0px 0px 10px rgba(75, 0, 130, 1),
+  		4px 4px 10px rgba(75, 0, 130, 1),
+  		-4px -4px 10px rgba(75, 0, 130, 1)`, 'indigo'],
+
+	"8": [`0px 0px 10px rgb(238, 130, 238),
+  		4px 4px 10px rgb(238, 130, 238),
+  		-4px -4px 10px rgb(238, 130, 238)`, 'violet'],
+
+}</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;run setInterval(setup.updateTimer, 1000)&gt;&gt;
+&lt;&lt;=setup.formattedTime = &quot;02:00&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Home" tags="" position="225,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Time Spent: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
 &lt;span id=&quot;currentFidget&quot;&gt;Switch&lt;/span&gt;
+&lt;div id=&quot;blankSpace&quot;&gt;&lt;/div&gt;
 &lt;div class=&quot;fidgetInterface&quot; id=&quot;container&quot;&gt;&lt;/div&gt;
   &lt;div class=&quot;options&quot; id=&quot;postContainer&quot;&gt;&lt;/div&gt;
   &lt;&lt;done&gt;&gt;&lt;&lt;run setup.populateFidget()&gt;&gt;&lt;&lt;/done&gt;&gt;
@@ -294,10 +782,11 @@ setup.updateTimer = function updateTimer() {
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="3" name="Fidget Library" tags="" position="350,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Fidget Library
 Time Spent: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
   &lt;div class=&quot;library&quot;&gt;
-    &lt;&lt;button &quot;Bubble Wrap&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;bubbleWrap&quot;)&gt;&gt;&lt;&lt;/button&gt;&gt;
-    &lt;&lt;button &quot;Light Switch&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;switch&quot;)&gt;&gt;&lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/bubbleWrap.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;bubbleWrap&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/lightSwitch.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;switch&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/controlPanel.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;controlPanel&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/drums.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;drums&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
   &lt;/div&gt; 
-
 
 &lt;/div&gt;</tw-passagedata></tw-storydata>
 	<script id="script-sugarcube" type="text/javascript">
