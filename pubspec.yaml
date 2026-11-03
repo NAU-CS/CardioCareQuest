@@ -52,6 +52,7 @@ dependencies:
   # option there. iOS requires Xcode capability + Info.plist key — see
   # IOS_NFC_SETUP.md for the handoff steps.
   nfc_manager: ^3.5.0
+  permission_handler: 12.0.3
 
 dev_dependencies:
   flutter_test:

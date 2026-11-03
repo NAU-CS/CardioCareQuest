@@ -53,6 +53,7 @@ class TwineGameHost extends StatefulWidget {
 
   // Walk target in meters. Can be overridden by the game's START_TRACKING message.
   final double targetDistance;
+  final bool enableGpsTracking;
 
   // App bar color. Defaults to deep purple.
   final Color appBarColor;
@@ -77,6 +78,7 @@ class TwineGameHost extends StatefulWidget {
     this.pointsCalculator = _defaultPointsCalculator,
     this.onCustomBridgeMessage,
     this.confirmExitDialog,
+    this.enableGpsTracking = true,
   });
 
   @override
@@ -256,19 +258,26 @@ class _TwineGameHostState extends State<TwineGameHost> {
                 );
                 break;
               // Player tapped "I'm done" in the game - finish the walk now.
+              // Checks for gps enabled for zombie chase, if not enabled ignore.
               case 'FINISH_QUEST_DATA':
-                await _endGame();
+                if (widget.enableGpsTracking) {
+                  await _endGame();
+                }
                 break;
               // Player picked a distance and started walking. Set the target,
               // ask for GPS permission, then begin (or resume) tracking.
               case 'START_TRACKING':
+                if (!widget.enableGpsTracking) break;
+
                 final incoming =
                     (data['distance'] ?? widget.targetDistance).toDouble()
                         as double;
-                // Same target and some progress already? Treat as a resume.
+
                 final shouldResume =
                     incoming == _targetDistance && _distanceWalked > 0;
+
                 if (!shouldResume) _targetDistance = incoming;
+
                 if (await _ensureLocationPermission()) {
                   await _startGame(resume: shouldResume);
                 }
@@ -348,6 +357,9 @@ class _TwineGameHostState extends State<TwineGameHost> {
       } catch (_) {
         /* ignore - profile read is best-effort */
       }
+
+      // Step-based games do not restore GPS walking sessions.
+      if (!widget.enableGpsTracking) return;
 
       // Look up any saved "walk in progress" for this game.
       final gameDoc = await MovementHooks.fetchOngoingState(
