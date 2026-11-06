@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cardio_care_quest/core/services/health_service.dart';
 import 'package:cardio_care_quest/core/widgets/twine_game_host.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ZombieChaseGame extends StatefulWidget {
   final double targetDistance;
@@ -37,9 +38,80 @@ class _ZombieChaseGameState extends State<ZombieChaseGame> {
         _stopStepTracking();
         return true;
 
+      case 'LOAD_ZOMBIE_DISTANCE':
+        await _loadZombieDistance(controller);
+        return true;
+
+      case 'GET_ZOMBIE_DISTANCE':
+        await _getZombieDistance(controller);
+        return true;
+
+      case 'SAVE_ZOMBIE_DISTANCE':
+        await _saveZombieDistance(data);
+        return true;
+
+      case 'RESET_ZOMBIE_DISTANCE':
+        await _resetZombieDistance();
+        return true;
+
       default:
         return false;
     }
+  }
+
+  // Loads the saved zombie distance and sends it back to Twine.
+  Future<void> _loadZombieDistance(TwineGameHostController controller) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Use 20,000 if no saved distance exists.
+    final savedDistance = prefs.getInt('zombie_distance') ?? 20000;
+
+    debugPrint('Zombie Chase: Loaded distance = $savedDistance');
+
+    // Send the saved distance to the Twine game.
+    await controller.webView.runJavaScript(
+      'SugarCube.setup.setZombieDistance($savedDistance)',
+    );
+  }
+
+  // Loads the saved zombie distance and sends it back to Twine.
+  Future<void> _getZombieDistance(TwineGameHostController controller) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Use 20,000 if no saved distance exists.
+    final savedDistance = prefs.getInt('zombie_distance') ?? 20000;
+
+    debugPrint('Zombie Chase: Loaded distance = $savedDistance');
+
+    // Send the saved distance to the Twine game.
+    await controller.webView.runJavaScript(
+      'SugarCube.setup.getZombieDistance($savedDistance)',
+    );
+  }
+
+  // Saves the zombie distance received from Twine.
+  Future<void> _saveZombieDistance(Map<String, dynamic> data) async {
+    final distance = int.tryParse(data['distance'].toString());
+
+    if (distance == null) {
+      debugPrint('Zombie Chase: Invalid distance received for saving.');
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt('zombie_distance', distance);
+
+    debugPrint('Zombie Chase: Saved distance = $distance');
+  }
+
+  // Resets the saved distance to the starting value.
+  Future<void> _resetZombieDistance() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt('zombie_distance', 20000);
+
+    debugPrint('Zombie Chase: Distance reset to 20000');
   }
 
   // Records the player's starting step count.
