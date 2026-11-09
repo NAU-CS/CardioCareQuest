@@ -16,6 +16,8 @@ import 'quiet_landscape.dart';
 import 'quiet_minute.dart';
 import 'salt_sludge.dart';
 import 'vascular_village_game.dart';
+import 'while_you_wait.dart';
+import 'zombie_chase.dart';
 
 // Opens the right game screen. Unknown ids fall back to "Coming Soon".
 void launchGameStory(BuildContext context, GameStory game) {
@@ -50,32 +52,38 @@ void launchGameStory(BuildContext context, GameStory game) {
     case 'quiet_landscape':
       screen = const QuietLandscapeGame();
       break;
+    case 'while_you_wait':
+      screen = const WhileYouWaitGame();
+      break;
+    case 'Zombie-chase':
+      screen = const ZombieChaseGame(targetDistance: 500);
+      break;
   }
   // Capture navigator before the game opens (context may be gone when it closes).
   final navigator = Navigator.of(context);
 
   navigator
       .push(
-    MaterialPageRoute(
-      builder: (_) => screen ?? ComingSoonScreen(featureName: game.title),
-    ),
-  )
-      .then((_) {
-    // Show feedback popup only if the game was actually finished.
-    // consume() also clears the signal so it can't trigger again.
-    final completed = GameCompletionSignal.consume(game.id);
-    final hasQuestions = gameFeedbackQuestions.containsKey(game.id);
-    debugPrint('GameFeedback: ${game.id} closed - '
-        'completed=$completed hasQuestions=$hasQuestions');
-    if (completed && hasQuestions) {
-      navigator.push(
         MaterialPageRoute(
-          builder: (_) => GameFeedbackScreen(
-            gameId: game.id,
-            gameTitle: game.title,
-          ),
+          builder: (_) => screen ?? ComingSoonScreen(featureName: game.title),
         ),
-      );
-    }
-  });
+      )
+      .then((_) {
+        // Show feedback popup only if the game was actually finished.
+        // consume() also clears the signal so it can't trigger again.
+        final completed = GameCompletionSignal.consume(game.id);
+        final hasQuestions = gameFeedbackQuestions.containsKey(game.id);
+        debugPrint(
+          'GameFeedback: ${game.id} closed - '
+          'completed=$completed hasQuestions=$hasQuestions',
+        );
+        if (completed && hasQuestions) {
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  GameFeedbackScreen(gameId: game.id, gameTitle: game.title),
+            ),
+          );
+        }
+      });
 }

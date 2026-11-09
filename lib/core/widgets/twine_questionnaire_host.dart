@@ -47,8 +47,10 @@ class TwineQuestionnaireHost extends StatefulWidget {
 
   // Optional handler for game-specific bridge messages. Return true to claim.
   final Future<bool> Function(
-          Map<String, dynamic> data, WebViewController webView)?
-      onCustomBridgeMessage;
+    Map<String, dynamic> data,
+    WebViewController webView,
+  )?
+  onCustomBridgeMessage;
 
   final Color appBarColor;
 
@@ -65,8 +67,10 @@ class TwineQuestionnaireHost extends StatefulWidget {
     this.onCustomBridgeMessage,
     this.appBarColor = const Color(0xFF4A1D6C),
     this.popResultOnly = false,
-  }) : assert((htmlAsset == null) != (htmlContent == null),
-            'Provide exactly one of htmlAsset or htmlContent.');
+  }) : assert(
+         (htmlAsset == null) != (htmlContent == null),
+         'Provide exactly one of htmlAsset or htmlContent.',
+       );
 
   @override
   State<TwineQuestionnaireHost> createState() => _TwineQuestionnaireHostState();
@@ -75,7 +79,8 @@ class TwineQuestionnaireHost extends StatefulWidget {
 // Holds live state for one play: WebView, session ids, flags.
 class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
   // ---- STATE ----
-  late final WebViewController _controller; // drives the WebView (the game page)
+  late final WebViewController
+  _controller; // drives the WebView (the game page)
 
   // Last BP saved this visit. Passed back to a parent game on exit.
   int? _lastLoggedSys; // last blood-pressure top number saved this visit
@@ -104,8 +109,7 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
 
   String get _phone =>
       Provider.of<UserDataProvider>(context, listen: false).phone;
-  String get _uid =>
-      Provider.of<UserDataProvider>(context, listen: false).uid;
+  String get _uid => Provider.of<UserDataProvider>(context, listen: false).uid;
 
   // Copied before dispose() so Provider.of can't be called after detach.
   String _phoneForDispose = '';
@@ -116,16 +120,12 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
   @override
   void initState() {
     super.initState();
-    _sessionId =
-        '${widget.surveyId}_${DateTime.now().millisecondsSinceEpoch}';
+    _sessionId = '${widget.surveyId}_${DateTime.now().millisecondsSinceEpoch}';
     _startedAt = DateTime.now();
     SessionManager.startGame(widget.title);
     TelemetryHooks.logEvent(
       '${widget.surveyId}_opened',
-      parameters: {
-        'gameId': widget.surveyId,
-        'sessionId': _sessionId,
-      },
+      parameters: {'gameId': widget.surveyId, 'sessionId': _sessionId},
       phone: _phone,
       userId: _uid,
     );
@@ -151,7 +151,9 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       ..setOnConsoleMessage((msg) {
         // Surfaces SugarCube boot errors and any in-game console output so a
         // blank WebView can be diagnosed from the Flutter logs.
-        debugPrint('WEBVIEW[${widget.surveyId}] ${msg.level.name}: ${msg.message}');
+        debugPrint(
+          'WEBVIEW[${widget.surveyId}] ${msg.level.name}: ${msg.message}',
+        );
       })
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -161,8 +163,10 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
             if (mounted) setState(() => _loading = false);
           },
           onWebResourceError: (error) {
-            debugPrint('❌ ${widget.surveyId} WebView Error: '
-                '${error.description}');
+            debugPrint(
+              '❌ ${widget.surveyId} WebView Error: '
+              '${error.description}',
+            );
             // Drop the spinner so the player can tap Home.
             if ((error.isForMainFrame ?? false) && mounted) {
               setState(() => _loading = false);
@@ -192,8 +196,10 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
 
             // Custom handler first; bail if it claims the message.
             if (widget.onCustomBridgeMessage != null) {
-              final handled =
-                  await widget.onCustomBridgeMessage!(data, _controller);
+              final handled = await widget.onCustomBridgeMessage!(
+                data,
+                _controller,
+              );
               if (handled) return;
             }
 
@@ -263,11 +269,13 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           // research-meaningful reading.
           if (!_snapshotLogged) {
             _snapshotLogged = true; // once per visit
-            unawaited(HealthHooks.logSnapshot(
-              uid: _uid,
-              gameId: widget.surveyId,
-              sessionId: _sessionId,
-            ));
+            unawaited(
+              HealthHooks.logSnapshot(
+                uid: _uid,
+                gameId: widget.surveyId,
+                sessionId: _sessionId,
+              ),
+            );
           }
           if (mounted) {
             PointsHooks.applyIncrements(context, const {
@@ -277,8 +285,7 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
             PointsHooks.applySets(context, {
               'lastSystolic': sys.toInt(),
               'lastDiastolic': dia.toInt(),
-              'lastBPLogDate':
-                  DateTime.now().toIso8601String().split('T')[0],
+              'lastBPLogDate': DateTime.now().toIso8601String().split('T')[0],
             });
           }
         }
@@ -309,7 +316,9 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       case 'LOG_MEAL':
         if (_uid.isNotEmpty) {
           final notes = data['notes'] is String ? data['notes'] as String : '';
-          final rating = data['rating'] is num ? (data['rating'] as num).toInt() : 4;
+          final rating = data['rating'] is num
+              ? (data['rating'] as num).toInt()
+              : 4;
           await DailyLogHooks.logMeal(
             uid: _uid,
             mealNotes: notes,
@@ -318,9 +327,7 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           );
           if (mounted) {
             _anyActivityLogged = true;
-            PointsHooks.applyIncrements(context, const {
-              'mealsLogged': 1,
-            });
+            PointsHooks.applyIncrements(context, const {'mealsLogged': 1});
           }
         }
         break;
@@ -330,8 +337,10 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       case 'LOG_MEDICATION':
         if (_uid.isNotEmpty) {
           final taken = data['taken'] == true;
-          final provider =
-              Provider.of<UserDataProvider>(context, listen: false);
+          final provider = Provider.of<UserDataProvider>(
+            context,
+            listen: false,
+          );
           final currentStreak =
               (provider.userData?['medicationStreak'] as num?)?.toInt() ?? 0;
           await DailyLogHooks.logMedication(
@@ -341,8 +350,9 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           );
           if (mounted) {
             _anyActivityLogged = true;
-            PointsHooks.applySets(
-              context, {'medicationStreak': taken ? currentStreak + 1 : 0});
+            PointsHooks.applySets(context, {
+              'medicationStreak': taken ? currentStreak + 1 : 0,
+            });
           }
         }
         break;
@@ -350,8 +360,12 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       // Whole-play score summary. Records the trivia_completed event.
       case 'LOG_TRIVIA':
         if (_uid.isNotEmpty) {
-          final score = data['score'] is num ? (data['score'] as num).toInt() : 0;
-          final total = data['total'] is num ? (data['total'] as num).toInt() : 0;
+          final score = data['score'] is num
+              ? (data['score'] as num).toInt()
+              : 0;
+          final total = data['total'] is num
+              ? (data['total'] as num).toInt()
+              : 0;
           await DailyLogHooks.logTrivia(
             uid: _uid,
             score: score,
@@ -365,20 +379,20 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       case 'LAUNCH_GAME':
         final gameId = data['gameId'];
         if (gameId is String && gameId.isNotEmpty && mounted) {
-          final result =
-              await Navigator.of(context).push<Map<String, dynamic>?>(
-            MaterialPageRoute(
-              builder: (_) => TwineQuestionnaireHost(
-                surveyId: gameId,
-                title: gameId,
-                htmlAsset: _assetForGameId(gameId),
-                appBarColor: widget.appBarColor,
-                // Sub-flow: pop straight back to THIS parent with the BP
-                // reading rather than jumping to the dashboard.
-                popResultOnly: true,
-              ),
-            ),
-          );
+          final result = await Navigator.of(context)
+              .push<Map<String, dynamic>?>(
+                MaterialPageRoute(
+                  builder: (_) => TwineQuestionnaireHost(
+                    surveyId: gameId,
+                    title: gameId,
+                    htmlAsset: _assetForGameId(gameId),
+                    appBarColor: widget.appBarColor,
+                    // Sub-flow: pop straight back to THIS parent with the BP
+                    // reading rather than jumping to the dashboard.
+                    popResultOnly: true,
+                  ),
+                ),
+              );
           if (result != null && mounted) {
             final sys = result['systolic'];
             final dia = result['diastolic'];
@@ -455,16 +469,18 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       // the Hub self-heal script doesn't have to ask again next render.
       case 'GET_TODAY_BP':
         if (mounted) {
-          final provider =
-              Provider.of<UserDataProvider>(context, listen: false);
+          final provider = Provider.of<UserDataProvider>(
+            context,
+            listen: false,
+          );
           final userMap = provider.userData;
-          final today =
-              DateTime.now().toIso8601String().split('T')[0];
+          final today = DateTime.now().toIso8601String().split('T')[0];
           // Only inject if the loaded data belongs to the current participant.
           // On a shared device this prevents one person's BP leaking to another.
           final loadedUid = userMap?['uid'] as String?;
           final liveUid = _uid;
-          final uidMatches = loadedUid != null &&
+          final uidMatches =
+              loadedUid != null &&
               loadedUid.isNotEmpty &&
               liveUid.isNotEmpty &&
               loadedUid == liveUid;
@@ -552,10 +568,13 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           enrichedAnswers['_sessionId'] = _sessionId;
 
           // Who answered? The game can say; otherwise fall back to the login prompt choice.
-          final respondent = (data['respondent'] as String?) ??
+          final respondent =
+              (data['respondent'] as String?) ??
               (mounted
-                  ? Provider.of<UserDataProvider>(context, listen: false)
-                      .respondent
+                  ? Provider.of<UserDataProvider>(
+                      context,
+                      listen: false,
+                    ).respondent
                   : null);
 
           await SurveyHooks.submitResponse(
@@ -570,8 +589,9 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
             _anyActivityLogged = true;
             if (countAsCompletion) {
               _completionAlreadyBumped = true;
-              PointsHooks.applyIncrements(
-                  context, const <String, int>{'surveysCompleted': 1});
+              PointsHooks.applyIncrements(context, const <String, int>{
+                'surveysCompleted': 1,
+              });
             }
           }
 
@@ -579,11 +599,13 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           // Per-quest submits use _performExit's catch-all instead.
           if (countAsCompletion && !_snapshotLogged) {
             _snapshotLogged = true;
-            unawaited(HealthHooks.logSnapshot(
-              uid: _uid,
-              gameId: widget.surveyId,
-              sessionId: _sessionId,
-            ));
+            unawaited(
+              HealthHooks.logSnapshot(
+                uid: _uid,
+                gameId: widget.surveyId,
+                sessionId: _sessionId,
+              ),
+            );
           }
 
           TelemetryHooks.logEvent(
@@ -606,10 +628,10 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
         if (questId is String && questId.isNotEmpty) {
           // Mark done so the launcher can show the feedback popup.
           GameCompletionSignal.markCompleted(
-              (data['gameId'] as String?) ?? widget.surveyId);
+            (data['gameId'] as String?) ?? widget.surveyId,
+          );
           final countAsCompletion = data['countAsCompletion'] != false;
-          final gameId =
-              (data['gameId'] as String?) ?? widget.surveyId;
+          final gameId = (data['gameId'] as String?) ?? widget.surveyId;
           final questData = data['data'] is Map
               ? Map<String, dynamic>.from(data['data'] as Map)
               : null;
@@ -627,19 +649,22 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
             _anyActivityLogged = true;
             if (countAsCompletion) {
               _completionAlreadyBumped = true;
-              PointsHooks.applyIncrements(
-                  context, const <String, int>{'surveysCompleted': 1});
+              PointsHooks.applyIncrements(context, const <String, int>{
+                'surveysCompleted': 1,
+              });
             }
           }
 
           // Only fire for whole-game completions. Per-quest ones use _performExit's catch-all.
           if (countAsCompletion && !_snapshotLogged) {
             _snapshotLogged = true;
-            unawaited(HealthHooks.logSnapshot(
-              uid: _uid,
-              gameId: gameId,
-              sessionId: _sessionId,
-            ));
+            unawaited(
+              HealthHooks.logSnapshot(
+                uid: _uid,
+                gameId: gameId,
+                sessionId: _sessionId,
+              ),
+            );
           }
 
           TelemetryHooks.logEvent(
@@ -694,28 +719,32 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       // If the player logged activity but no submit was marked as a completion
       // (e.g. Vascular Village per-quest credits), bump surveysCompleted once now.
       if (_anyActivityLogged && !_completionAlreadyBumped) {
-        PointsHooks.applyIncrements(
-            context, const <String, int>{'surveysCompleted': 1});
+        PointsHooks.applyIncrements(context, const <String, int>{
+          'surveysCompleted': 1,
+        });
         if (_uid.isNotEmpty) {
-          unawaited(GetIt.instance<OfflineQueue>().enqueue(PendingOp.update(
-            '${FirestorePaths.userData}/$_uid',
-            {
-              'surveysCompleted': OfflineFieldValue.increment(1),
-              'lastSurveyId': widget.surveyId,
-              'lastSurveyAt': OfflineFieldValue.nowTimestamp(),
-            },
-          )));
+          unawaited(
+            GetIt.instance<OfflineQueue>().enqueue(
+              PendingOp.update('${FirestorePaths.userData}/$_uid', {
+                'surveysCompleted': OfflineFieldValue.increment(1),
+                'lastSurveyId': widget.surveyId,
+                'lastSurveyAt': OfflineFieldValue.nowTimestamp(),
+              }),
+            ),
+          );
         }
       }
       // Catch-all vitals snapshot: fires if nothing earlier did (abandoned game,
       // or hub-and-spoke games that use countAsCompletion: false per submit).
       if (!_snapshotLogged) {
         _snapshotLogged = true;
-        unawaited(HealthHooks.logSnapshot(
-          uid: _uid,
-          gameId: widget.surveyId,
-          sessionId: _sessionId,
-        ));
+        unawaited(
+          HealthHooks.logSnapshot(
+            uid: _uid,
+            gameId: widget.surveyId,
+            sessionId: _sessionId,
+          ),
+        );
       }
       unawaited(_writeSessionSummary(exitReason: exitReason));
     }
@@ -745,25 +774,26 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
     final endedAt = DateTime.now();
     final durationMs = endedAt.difference(_startedAt).inMilliseconds;
     try {
-      await GetIt.instance<OfflineQueue>().enqueue(PendingOp.set(
-        '${FirestorePaths.userData}/$_uid/gameSessions/$_sessionId',
-        {
-          'sessionId': _sessionId,
-          'userId': _uid,
-          'gameId': widget.surveyId,
-          'hostType': 'TwineQuestionnaireHost',
-          'startedAt': OfflineFieldValue.timestampFrom(_startedAt),
-          'endedAt': OfflineFieldValue.timestampFrom(endedAt),
-          'durationMs': durationMs,
-          'exitReason': exitReason,
-          'bpLogged': _lastLoggedSys != null && _lastLoggedDia != null,
-          if (_lastLoggedSys != null) 'lastSystolic': _lastLoggedSys,
-          if (_lastLoggedDia != null) 'lastDiastolic': _lastLoggedDia,
-        },
-      ));
+      await GetIt.instance<OfflineQueue>().enqueue(
+        PendingOp.set(
+          '${FirestorePaths.userData}/$_uid/gameSessions/$_sessionId',
+          {
+            'sessionId': _sessionId,
+            'userId': _uid,
+            'gameId': widget.surveyId,
+            'hostType': 'TwineQuestionnaireHost',
+            'startedAt': OfflineFieldValue.timestampFrom(_startedAt),
+            'endedAt': OfflineFieldValue.timestampFrom(endedAt),
+            'durationMs': durationMs,
+            'exitReason': exitReason,
+            'bpLogged': _lastLoggedSys != null && _lastLoggedDia != null,
+            if (_lastLoggedSys != null) 'lastSystolic': _lastLoggedSys,
+            if (_lastLoggedDia != null) 'lastDiastolic': _lastLoggedDia,
+          },
+        ),
+      );
     } catch (e) {
-      debugPrint(
-          'TwineQuestionnaireHost session summary write failed: $e');
+      debugPrint('TwineQuestionnaireHost session summary write failed: $e');
     }
   }
 
@@ -772,10 +802,7 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
     SessionManager.endGame();
     TelemetryHooks.logEvent(
       '${widget.surveyId}_closed',
-      parameters: {
-        'gameId': widget.surveyId,
-        'sessionId': _sessionId,
-      },
+      parameters: {'gameId': widget.surveyId, 'sessionId': _sessionId},
       phone: _phoneForDispose,
       userId: _uidForDispose,
     );

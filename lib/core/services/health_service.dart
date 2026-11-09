@@ -4,6 +4,8 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 // Wraps the Health plugin. Call requestPermissions() once at startup, then
 // captureSnapshot() whenever you need vitals. All fields can be null.
@@ -11,9 +13,8 @@ class HealthService {
   HealthService._();
   static final HealthService instance = HealthService._();
 
-  // Health types we read. Same list on iOS and Android; the plugin maps them
-  // to the right native types. Apple Watch on iOS, Wear OS on Android.
-  static const List<HealthDataType> _readTypes = [
+  // Data types supported by Apple Health.
+  static const List<HealthDataType> _iosReadTypes = [
     HealthDataType.HEART_RATE,
     HealthDataType.RESTING_HEART_RATE,
     HealthDataType.HEART_RATE_VARIABILITY_SDNN,
@@ -23,8 +24,21 @@ class HealthService {
     HealthDataType.BLOOD_OXYGEN,
   ];
 
+  // Data types supported by Google Health Connect.
+  static const List<HealthDataType> _androidReadTypes = [
+    HealthDataType.HEART_RATE,
+    HealthDataType.RESTING_HEART_RATE,
+    HealthDataType.STEPS,
+    HealthDataType.ACTIVE_ENERGY_BURNED,
+    HealthDataType.BLOOD_OXYGEN,
+  ];
+
+  // Select the appropriate list for the current device.
+  List<HealthDataType> get _readTypes =>
+      Platform.isAndroid ? _androidReadTypes : _iosReadTypes;
+
   // Read-only permissions for each type.
-  static List<HealthDataAccess> get _readPermissions =>
+  List<HealthDataAccess> get _readPermissions =>
       List.filled(_readTypes.length, HealthDataAccess.READ);
 
   bool _configured = false;
@@ -41,31 +55,90 @@ class HealthService {
   }
 
   // Ask the OS for health permissions. Returns true if granted.
-  // Safe to call multiple times; no-op if already granted.
   Future<bool> requestPermissions() async {
     try {
+      debugPrint('HEALTH DEBUG: Starting permission request.');
+
+      if (Platform.isAndroid) {
+        final activityPermission = await Permission.activityRecognition
+            .request();
+
+        debugPrint('HEALTH DEBUG: Activity Recognition: $activityPermission');
+
+        if (!activityPermission.isGranted) {
+          debugPrint('HEALTH DEBUG: Activity Recognition was denied.');
+          _permissionsGranted = false;
+          return false;
+        }
+      }
+
+      debugPrint('HEALTH DEBUG: Configuring Health Connect.');
       await _ensureConfigured();
 
-      final hasExisting = await Health().hasPermissions(
+      debugPrint('HEALTH DEBUG: Checking existing Health permissions.');
+
+      final hasExisting =
+          await Health().hasPermissions(
             _readTypes,
             permissions: _readPermissions,
           ) ??
           false;
+
+      debugPrint('HEALTH DEBUG: Existing permissions: $hasExisting');
+
       if (hasExisting) {
         _permissionsGranted = true;
         return true;
       }
 
+      debugPrint('HEALTH DEBUG: Requesting Health Connect permissions.');
+
       final granted = await Health().requestAuthorization(
         _readTypes,
         permissions: _readPermissions,
       );
+
+      debugPrint('HEALTH DEBUG: Health Connect granted: $granted');
+
       _permissionsGranted = granted;
       return granted;
-    } catch (e) {
-      debugPrint('HealthService.requestPermissions error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('HEALTH DEBUG: Permission error: $e');
+      debugPrint('$stackTrace');
+
       _permissionsGranted = false;
       return false;
+    }
+  }
+
+  // Get steps walked today
+  Future<int?> getStepsToday() async {
+    // Make sure we have permission to read health data.
+    if (!_permissionsGranted) {
+      final granted = await requestPermissions();
+
+      if (!granted) {
+        return null;
+      }
+    }
+
+    try {
+      // Make sure the Health plugin is configured.
+      await _ensureConfigured();
+
+      // Get the current date and time.
+      final now = DateTime.now();
+
+      // Calculate midnight at the beginning of today.
+      final startOfToday = DateTime(now.year, now.month, now.day);
+
+      // Retrieve the total steps recorded between midnight and now.
+      final steps = await Health().getTotalStepsInInterval(startOfToday, now);
+
+      return steps;
+    } catch (e) {
+      debugPrint('HealthService.getStepsToday error: $e');
+      return null;
     }
   }
 
@@ -253,9 +326,7 @@ class HealthSnapshot {
 
   // Firestore-ready map. Only includes non-null fields.
   Map<String, dynamic> toFirestore() {
-    final out = <String, dynamic>{
-      'collectedAt': collectedAt.toIso8601String(),
-    };
+    final out = <String, dynamic>{'collectedAt': collectedAt.toIso8601String()};
     if (heartRate != null) out['heartRate'] = heartRate;
     if (restingHeartRate != null) out['restingHeartRate'] = restingHeartRate;
     if (heartRateVariability != null) {

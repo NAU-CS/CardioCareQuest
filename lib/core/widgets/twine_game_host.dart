@@ -24,10 +24,11 @@ import 'package:cardio_care_quest/features/games/game_completion_signal.dart';
 // One reusable host so all walking games share the same logic.
 
 // Callback for game-specific bridge messages. Return true if handled, false to fall through.
-typedef OnTwineBridgeMessage = Future<bool> Function(
-  Map<String, dynamic> data,
-  TwineGameHostController controller,
-);
+typedef OnTwineBridgeMessage =
+    Future<bool> Function(
+      Map<String, dynamic> data,
+      TwineGameHostController controller,
+    );
 
 // Returns the number shown on the built-in game's own end screen for a finished
 // walk. Default: 30 / 60 / 100 for short/medium/long. Display only, not saved.
@@ -52,6 +53,7 @@ class TwineGameHost extends StatefulWidget {
 
   // Walk target in meters. Can be overridden by the game's START_TRACKING message.
   final double targetDistance;
+  final bool enableGpsTracking;
 
   // App bar color. Defaults to deep purple.
   final Color appBarColor;
@@ -76,6 +78,7 @@ class TwineGameHost extends StatefulWidget {
     this.pointsCalculator = _defaultPointsCalculator,
     this.onCustomBridgeMessage,
     this.confirmExitDialog,
+    this.enableGpsTracking = true,
   });
 
   @override
@@ -101,8 +104,10 @@ class TwineGameHostController {
 // Holds all live state for one play: GPS stream, distance, session ids, flags.
 class _TwineGameHostState extends State<TwineGameHost> {
   // ---- STATE ----
-  late final WebViewController _controller; // drives the WebView (the game page)
-  late TwineGameHostController _externalController; // remote control for handlers
+  late final WebViewController
+  _controller; // drives the WebView (the game page)
+  late TwineGameHostController
+  _externalController; // remote control for handlers
 
   bool _isPlaying = false; // is a walk currently running?
   double _distanceWalked = 0.0; // metres walked so far this walk
@@ -144,8 +149,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
 
   String get _phone =>
       Provider.of<UserDataProvider>(context, listen: false).phone;
-  String get _uid =>
-      Provider.of<UserDataProvider>(context, listen: false).uid;
+  String get _uid => Provider.of<UserDataProvider>(context, listen: false).uid;
 
   // Copied before dispose() so Provider.of can't be called after detach.
   String _phoneForDispose = '';
@@ -163,10 +167,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
     SessionManager.startGame(widget.gameTitle);
     TelemetryHooks.logEvent(
       '${widget.gameId}_opened',
-      parameters: {
-        'gameId': widget.gameId,
-        'sessionId': _hostSessionId,
-      },
+      parameters: {'gameId': widget.gameId, 'sessionId': _hostSessionId},
       phone: _phone,
       userId: _uid,
     );
@@ -199,7 +200,9 @@ class _TwineGameHostState extends State<TwineGameHost> {
             if (mounted) setState(() => _loading = false);
           },
           onWebResourceError: (error) {
-            debugPrint('❌ ${widget.gameId} WebView Error: ${error.description}');
+            debugPrint(
+              '❌ ${widget.gameId} WebView Error: ${error.description}',
+            );
             // Drop the spinner so the player can still tap Home.
             if ((error.isForMainFrame ?? false) && mounted) {
               setState(() => _loading = false);
@@ -230,8 +233,10 @@ class _TwineGameHostState extends State<TwineGameHost> {
 
             // Custom handler first; bail if it claims the message.
             if (widget.onCustomBridgeMessage != null) {
-              final handled =
-                  await widget.onCustomBridgeMessage!(data, _externalController);
+              final handled = await widget.onCustomBridgeMessage!(
+                data,
+                _externalController,
+              );
               if (handled) return;
             }
 
@@ -253,18 +258,26 @@ class _TwineGameHostState extends State<TwineGameHost> {
                 );
                 break;
               // Player tapped "I'm done" in the game - finish the walk now.
+              // Checks for gps enabled for zombie chase, if not enabled ignore.
               case 'FINISH_QUEST_DATA':
-                await _endGame();
+                if (widget.enableGpsTracking) {
+                  await _endGame();
+                }
                 break;
               // Player picked a distance and started walking. Set the target,
               // ask for GPS permission, then begin (or resume) tracking.
               case 'START_TRACKING':
-                final incoming = (data['distance'] ?? widget.targetDistance)
-                    .toDouble() as double;
-                // Same target and some progress already? Treat as a resume.
+                if (!widget.enableGpsTracking) break;
+
+                final incoming =
+                    (data['distance'] ?? widget.targetDistance).toDouble()
+                        as double;
+
                 final shouldResume =
                     incoming == _targetDistance && _distanceWalked > 0;
+
                 if (!shouldResume) _targetDistance = incoming;
+
                 if (await _ensureLocationPermission()) {
                   await _startGame(resume: shouldResume);
                 }
@@ -320,8 +333,10 @@ class _TwineGameHostState extends State<TwineGameHost> {
       var hasOngoingWalk = false;
 
       // Push this week's completed quest count to the HTML for stats display.
-      MovementHooks.fetchWeeklyQuestCount(uid: uid, gameId: widget.gameId)
-          .then(_pushWeeklyQuestCount);
+      MovementHooks.fetchWeeklyQuestCount(
+        uid: uid,
+        gameId: widget.gameId,
+      ).then(_pushWeeklyQuestCount);
 
       // Restore the saved buddy name from the user profile.
       try {
@@ -339,7 +354,12 @@ class _TwineGameHostState extends State<TwineGameHost> {
             );
           }
         }
-      } catch (_) {/* ignore - profile read is best-effort */}
+      } catch (_) {
+        /* ignore - profile read is best-effort */
+      }
+
+      // Step-based games do not restore GPS walking sessions.
+      if (!widget.enableGpsTracking) return;
 
       // Look up any saved "walk in progress" for this game.
       final gameDoc = await MovementHooks.fetchOngoingState(
@@ -359,25 +379,25 @@ class _TwineGameHostState extends State<TwineGameHost> {
         // Validate saved walk data. Anything corrupt or zero means start fresh.
         final rawDistance = gData['ongoingDistance'];
         final rawTarget = gData['ongoingTarget'];
-        final rawSessionId =
-            gData['ongoingSessionId'] is String
-                ? gData['ongoingSessionId'] as String
-                : null;
-        final lastCompletedSessionId =
-            gData['lastCompletedSessionId'] is String
-                ? gData['lastCompletedSessionId'] as String
-                : null;
+        final rawSessionId = gData['ongoingSessionId'] is String
+            ? gData['ongoingSessionId'] as String
+            : null;
+        final lastCompletedSessionId = gData['lastCompletedSessionId'] is String
+            ? gData['lastCompletedSessionId'] as String
+            : null;
         final justCompletedInMemory =
             _justCompletedSessionByGame[widget.gameId];
 
         // A late GPS write can leave stale data after a completed walk.
         // If either "already done" marker matches, skip the resume.
-        final sessionAlreadyCompleted = rawSessionId != null &&
+        final sessionAlreadyCompleted =
+            rawSessionId != null &&
             (rawSessionId == lastCompletedSessionId ||
                 rawSessionId == justCompletedInMemory);
 
         // Only resume if numbers are real and the walk wasn't already done.
-        final isValidResume = rawDistance is num &&
+        final isValidResume =
+            rawDistance is num &&
             rawTarget is num &&
             rawDistance > 0 &&
             rawTarget > 0 &&
@@ -398,13 +418,13 @@ class _TwineGameHostState extends State<TwineGameHost> {
             for (final p in rawPath) {
               if (p is GeoPoint) {
                 _pathCoordinates.add(p);
-              } else if (p is Map &&
-                  p['lat'] is num &&
-                  p['lng'] is num) {
-                _pathCoordinates.add(GeoPoint(
-                  (p['lat'] as num).toDouble(),
-                  (p['lng'] as num).toDouble(),
-                ));
+              } else if (p is Map && p['lat'] is num && p['lng'] is num) {
+                _pathCoordinates.add(
+                  GeoPoint(
+                    (p['lat'] as num).toDouble(),
+                    (p['lng'] as num).toDouble(),
+                  ),
+                );
               }
             }
           }
@@ -587,9 +607,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
 
           // Save to the cloud every 5th fix.
           _writeCount++;
-          if (_writeCount % 5 == 0 &&
-              _sessionId != null &&
-              !_endingGame) {
+          if (_writeCount % 5 == 0 && _sessionId != null && !_endingGame) {
             await MovementHooks.pushPing(
               uid: uid,
               sessionId: _sessionId!,
@@ -626,19 +644,18 @@ class _TwineGameHostState extends State<TwineGameHost> {
 
       // Watchdog checks completion every 1.5s in case GPS goes quiet.
       _completionWatchdog?.cancel();
-      _completionWatchdog = Timer.periodic(
-        const Duration(milliseconds: 1500),
-        (_) {
-          if (!_isPlaying || _endingGame) {
-            _completionWatchdog?.cancel();
-            _completionWatchdog = null;
-            return;
-          }
-          if (_distanceWalked >= _targetDistance) {
-            _endGame();
-          }
-        },
-      );
+      _completionWatchdog = Timer.periodic(const Duration(milliseconds: 1500), (
+        _,
+      ) {
+        if (!_isPlaying || _endingGame) {
+          _completionWatchdog?.cancel();
+          _completionWatchdog = null;
+          return;
+        }
+        if (_distanceWalked >= _targetDistance) {
+          _endGame();
+        }
+      });
     } catch (e) {
       debugPrint('GPS error in ${widget.gameId}: $e');
     }
@@ -707,19 +724,23 @@ class _TwineGameHostState extends State<TwineGameHost> {
       }
 
       // Grab watch vitals in the background.
-      unawaited(HealthHooks.logSnapshot(
-        uid: uid,
-        gameId: widget.gameId,
-        sessionId: sessionId,
-      ));
+      unawaited(
+        HealthHooks.logSnapshot(
+          uid: uid,
+          gameId: widget.gameId,
+          sessionId: sessionId,
+        ),
+      );
       _snapshotLogged = true; // remember we did it, so exit won't repeat it
 
       // Write a one-row summary for researchers.
-      unawaited(_writeSessionSummary(
-        exitReason: 'completed',
-        distanceWalked: _distanceWalked.toInt(),
-        movementSessionId: sessionId,
-      ));
+      unawaited(
+        _writeSessionSummary(
+          exitReason: 'completed',
+          distanceWalked: _distanceWalked.toInt(),
+          movementSessionId: sessionId,
+        ),
+      );
 
       final completedDistance = _distanceWalked.toInt();
 
@@ -745,7 +766,8 @@ class _TwineGameHostState extends State<TwineGameHost> {
           uid: uid,
           gameId: widget.gameId,
         );
-        if (mounted) _pushWeeklyQuestCount(weeklyCount); // re-check: awaited above
+        if (mounted)
+          _pushWeeklyQuestCount(weeklyCount); // re-check: awaited above
       }
     } catch (e) {
       debugPrint('❌ ${widget.gameId} sync error in _endGame: $e');
@@ -765,23 +787,25 @@ class _TwineGameHostState extends State<TwineGameHost> {
     final endedAt = DateTime.now();
     final durationMs = endedAt.difference(_hostStartedAt).inMilliseconds;
     try {
-      await GetIt.instance<OfflineQueue>().enqueue(PendingOp.set(
-        '${FirestorePaths.userData}/$_uid/gameSessions/$_hostSessionId',
-        {
-          'sessionId': _hostSessionId,
-          'userId': _uid,
-          'gameId': widget.gameId,
-          'gameTitle': widget.gameTitle,
-          'hostType': 'TwineGameHost',
-          'startedAt': OfflineFieldValue.timestampFrom(_hostStartedAt),
-          'endedAt': OfflineFieldValue.nowTimestamp(),
-          'durationMs': durationMs,
-          'exitReason': exitReason,
-          'distanceWalked': distanceWalked,
-          if (movementSessionId != null)
-            'movementSessionId': movementSessionId,
-        },
-      ));
+      await GetIt.instance<OfflineQueue>().enqueue(
+        PendingOp.set(
+          '${FirestorePaths.userData}/$_uid/gameSessions/$_hostSessionId',
+          {
+            'sessionId': _hostSessionId,
+            'userId': _uid,
+            'gameId': widget.gameId,
+            'gameTitle': widget.gameTitle,
+            'hostType': 'TwineGameHost',
+            'startedAt': OfflineFieldValue.timestampFrom(_hostStartedAt),
+            'endedAt': OfflineFieldValue.nowTimestamp(),
+            'durationMs': durationMs,
+            'exitReason': exitReason,
+            'distanceWalked': distanceWalked,
+            if (movementSessionId != null)
+              'movementSessionId': movementSessionId,
+          },
+        ),
+      );
     } catch (e) {
       debugPrint('TwineGameHost session summary write failed: $e');
     }
@@ -792,18 +816,22 @@ class _TwineGameHostState extends State<TwineGameHost> {
   Future<void> _exitWithOptionalBpPrompt() async {
     if (!mounted) return; // screen already gone
     if (!_snapshotLogged) {
-      unawaited(HealthHooks.logSnapshot(
-        uid: _uid,
-        gameId: widget.gameId,
-        sessionId: _hostSessionId,
-      ));
+      unawaited(
+        HealthHooks.logSnapshot(
+          uid: _uid,
+          gameId: widget.gameId,
+          sessionId: _hostSessionId,
+        ),
+      );
       _snapshotLogged = true;
     }
     // Guard inside _writeSessionSummary prevents a second write if _endGame already ran.
-    unawaited(_writeSessionSummary(
-      exitReason: 'exited_in_progress',
-      distanceWalked: _distanceWalked.toInt(),
-    ));
+    unawaited(
+      _writeSessionSummary(
+        exitReason: 'exited_in_progress',
+        distanceWalked: _distanceWalked.toInt(),
+      ),
+    );
     // Pop all the way to the first route so exit always lands on the dashboard.
     if (mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -871,10 +899,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
     try {
       TelemetryHooks.logEvent(
         '${widget.gameId}_closed',
-        parameters: {
-          'gameId': widget.gameId,
-          'sessionId': _hostSessionId,
-        },
+        parameters: {'gameId': widget.gameId, 'sessionId': _hostSessionId},
         phone: _phoneForDispose,
         userId: _uidForDispose,
       );

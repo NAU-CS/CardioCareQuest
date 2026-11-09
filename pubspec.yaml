@@ -52,6 +52,7 @@ dependencies:
   # option there. iOS requires Xcode capability + Info.plist key — see
   # IOS_NFC_SETUP.md for the handoff steps.
   nfc_manager: ^3.5.0
+  permission_handler: 12.0.3
 
 dev_dependencies:
   flutter_test:
@@ -82,11 +83,19 @@ flutter:
     - assets/game/game_feedback.html
     - assets/game/pill_path.html
     - assets/game/quiet_landscape.html
+    - assets/game/while_you_wait.html
+    - assets/game/Zombie-chase.html
     # Engine shell (SugarCube + shared stylesheet, passages stripped) that
     # custom_twine_builder.dart fills in at runtime to play user-made story games.
     - assets/game/custom_game_template.html
     # Photos shown next to each health topic in the game catalog list.
     - assets/game/categories/
+    #Audio files for capstone games
+    - assets/game/audio/
+    #image files for capstone games
+    - img/
+    - img/measurement/
+    - img/exercise/
     # Twine source for the short intro story shown before each factor's games.
     # Loaded at runtime and spliced into custom_game_template.html.
     - assets/game-src/intro/
