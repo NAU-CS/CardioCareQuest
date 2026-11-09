@@ -144,6 +144,7 @@ class _CustomWalkGameState extends State<CustomWalkGame> {
     setState(() => _completed = true);
     await _positionSub?.cancel(); // stop the GPS
     _positionSub = null;
+    if (!mounted) return;
 
     final uid = Provider.of<UserDataProvider>(context, listen: false).uid;
     final game = widget.game;

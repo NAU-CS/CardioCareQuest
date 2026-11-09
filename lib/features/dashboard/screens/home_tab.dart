@@ -66,6 +66,7 @@ class _HomeTabState extends State<HomeTab> {
     try {
       final granted = await HealthService.instance.requestPermissions();
       if (!granted) {
+        if (!mounted) return;
         final uid =
             Provider.of<UserDataProvider>(context, listen: false).uid;
         await TelemetryHooks.logEvent(
@@ -534,7 +535,7 @@ class _HomeTabState extends State<HomeTab> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: tiles.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, index) => tiles[index],
                     ),
                   ),

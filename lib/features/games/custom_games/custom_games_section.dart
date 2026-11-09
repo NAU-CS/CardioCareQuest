@@ -39,7 +39,7 @@ class CustomGamesSection extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.zero,
                   itemCount: games.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) => _CustomGameTile(
                     game: games[index],
                     uid: uid,

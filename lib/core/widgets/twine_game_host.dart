@@ -766,8 +766,9 @@ class _TwineGameHostState extends State<TwineGameHost> {
           uid: uid,
           gameId: widget.gameId,
         );
-        if (mounted)
+        if (mounted) {
           _pushWeeklyQuestCount(weeklyCount); // re-check: awaited above
+        }
       }
     } catch (e) {
       debugPrint('❌ ${widget.gameId} sync error in _endGame: $e');
@@ -801,8 +802,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
             'durationMs': durationMs,
             'exitReason': exitReason,
             'distanceWalked': distanceWalked,
-            if (movementSessionId != null)
-              'movementSessionId': movementSessionId,
+            'movementSessionId': ?movementSessionId,
           },
         ),
       );

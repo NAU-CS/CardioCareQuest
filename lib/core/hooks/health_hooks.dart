@@ -36,7 +36,7 @@ abstract class HealthHooks {
           'id': docId,
           'userId': uid,
           'gameId': gameId,
-          if (sessionId != null) 'sessionId': sessionId,
+          'sessionId': ?sessionId,
           'collectedAt': OfflineFieldValue.nowTimestamp(),
           'hasWearableData': snapshot.hasAnyData,
           ...snap,

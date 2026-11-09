@@ -42,8 +42,8 @@ abstract class PairHooks {
       'status': 'active',
       'startedAt': OfflineFieldValue.nowTimestamp(),
       'lastActiveAt': OfflineFieldValue.nowTimestamp(),
-      if (deviceTag != null) 'deviceTag': deviceTag,
-      if (settings != null) 'settings': settings,
+      'deviceTag': ?deviceTag,
+      'settings': ?settings,
       'helpMarkerCount': 0, // grows each time the caregiver marks "I helped".
     };
 

@@ -14,7 +14,6 @@ class SessionManager {
   static String? _participantId;
   static String? _caregiverId;
   static String? _caregiverLabel;
-  static String? _currentStep;
 
   // Getters
   static String? get sessionId => _sessionId;
@@ -29,8 +28,7 @@ class SessionManager {
   static bool get isPaired => _pairedSessionId != null;
 
   // The current in-game passage. Used to tag caregiver-help events to the right moment.
-  static String? get currentStep => _currentStep;
-  static set currentStep(String? step) => _currentStep = step;
+  static String? currentStep;
 
   // Start a paired session. Pass a pre-made id or let this generate one.
   static String startPairedSession({
@@ -70,7 +68,7 @@ class SessionManager {
     _participantId = null;
     _caregiverId = null;
     _caregiverLabel = null;
-    _currentStep = null;
+    currentStep = null;
   }
 
   // Sets the session ID (typically called once at app startup)
@@ -111,7 +109,7 @@ class SessionManager {
     _participantId = null;
     _caregiverId = null;
     _caregiverLabel = null;
-    _currentStep = null;
+    currentStep = null;
     debugPrint('[SESSION_MANAGER] Session reset');
   }
 }
