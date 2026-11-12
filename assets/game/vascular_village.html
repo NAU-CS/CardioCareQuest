@@ -887,7 +887,34 @@ body {
 @media (min-width: 480px) {
   body { padding: 32px 16px; }
   .phone { min-height: 720px; }
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
+}
+/* A11y text and contrast (#18, #19) */
+/* Small white text on the teal end of the gradient gets a dark backing;
+   faded (60-85%) text is made solid; all informational text is 14px+.
+   Reallocate targets also reach 44px tall (#22). */
+.help-text { font-size: 14px; opacity: 1; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 12px; }
+.btn-secondary, .phone a.btn-secondary, .phone a.btn-secondary.link-internal, .phone a.btn-secondary.macro-link { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
+.finish-row a.macro-link, .finish-row a.link-internal { background-color: rgba(0, 0, 0, 0.3) !important; font-size: 15px !important; }
+.alloc-row a.alloc-target, .alloc-row a.macro-link { font-size: 14px !important; min-height: 44px !important; }
+.alloc-row a.alloc-target:not(.matched), .alloc-row a.macro-link:not(.matched) { background-color: rgba(0, 0, 0, 0.25) !important; }
+.voyage-taken { background-color: rgba(0, 0, 0, 0.25) !important; }
+/* Pre-existing bug: the green "matched" state never showed, because
+   .alloc-row a.alloc-target outranked .alloc-target.matched. */
+.alloc-row a.alloc-target.matched, .alloc-row a.macro-link.matched { background-color: #5ec962 !important; color: #1a3a0f !important; border: 1px solid #5ec962 !important; font-weight: bold !important; }
+.alloc-status, .path-instruction { font-size: 14px !important; }
+.heart-counter-label, .stretch-timer-text { font-size: 14px !important; opacity: 1 !important; }
+.alloc-source { font-size: 14px; }
+.plaque-counter { font-size: 14px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 4px 10px; }
+.all-done-blurb { color: #ffffff; }
+.voyage-taken .quest-name { color: #ffffff !important; }
+.voyage-taken .quest-blurb { font-size: 14px !important; color: #ffffff !important; }
+.quest-blurb { font-size: 14px !important; }
+.bp-label { font-size: 14px; opacity: 1; letter-spacing: 0.08em; }
+.bp-progress-count { font-size: 14px; color: #ffffff; }
+.bp-units { font-size: 14px; opacity: 1; }
+.bp-zone { font-size: 14px; letter-spacing: 0.04em; }
+.section-title { font-size: 14px; opacity: 1; letter-spacing: 0.08em; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
    path plus key in-game state. Best-effort; swallows errors. */
