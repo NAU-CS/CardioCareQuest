@@ -821,7 +821,16 @@ body { padding: 0; }
    `<<link>>` macro's anchor. */
 .btn-another-quest, .btn-final-home {
   display: block;
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "SetupAssets" */
+}
+/* Accessibility fixes (2026-11-09)
+   1. Cloud text sits on its own layer above every cloud shape, so one cloud can
+      never cover another cloud's words. The clouds themselves look the same.
+   2. "I'm done for now" gets a 44px-tall touch area (it was 21px). */
+.cloud.white { z-index: auto; }
+.cloud.white .cloud-svg { z-index: 2; }
+.cloud.white .cloud-text { z-index: 3; }
+.finish-early a { display: inline-block; min-height: 44px; min-width: 44px; padding: 12px 18px; box-sizing: border-box; line-height: 20px; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "SetupAssets" */
 /* Base64-inlined dog image so the visual works in BOTH twinery.org
    preview AND on device, with no dependency on a relative file path.
    485x400 PNG, ~130KB binary / ~175KB base64. Each scene's <img>

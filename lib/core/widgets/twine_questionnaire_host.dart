@@ -160,6 +160,7 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
           onPageFinished: (_) async {
             await _controller.runJavaScript(kCcqGameStyleInjectionJs);
             await _injectBridge();
+            await _injectA11y();
             if (mounted) setState(() => _loading = false);
           },
           onWebResourceError: (error) {
@@ -235,6 +236,17 @@ class _TwineQuestionnaireHostState extends State<TwineQuestionnaireHost> {
       );
     } catch (e) {
       debugPrint('${widget.surveyId} bridge inject failed: $e');
+    }
+  }
+
+  // Inject ccq_a11y.js into every game, even ones that carry their own bridge:
+  // screen-change announcements, meter values, real header buttons, page language.
+  Future<void> _injectA11y() async {
+    try {
+      final js = await rootBundle.loadString('assets/game/ccq_a11y.js');
+      await _controller.runJavaScript(js);
+    } catch (e) {
+      debugPrint('${widget.surveyId} a11y inject failed: $e');
     }
   }
 

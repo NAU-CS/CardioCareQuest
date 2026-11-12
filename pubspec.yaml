@@ -73,6 +73,7 @@ flutter:
     - assets/game/dog_quest/
     - assets/game/fonts/
     - assets/game/ccq_bridge.js
+    - assets/game/ccq_a11y.js
     - assets/game/control_game.html
     - assets/game/salt_sludge.html
     - assets/game/bingo_bash.html

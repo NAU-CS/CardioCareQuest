@@ -1243,3 +1243,13 @@ and the player sees just the loading text below.
     </div>
   </div>
 </div>
+
+:: A11yFixes [stylesheet]
+/* Accessibility fixes (2026-11-09)
+   1. Cloud text sits on its own layer above every cloud shape, so one cloud can
+      never cover another cloud's words. The clouds themselves look the same.
+   2. "I'm done for now" gets a 44px-tall touch area (it was 21px). */
+.cloud.white { z-index: auto; }
+.cloud.white .cloud-svg { z-index: 2; }
+.cloud.white .cloud-text { z-index: 3; }
+.finish-early a { display: inline-block; min-height: 44px; min-width: 44px; padding: 12px 18px; box-sizing: border-box; line-height: 20px; }

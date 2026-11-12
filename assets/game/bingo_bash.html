@@ -615,6 +615,7 @@ $(document).on(':passagedisplay', function (ev) {
     var input = document.createElement('input');
     input.type = 'text';
     input.className = 'goal-edit-input';
+    input.setAttribute('aria-label', 'Goal ' + (idx + 1));
     input.value = text;
     input.maxLength = 80;
     if (idx === 12) {

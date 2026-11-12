@@ -684,7 +684,10 @@ body {
 .input-card input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 100px #ffffff inset !important;
   -webkit-text-fill-color: #1a1a1a !important;
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
+}
+/* Accessibility fix (2026-11-09): "I'm ready" gets a 44px touch area (it was 14px tall). */
+.skip-rest a { display: inline-block; min-height: 44px; min-width: 44px; padding: 12px 18px; box-sizing: border-box; line-height: 20px; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
    path plus key in-game state. Best-effort; swallows errors. */
@@ -774,12 +777,12 @@ after just 30 seconds and the celebration shouldn&#39;t claim two minutes.
 &lt;div class=&quot;input-row&quot;&gt;
   &lt;div class=&quot;input-card&quot;&gt;
     &lt;div class=&quot;label&quot;&gt;Top number&lt;/div&gt;
-    &lt;input type=&quot;text&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9]*&quot; id=&quot;qm-sys&quot; @value=&quot;$todaySys &gt; 0 ? $todaySys : &#39;&#39;&quot;&gt;
+    &lt;input type=&quot;text&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9]*&quot; id=&quot;qm-sys&quot; aria-label=&quot;Top number (systolic), in mmHg&quot; @value=&quot;$todaySys &gt; 0 ? $todaySys : &#39;&#39;&quot;&gt;
     &lt;div class=&quot;unit&quot;&gt;mmHg (systolic)&lt;/div&gt;
   &lt;/div&gt;
   &lt;div class=&quot;input-card&quot;&gt;
     &lt;div class=&quot;label&quot;&gt;Bottom number&lt;/div&gt;
-    &lt;input type=&quot;text&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9]*&quot; id=&quot;qm-dia&quot; @value=&quot;$todayDia &gt; 0 ? $todayDia : &#39;&#39;&quot;&gt;
+    &lt;input type=&quot;text&quot; inputmode=&quot;numeric&quot; pattern=&quot;[0-9]*&quot; id=&quot;qm-dia&quot; aria-label=&quot;Bottom number (diastolic), in mmHg&quot; @value=&quot;$todayDia &gt; 0 ? $todayDia : &#39;&#39;&quot;&gt;
     &lt;div class=&quot;unit&quot;&gt;mmHg (diastolic)&lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;

@@ -105,20 +105,24 @@ empty passage with that name.
 </svg>
 </div>
 
-<div class="path-row" id="path-row" @style="'--progress: ' + _progressPct + '%;'">
+<!-- Each stone says what it means in words (role="img" + aria-label), so a
+     screen reader hears "Day 2: taken with help" instead of a tick, and the
+     meaning no longer rests on colour alone. The icons are hidden from it. -->
+<div class="path-row" id="path-row" role="group" aria-label="Your 7-day path" @style="'--progress: ' + _progressPct + '%;'">
 <<for _idx, _stone range _stones>>
+<<set _day to _idx + 1>>
 <<if _stone is null>>
 <<if _idx is _todaySlot and not $todayTaken>>
-<div class="stone today" data-stone="today"><span class="stone-icon">💊</span></div>
+<div class="stone today" data-stone="today" role="img" @aria-label="'Day ' + _day + ': today, not marked yet'"><span class="stone-icon" aria-hidden="true">💊</span></div>
 <<else>>
-<div class="stone future"><span class="stone-icon future-text"><<print _idx + 1>></span></div>
+<div class="stone future" role="img" @aria-label="'Day ' + _day + ': not reached yet'"><span class="stone-icon future-text" aria-hidden="true"><<print _day>></span></div>
 <</if>>
 <<elseif _stone.taken and _stone.caregiver>>
-<div class="stone taken-helper" data-stone="taken-helper"><span class="stone-icon">✓</span></div>
+<div class="stone taken-helper" data-stone="taken-helper" role="img" @aria-label="'Day ' + _day + ': taken with help'"><span class="stone-icon" aria-hidden="true">✓</span></div>
 <<elseif _stone.taken>>
-<div class="stone taken" data-stone="taken"><span class="stone-icon">✓</span></div>
+<div class="stone taken" data-stone="taken" role="img" @aria-label="'Day ' + _day + ': taken by yourself'"><span class="stone-icon" aria-hidden="true">✓</span></div>
 <<else>>
-<div class="stone missed" data-stone="missed"><span class="stone-icon">·</span></div>
+<div class="stone missed" data-stone="missed" role="img" @aria-label="'Day ' + _day + ': missed'"><span class="stone-icon" aria-hidden="true">·</span></div>
 <</if>>
 <</for>>
 </div>
@@ -395,19 +399,25 @@ body {
   z-index: 0;
 }
 
+/* Stones are 36px on a normal phone. On narrow screens (small phones,
+   "Display size: Largest", 200% zoom) they shrink down to 14px instead of
+   being cut off, and stay round thanks to aspect-ratio. The icon shrinks
+   with them; on a normal phone (375px) it is still 16px. */
 .stone {
   position: relative;
   z-index: 1;
   width: 36px;
-  height: 36px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  min-width: 14px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: clamp(9px, 4.3vw, 16px);
   font-weight: bold;
   color: #ffffff;
-  flex: 0 0 36px;
+  flex: 0 1 36px;
 }
 
 /* Stone states */
@@ -780,6 +790,8 @@ setup.pillPath = (function () {
   // Load { entries, pathNum } from localStorage into State.variables.
   // Falls back to a fresh blank state on any error so a corrupted
   // localStorage row never wedges the game.
+  // `awarded` remembers the days whose 25 points were already given, so
+  // taking, undoing and taking again on the same day cannot earn them twice.
   function loadState() {
     try {
       var saved = window.localStorage.getItem(STORAGE_KEY);
@@ -787,33 +799,67 @@ setup.pillPath = (function () {
         var s = JSON.parse(saved);
         State.variables.entries = s.entries || [];
         State.variables.pathNum = Number(s.pathNum) || 1;
+        State.variables.awarded = (s.awarded && typeof s.awarded === "object") ? s.awarded : {};
       } else {
         State.variables.entries = [];
         State.variables.pathNum = 1;
+        State.variables.awarded = {};
       }
     } catch (e) {
       State.variables.entries = [];
       State.variables.pathNum = 1;
+      State.variables.awarded = {};
     }
     /* Local calendar date, not UTC — see the note in the DASH game.
        toISOString() rolls over at 5pm Arizona time, which stamped an
        evening entry with tomorrow's date and pushed the path a stone
        ahead. Stored dates stay plain YYYY-MM-DD strings, so the UTC
        arithmetic in backfillMissedDays still lines up. */
-    State.variables.todayDate = (function () {
-      var d = new Date();
-      var mo = d.getMonth() + 1;
-      var day = d.getDate();
-      return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
-    }());
+    State.variables.todayDate = todayStr();
     State.variables.justCelebrated = false;
+  }
+
+  // Today as a local YYYY-MM-DD string.
+  function todayStr() {
+    var d = new Date();
+    var mo = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
+  }
+
+  // The game can stay open past midnight. Every action re-reads the date
+  // so a new day is never treated as "still yesterday".
+  function refreshToday() {
+    State.variables.todayDate = todayStr();
+    return State.variables.todayDate;
+  }
+
+  // When the current 7-stone path is full and today belongs after it, start
+  // the next path. Runs before the path is drawn or a pill is recorded, so a
+  // finished path always moves on by itself ("a new one starts tomorrow").
+  function settlePath(entries, today) {
+    var pathNum = State.variables.pathNum || 1;
+    var moved = false;
+    for (;;) {
+      var start = (pathNum - 1) * 7;
+      var slice = entries.slice(start, start + 7);
+      var todayInside = slice.some(function (e) { return e.date === today; });
+      if (slice.length >= 7 && !todayInside) { pathNum++; moved = true; }
+      else { break; }
+    }
+    if (moved) {
+      State.variables.pathNum = pathNum;
+      saveState();
+    }
+    return pathNum;
   }
 
   function saveState() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
         entries: State.variables.entries,
-        pathNum: State.variables.pathNum
+        pathNum: State.variables.pathNum,
+        awarded: State.variables.awarded || {}
       }));
     } catch (e) { /* ignore — Firestore is the canonical record */ }
   }
@@ -824,8 +870,7 @@ setup.pillPath = (function () {
   // of the Path passage.
   function computePath() {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
-    var pathNum = State.variables.pathNum || 1;
+    var today = refreshToday();
 
     // Cross-game auto-record: if Bingo Bash marked its "Take meds"
     // habit today (shared, date-keyed `ccq_shared_habits` record) and
@@ -841,12 +886,18 @@ setup.pillPath = (function () {
           if (entries[s].date === today) { hasToday = true; break; }
         }
         if (!hasToday) {
+          // Fill any skipped days first so the new entry lands on the
+          // right stone instead of straight after the last entry.
+          entries = backfillMissedDays(entries, today);
           entries.push({ date: today, taken: true, caregiver: false });
           State.variables.entries = entries;
           saveState();
         }
       }
     } catch (e) { /* best-effort cross-game sync */ }
+
+    // Start the next path if the current one is full and today is past it.
+    var pathNum = settlePath(entries, today);
 
     // Find today's entry, if any.
     var todayEntry = null;
@@ -924,10 +975,11 @@ setup.pillPath = (function () {
   // <<goto _nextStop>>.
   function markTaken(caregiver) {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
-    var pathNum = State.variables.pathNum || 1;
+    var today = refreshToday();
 
     entries = backfillMissedDays(entries, today);
+    // A finished path moves on before today's pill is recorded.
+    var pathNum = settlePath(entries, today);
 
     // If today already has a taken entry, this call is a
     // *correction* (participant came back via Edit Today to flip
@@ -942,10 +994,24 @@ setup.pillPath = (function () {
     if (todayIdx < 0) {
       entries.push({ date: today, taken: true, caregiver: !!caregiver });
     } else {
+      // Same answer as already saved (the screen was shown again by going
+      // Back and Forward): nothing changed, so log nothing and move on.
+      if (entries[todayIdx].taken && entries[todayIdx].caregiver === !!caregiver) {
+        var sameStart = (pathNum - 1) * 7;
+        State.temporary.nextStop =
+            (entries.slice(sameStart, sameStart + 7).length >= 7) ? "Celebration" : "Path";
+        return;
+      }
       isCorrection = !!entries[todayIdx].taken;
       entries[todayIdx].taken = true;
       entries[todayIdx].caregiver = !!caregiver;
     }
+
+    // Points are paid once per day, even if the pill is undone and taken
+    // again. The record is kept when a day is undone.
+    var awarded = State.variables.awarded || (State.variables.awarded = {});
+    var firstPayout = !awarded[today];
+    awarded[today] = true;
 
     State.variables.entries = entries;
     saveState();
@@ -971,23 +1037,17 @@ setup.pillPath = (function () {
     // game exit (TwineQuestionnaireHost._performExit). Corrections
     // earn 0 points (the original tap already credited 25) so the
     // participant can't farm the Edit Today flow for points.
-    try {
-      if (window.CCQ && typeof window.CCQ.logQuestCompletion === "function") {
-        window.CCQ.logQuestCompletion(caregiver ? "pill_taken_helper" : "pill_taken_self", {
-          pointsEarned: isCorrection ? 0 : 25,
-          gameId: "pill_path",
-          data: {
-            date: today,
-            pathNum: pathNum,
-            caregiver: !!caregiver,
-            correction: isCorrection
-          },
-          countAsCompletion: false
-        });
-      }
-    } catch (e) {
-      console.error("[PillPath] submit error:", e);
-    }
+    setup.ccq.call("logQuestCompletion", caregiver ? "pill_taken_helper" : "pill_taken_self", {
+      pointsEarned: (isCorrection || !firstPayout) ? 0 : 25,
+      gameId: "pill_path",
+      data: {
+        date: today,
+        pathNum: pathNum,
+        caregiver: !!caregiver,
+        correction: isCorrection
+      },
+      countAsCompletion: false
+    });
   }
 
   // Stash the celebration screen's "X of 7 stones" stat. Called
@@ -1028,7 +1088,7 @@ setup.pillPath = (function () {
   // `data.correction === true`.
   function undoToday() {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
+    var today = refreshToday();
     var pathNum = State.variables.pathNum || 1;
 
     var hadEntry = entries.some(function (e) { return e.date === today; });
@@ -1037,24 +1097,31 @@ setup.pillPath = (function () {
     State.variables.entries = entries;
     saveState();
 
+    // Also clear today's shared "took my meds" record. Without this, the
+    // very next Path screen reads that record and puts today's pill straight
+    // back, so Undo never stuck.
+    try {
+      var sharedRaw = window.localStorage.getItem("ccq_shared_habits");
+      var sharedObj = sharedRaw ? JSON.parse(sharedRaw) : null;
+      if (sharedObj && typeof sharedObj === "object" && sharedObj[today]) {
+        delete sharedObj[today].medTaken;
+        delete sharedObj[today].medHelper;
+        window.localStorage.setItem("ccq_shared_habits", JSON.stringify(sharedObj));
+      }
+    } catch (e) { /* best-effort cross-game hint */ }
+
     if (!hadEntry) return; /* nothing to log if already absent */
 
-    try {
-      if (window.CCQ && typeof window.CCQ.logQuestCompletion === "function") {
-        window.CCQ.logQuestCompletion("pill_undone", {
-          pointsEarned: 0,
-          gameId: "pill_path",
-          data: {
-            date: today,
-            pathNum: pathNum,
-            correction: true
-          },
-          countAsCompletion: false
-        });
-      }
-    } catch (e) {
-      console.error("[PillPath] undo error:", e);
-    }
+    setup.ccq.call("logQuestCompletion", "pill_undone", {
+      pointsEarned: 0,
+      gameId: "pill_path",
+      data: {
+        date: today,
+        pathNum: pathNum,
+        correction: true
+      },
+      countAsCompletion: false
+    });
   }
 
   // Position the green-pill mascot above the most recent taken

@@ -564,11 +564,14 @@ body {
   font-weight: bold;
   color: #1a1a1a;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
+/* 44x44 buttons with 8px between them: big enough for a shaky finger and
+   far enough apart that "up" is not hit by mistake for "down". */
 .rank-controls {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex: 0 0 auto;
 }
 .rank-btn {
@@ -576,8 +579,9 @@ body {
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
-  width: 36px !important;
-  height: 28px !important;
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
   cursor: pointer !important;
   font-size: 14px !important;
   font-weight: bold !important;
@@ -589,6 +593,7 @@ body {
   line-height: 1 !important;
 }
 .rank-btn:hover { background-color: #2a3a6a !important; }
+.rank-btn:focus-visible { outline: 3px solid #fde725 !important; outline-offset: 2px !important; }
 .rank-btn.disabled {
   background-color: #aaaaaa !important;
   cursor: not-allowed !important;
@@ -746,7 +751,8 @@ body {
 @media (min-width: 480px) {
   body { padding: 32px 16px; }
   .phone { min-height: 760px; }
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "SetupHelpers" */
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+/* twine-user-script #1: "SetupHelpers" */
 /*
 HELPERS available before any passage renders.
 - setup.gameInfo: lookup table for ranking cards
@@ -793,48 +799,70 @@ setup.bindSpeak = function () {
   });
 };
 
+/* Ranking list with move-up / move-down controls.
+   Accessibility: the controls are real <button>s (reachable by Tab, work with
+   Enter and Space, switch access and voice control), each named for its game
+   ("Move Salt Sludge up"), 44x44 to touch, and disabled at the ends. After a
+   move, focus follows the item and its new place is announced, so a
+   screen-reader or keyboard user does not lose their spot. */
 setup.renderRank = function (containerId, varName) {
   var container = document.getElementById(containerId);
   if (!container) return;
-  var draw = function () {
+  var ordinal = function (n) { return ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"][n - 1] || (n + "th"); };
+  var esc = function (s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); };
+  var draw = function (focusIdx, focusDir) {
     var arr = State.variables[varName] || [];
     container.innerHTML = "";
     arr.forEach(function (key, idx) {
       var info = setup.gameInfo[key] || { name: key, emoji: "🎮" };
       var row = document.createElement("div");
       row.className = "rank-item";
-      var upDisabled = (idx === 0) ? " disabled" : "";
-      var downDisabled = (idx === arr.length - 1) ? " disabled" : "";
+      row.setAttribute("aria-label", (idx + 1) + ". " + info.name);
+      var upOff = (idx === 0);
+      var downOff = (idx === arr.length - 1);
       row.innerHTML =
-        '<span class="rank-num">' + (idx + 1) + '</span>' +
-        '<span class="rank-emoji">' + info.emoji + '</span>' +
+        '<span class="rank-num" aria-hidden="true">' + (idx + 1) + '</span>' +
+        '<span class="rank-emoji" aria-hidden="true">' + info.emoji + '</span>' +
         '<span class="rank-name">' + info.name + '</span>' +
         '<span class="rank-controls">' +
-          '<a class="rank-btn rank-up' + upDisabled + '" data-idx="' + idx + '" data-dir="up">▲</a>' +
-          '<a class="rank-btn rank-down' + downDisabled + '" data-idx="' + idx + '" data-dir="down">▼</a>' +
+          '<button type="button" class="rank-btn rank-up' + (upOff ? ' disabled' : '') + '"' + (upOff ? ' disabled' : '') +
+            ' data-idx="' + idx + '" data-dir="up" aria-label="Move ' + esc(info.name) + ' up"><span aria-hidden="true">▲</span></button>' +
+          '<button type="button" class="rank-btn rank-down' + (downOff ? ' disabled' : '') + '"' + (downOff ? ' disabled' : '') +
+            ' data-idx="' + idx + '" data-dir="down" aria-label="Move ' + esc(info.name) + ' down"><span aria-hidden="true">▼</span></button>' +
         '</span>';
       container.appendChild(row);
     });
     container.querySelectorAll(".rank-btn").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.preventDefault();
-        if (btn.classList.contains("disabled")) return;
+        if (btn.disabled || btn.classList.contains("disabled")) return;
         var i = Number(btn.dataset.idx);
         var dir = btn.dataset.dir;
         var current = (State.variables[varName] || []).slice();
+        var to = i;
         if (dir === "up" && i > 0) {
-          var t = current[i]; current[i] = current[i - 1]; current[i - 1] = t;
+          var t = current[i]; current[i] = current[i - 1]; current[i - 1] = t; to = i - 1;
         } else if (dir === "down" && i < current.length - 1) {
-          var t2 = current[i]; current[i] = current[i + 1]; current[i + 1] = t2;
+          var t2 = current[i]; current[i] = current[i + 1]; current[i + 1] = t2; to = i + 1;
         }
         State.variables[varName] = current;
         /* Record that the participant actually moved an item in this
            list — detect which list is being rendered by varName. */
         if (varName === "rankFun") State.variables.rankFunTouched = true;
         if (varName === "rankHealth") State.variables.rankHealthTouched = true;
-        draw();
+        draw(to, dir);
+        var moved = (setup.gameInfo[current[to]] || { name: current[to] }).name;
+        if (window.CCQA11y && typeof window.CCQA11y.announce === "function") {
+          window.CCQA11y.announce(moved + " is now " + ordinal(to + 1));
+        }
       });
     });
+    /* Put focus back on the moved item's button (the other one if this end is now disabled). */
+    if (typeof focusIdx === "number") {
+      var pick = container.querySelector('.rank-btn[data-idx="' + focusIdx + '"][data-dir="' + focusDir + '"]:not([disabled])') ||
+                 container.querySelector('.rank-btn[data-idx="' + focusIdx + '"]:not([disabled])');
+      if (pick) { try { pick.focus({ preventScroll: true }); } catch (err) { pick.focus(); } }
+    }
   };
   draw();
 };
@@ -846,15 +874,199 @@ setup.renderRank = function (containerId, varName) {
 $(document).on(":passagestart", function (ev) {
   try {
     if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values go out, and the free-text answers (wishOpen,
+         threeWords) are left out entirely: telemetry is not meant to carry
+         what a participant typed. The full answers travel once, in the
+         final submit. */
       var snap = {};
-      try { Object.assign(snap, SugarCube.State.variables); } catch (e) {}
+      try {
+        snap = setup.ccq.slimVars(SugarCube.State.variables, 40);
+        delete snap.wishOpen;
+      } catch (e) {}
       CCQ.telemetry("passage_entered", {
         passage: ev.passage.title,
         vars: snap
       });
     }
   } catch (e) { /* swallow */ }
-});</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;script&gt;&gt;
+});
+/* twine-user-script #2: "CCQ Game Kit" */
+/*
+CardioCare Quest game kit: shared game-logic helpers (no UI, no styling).
+
+Included in every buildable game by tool/build_twine.sh. Everything lives
+under setup.ccq. The helpers come from patterns that worked well in the
+Capstone team's Zombie Chase game:
+
+  1. One safe door to Flutter      -> ccq.call()
+  2. Run-once guards that survive  -> ccq.once(), ccq.submitOnce()
+     the Back button
+  3. Tap guards for double taps    -> ccq.lock()
+  4. Timers that are always        -> ccq.after(), ccq.every(), cleaned on
+     cleaned up                       every passage change
+  5. Small telemetry snapshots     -> ccq.slimVars()
+  6. Threshold tables, not        -> ccq.band()
+     repeated if/else chains
+  7. Number safety                 -> ccq.clamp()
+
+Why "once" guards live on window and not in $variables: SugarCube restores
+$variables when the player uses Back/Forward, so a guard stored there is
+reset by history navigation. A window-level record is not.
+*/
+(function () {
+  "use strict";
+
+  var ccq = (setup.ccq = setup.ccq || {});
+
+  /* ---------- 1. Safe bridge ---------- */
+
+  // True when the Flutter bridge shim is present (false in a plain browser).
+  ccq.hasBridge = function () {
+    return !!(window.CCQ && typeof window.CCQ === "object");
+  };
+
+  // Calls window.CCQ[method](...args). Never throws. Returns the method's
+  // result, or undefined when the bridge or method is missing.
+  ccq.call = function (method) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      if (window.CCQ && typeof window.CCQ[method] === "function") {
+        return window.CCQ[method].apply(window.CCQ, args);
+      }
+    } catch (e) {
+      if (window.console) { console.warn("ccq.call(" + method + ") failed:", e); }
+    }
+    return undefined;
+  };
+
+  /* ---------- 2. Run-once guards ---------- */
+
+  var done = {};
+
+  // Runs fn only the first time this key is used. If fn throws, the key is
+  // released so a later attempt can try again. Returns true if fn ran.
+  ccq.once = function (key, fn) {
+    if (done[key]) { return false; }
+    done[key] = true;
+    try {
+      fn();
+      return true;
+    } catch (e) {
+      delete done[key];
+      if (window.console) { console.warn("ccq.once(" + key + ") failed:", e); }
+      return false;
+    }
+  };
+
+  // Forget a guard (or every guard that starts with prefix) so a new
+  // play-through can submit again.
+  ccq.resetOnce = function (prefix) {
+    Object.keys(done).forEach(function (k) {
+      if (!prefix || k.indexOf(prefix) === 0) { delete done[k]; }
+    });
+  };
+
+  // Submits a survey/game response exactly once per key. Does nothing (and
+  // keeps the key free) when the bridge is missing, so a later try works.
+  // Returns true when the response was sent.
+  ccq.submitOnce = function (key, answers, opts) {
+    if (!ccq.hasBridge() || typeof window.CCQ.submitResponse !== "function") {
+      return false;
+    }
+    return ccq.once("submit:" + key, function () {
+      window.CCQ.submitResponse(answers, opts || {});
+    });
+  };
+
+  /* ---------- 3. Tap guard ---------- */
+
+  var locks = {};
+
+  // Returns true the first time, then false until ms have passed. Use at the
+  // top of a choice handler: if (!ccq.lock("pick")) return;
+  ccq.lock = function (key, ms) {
+    var now = Date.now();
+    var hold = typeof ms === "number" ? ms : 700;
+    if (locks[key] && now - locks[key] < hold) { return false; }
+    locks[key] = now;
+    return true;
+  };
+
+  ccq.unlock = function (key) { delete locks[key]; };
+
+  /* ---------- 4. Timers that always get cleaned up ---------- */
+
+  var timeouts = [];
+  var intervals = [];
+
+  ccq.after = function (ms, fn) {
+    var id = setTimeout(function () {
+      var i = timeouts.indexOf(id);
+      if (i >= 0) { timeouts.splice(i, 1); }
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  };
+
+  ccq.every = function (ms, fn) {
+    var id = setInterval(fn, ms);
+    intervals.push(id);
+    return id;
+  };
+
+  // Stops every timer made with ccq.after / ccq.every.
+  ccq.clearTimers = function () {
+    timeouts.forEach(clearTimeout);
+    intervals.forEach(clearInterval);
+    timeouts = [];
+    intervals = [];
+  };
+
+  // Leaving a passage cancels its timers, so nothing fires on a screen that
+  // is no longer showing.
+  if (window.jQuery) {
+    jQuery(document).off(":passageinit.ccqkit").on(":passageinit.ccqkit", ccq.clearTimers);
+  }
+
+  /* ---------- 5. Small telemetry snapshot ---------- */
+
+  // Keeps only simple values (text, numbers, true/false) from a variables
+  // object. Long text is cut at maxLen. Big tables and objects are skipped,
+  // so each passage_entered event stays small.
+  ccq.slimVars = function (vars, maxLen) {
+    var limit = typeof maxLen === "number" ? maxLen : 120;
+    var out = {};
+    Object.keys(vars || {}).forEach(function (k) {
+      var v = vars[k];
+      var t = typeof v;
+      if (t === "number" || t === "boolean") { out[k] = v; }
+      else if (t === "string") { out[k] = v.length > limit ? v.slice(0, limit) : v; }
+    });
+    return out;
+  };
+
+  /* ---------- 6. Threshold tables ---------- */
+
+  // Picks a label from a list of [upperLimit, label] pairs, checked in order.
+  // The value must be BELOW the limit. Use Infinity for the last pair.
+  //   ccq.band(42, [[30, "clean"], [60, "middle"], [Infinity, "heavy"]])
+  //   -> "middle"
+  ccq.band = function (value, table) {
+    for (var i = 0; i < table.length; i++) {
+      if (value < table[i][0]) { return table[i][1]; }
+    }
+    return table.length ? table[table.length - 1][1] : undefined;
+  };
+
+  /* ---------- 7. Number safety ---------- */
+
+  ccq.clamp = function (n, min, max) {
+    var x = Number(n);
+    if (!isFinite(x)) { x = min; }
+    return Math.min(max, Math.max(min, x));
+  };
+})();</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;script&gt;&gt;
 State.variables.favoriteGame = &quot;&quot;;
 State.variables.funReasons = [];
 State.variables.feeling = 0;
@@ -879,7 +1091,6 @@ State.variables.rankHealthTouched = false;
 State.variables.favoriteTouched = false;
 State.variables.feelingTouched = false;
 State.variables.playAgainTouched = false;
-State.variables.submittedThisSession = false;
 State.variables.susIdx = 1;
 State.variables.susScore = 0;
 State.variables.startedAt = Date.now();
@@ -1482,9 +1693,9 @@ Three text inputs. Neutral prompt, no example words shown.
 &lt;/div&gt;
 
 &lt;div class=&quot;three-input-stack&quot;&gt;
-&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;1&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-1&quot;&gt;&lt;/div&gt;
-&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;2&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-2&quot;&gt;&lt;/div&gt;
-&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;3&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-3&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;1&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-1&quot; aria-label=&quot;Word 1 of 3&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;2&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-2&quot; aria-label=&quot;Word 2 of 3&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;three-input-row&quot;&gt;&lt;span class=&quot;three-input-num&quot;&gt;3&lt;/span&gt;&lt;input type=&quot;text&quot; id=&quot;word-3&quot; aria-label=&quot;Word 3 of 3&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 
 &lt;div class=&quot;spacer&quot;&gt;&lt;/div&gt;
@@ -1614,11 +1825,14 @@ scoring, no composite score.
       playAgain: State.variables.playAgain,
       wishOpen: State.variables.wishOpen
     },
+    /* Ratings run 1 to 5. An unanswered question is still 0 in the story
+       state, so it is sent as null: a missing answer must never look like a
+       real rating. */
     usability: {
-      easy: State.variables.susAnswers[0],
-      keepPlaying: State.variables.susAnswers[1],
-      knewProgress: State.variables.susAnswers[2],
-      confident: State.variables.susAnswers[3]
+      easy: ans[0] || null,
+      keepPlaying: ans[1] || null,
+      knewProgress: ans[2] || null,
+      confident: ans[3] || null
     },
     threeWords: State.variables.threeWords,
     rankFun: State.variables.rankFun,
@@ -1645,18 +1859,12 @@ scoring, no composite score.
 
      One-shot guard: the Done passage re-renders on every visit /
      :passagestart, which previously fired submitResponse each time
-     and wrote a duplicate response row. Guard on
-     $submittedThisSession so the network submit fires exactly once
-     per session; `submissionKey` (the story&#39;s startedAt) lets any
-     stray re-fire coalesce onto the same logical response. */
-  if (!State.variables.submittedThisSession) {
-    State.variables.submittedThisSession = true;
-    try {
-      if (window.CCQ &amp;&amp; typeof window.CCQ.submitResponse === &quot;function&quot;) {
-        window.CCQ.submitResponse(payload, { pointsEarned: 25 });
-      }
-    } catch (e) { /* swallow */ }
-  }
+     and wrote a duplicate response row. setup.ccq.submitOnce keeps its
+     record outside the story history, so Back and Forward cannot reset
+     it, and it only counts as used once the response was really handed to
+     the bridge (with no bridge it stays free for a later try). The key is
+     this play&#39;s startedAt, so a new respondent submits normally. */
+  setup.ccq.submitOnce(&quot;post_play:&quot; + State.variables.startedAt, payload, { pointsEarned: 25 });
 })();
 &lt;&lt;/script&gt;&gt;
 

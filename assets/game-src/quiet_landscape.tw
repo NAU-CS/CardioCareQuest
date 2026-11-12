@@ -737,12 +737,12 @@ ENTER SYS / DIA from cuff.
 <div class="input-row">
 <div class="input-card">
 <div class="input-label">Top</div>
-<input type="text" inputmode="numeric" pattern="[0-9]*" id="ql-sys">
+<input type="text" inputmode="numeric" pattern="[0-9]*" id="ql-sys" aria-label="Top number (systolic), in mmHg">
 <div class="input-unit">systolic</div>
 </div>
 <div class="input-card">
 <div class="input-label">Bottom</div>
-<input type="text" inputmode="numeric" pattern="[0-9]*" id="ql-dia">
+<input type="text" inputmode="numeric" pattern="[0-9]*" id="ql-dia" aria-label="Bottom number (diastolic), in mmHg">
 <div class="input-unit">diastolic</div>
 </div>
 </div>

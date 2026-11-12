@@ -239,19 +239,25 @@ body {
   z-index: 0;
 }
 
+/* Stones are 36px on a normal phone. On narrow screens (small phones,
+   "Display size: Largest", 200% zoom) they shrink down to 14px instead of
+   being cut off, and stay round thanks to aspect-ratio. The icon shrinks
+   with them; on a normal phone (375px) it is still 16px. */
 .stone {
   position: relative;
   z-index: 1;
   width: 36px;
-  height: 36px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  min-width: 14px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: clamp(9px, 4.3vw, 16px);
   font-weight: bold;
   color: #ffffff;
-  flex: 0 0 36px;
+  flex: 0 1 36px;
 }
 
 /* Stone states */
@@ -594,7 +600,8 @@ body {
 @media (min-width: 480px) {
   body { padding: 32px 16px; }
   .phone { min-height: 760px; }
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/*
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+/*
   Story-load script passage. SugarCube runs this once at engine
   init, BEFORE StoryInit, so `setup.pillPath` is defined by the
   time any passage references it.
@@ -621,6 +628,8 @@ setup.pillPath = (function () {
   // Load { entries, pathNum } from localStorage into State.variables.
   // Falls back to a fresh blank state on any error so a corrupted
   // localStorage row never wedges the game.
+  // `awarded` remembers the days whose 25 points were already given, so
+  // taking, undoing and taking again on the same day cannot earn them twice.
   function loadState() {
     try {
       var saved = window.localStorage.getItem(STORAGE_KEY);
@@ -628,33 +637,67 @@ setup.pillPath = (function () {
         var s = JSON.parse(saved);
         State.variables.entries = s.entries || [];
         State.variables.pathNum = Number(s.pathNum) || 1;
+        State.variables.awarded = (s.awarded && typeof s.awarded === "object") ? s.awarded : {};
       } else {
         State.variables.entries = [];
         State.variables.pathNum = 1;
+        State.variables.awarded = {};
       }
     } catch (e) {
       State.variables.entries = [];
       State.variables.pathNum = 1;
+      State.variables.awarded = {};
     }
     /* Local calendar date, not UTC — see the note in the DASH game.
        toISOString() rolls over at 5pm Arizona time, which stamped an
        evening entry with tomorrow's date and pushed the path a stone
        ahead. Stored dates stay plain YYYY-MM-DD strings, so the UTC
        arithmetic in backfillMissedDays still lines up. */
-    State.variables.todayDate = (function () {
-      var d = new Date();
-      var mo = d.getMonth() + 1;
-      var day = d.getDate();
-      return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
-    }());
+    State.variables.todayDate = todayStr();
     State.variables.justCelebrated = false;
+  }
+
+  // Today as a local YYYY-MM-DD string.
+  function todayStr() {
+    var d = new Date();
+    var mo = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + "-" + (mo < 10 ? "0" : "") + mo + "-" + (day < 10 ? "0" : "") + day;
+  }
+
+  // The game can stay open past midnight. Every action re-reads the date
+  // so a new day is never treated as "still yesterday".
+  function refreshToday() {
+    State.variables.todayDate = todayStr();
+    return State.variables.todayDate;
+  }
+
+  // When the current 7-stone path is full and today belongs after it, start
+  // the next path. Runs before the path is drawn or a pill is recorded, so a
+  // finished path always moves on by itself ("a new one starts tomorrow").
+  function settlePath(entries, today) {
+    var pathNum = State.variables.pathNum || 1;
+    var moved = false;
+    for (;;) {
+      var start = (pathNum - 1) * 7;
+      var slice = entries.slice(start, start + 7);
+      var todayInside = slice.some(function (e) { return e.date === today; });
+      if (slice.length >= 7 && !todayInside) { pathNum++; moved = true; }
+      else { break; }
+    }
+    if (moved) {
+      State.variables.pathNum = pathNum;
+      saveState();
+    }
+    return pathNum;
   }
 
   function saveState() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
         entries: State.variables.entries,
-        pathNum: State.variables.pathNum
+        pathNum: State.variables.pathNum,
+        awarded: State.variables.awarded || {}
       }));
     } catch (e) { /* ignore — Firestore is the canonical record */ }
   }
@@ -665,8 +708,7 @@ setup.pillPath = (function () {
   // of the Path passage.
   function computePath() {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
-    var pathNum = State.variables.pathNum || 1;
+    var today = refreshToday();
 
     // Cross-game auto-record: if Bingo Bash marked its "Take meds"
     // habit today (shared, date-keyed `ccq_shared_habits` record) and
@@ -682,12 +724,18 @@ setup.pillPath = (function () {
           if (entries[s].date === today) { hasToday = true; break; }
         }
         if (!hasToday) {
+          // Fill any skipped days first so the new entry lands on the
+          // right stone instead of straight after the last entry.
+          entries = backfillMissedDays(entries, today);
           entries.push({ date: today, taken: true, caregiver: false });
           State.variables.entries = entries;
           saveState();
         }
       }
     } catch (e) { /* best-effort cross-game sync */ }
+
+    // Start the next path if the current one is full and today is past it.
+    var pathNum = settlePath(entries, today);
 
     // Find today's entry, if any.
     var todayEntry = null;
@@ -765,10 +813,11 @@ setup.pillPath = (function () {
   // <<goto _nextStop>>.
   function markTaken(caregiver) {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
-    var pathNum = State.variables.pathNum || 1;
+    var today = refreshToday();
 
     entries = backfillMissedDays(entries, today);
+    // A finished path moves on before today's pill is recorded.
+    var pathNum = settlePath(entries, today);
 
     // If today already has a taken entry, this call is a
     // *correction* (participant came back via Edit Today to flip
@@ -783,10 +832,24 @@ setup.pillPath = (function () {
     if (todayIdx < 0) {
       entries.push({ date: today, taken: true, caregiver: !!caregiver });
     } else {
+      // Same answer as already saved (the screen was shown again by going
+      // Back and Forward): nothing changed, so log nothing and move on.
+      if (entries[todayIdx].taken && entries[todayIdx].caregiver === !!caregiver) {
+        var sameStart = (pathNum - 1) * 7;
+        State.temporary.nextStop =
+            (entries.slice(sameStart, sameStart + 7).length >= 7) ? "Celebration" : "Path";
+        return;
+      }
       isCorrection = !!entries[todayIdx].taken;
       entries[todayIdx].taken = true;
       entries[todayIdx].caregiver = !!caregiver;
     }
+
+    // Points are paid once per day, even if the pill is undone and taken
+    // again. The record is kept when a day is undone.
+    var awarded = State.variables.awarded || (State.variables.awarded = {});
+    var firstPayout = !awarded[today];
+    awarded[today] = true;
 
     State.variables.entries = entries;
     saveState();
@@ -812,23 +875,17 @@ setup.pillPath = (function () {
     // game exit (TwineQuestionnaireHost._performExit). Corrections
     // earn 0 points (the original tap already credited 25) so the
     // participant can't farm the Edit Today flow for points.
-    try {
-      if (window.CCQ && typeof window.CCQ.logQuestCompletion === "function") {
-        window.CCQ.logQuestCompletion(caregiver ? "pill_taken_helper" : "pill_taken_self", {
-          pointsEarned: isCorrection ? 0 : 25,
-          gameId: "pill_path",
-          data: {
-            date: today,
-            pathNum: pathNum,
-            caregiver: !!caregiver,
-            correction: isCorrection
-          },
-          countAsCompletion: false
-        });
-      }
-    } catch (e) {
-      console.error("[PillPath] submit error:", e);
-    }
+    setup.ccq.call("logQuestCompletion", caregiver ? "pill_taken_helper" : "pill_taken_self", {
+      pointsEarned: (isCorrection || !firstPayout) ? 0 : 25,
+      gameId: "pill_path",
+      data: {
+        date: today,
+        pathNum: pathNum,
+        caregiver: !!caregiver,
+        correction: isCorrection
+      },
+      countAsCompletion: false
+    });
   }
 
   // Stash the celebration screen's "X of 7 stones" stat. Called
@@ -869,7 +926,7 @@ setup.pillPath = (function () {
   // `data.correction === true`.
   function undoToday() {
     var entries = State.variables.entries || [];
-    var today = State.variables.todayDate;
+    var today = refreshToday();
     var pathNum = State.variables.pathNum || 1;
 
     var hadEntry = entries.some(function (e) { return e.date === today; });
@@ -878,24 +935,31 @@ setup.pillPath = (function () {
     State.variables.entries = entries;
     saveState();
 
+    // Also clear today's shared "took my meds" record. Without this, the
+    // very next Path screen reads that record and puts today's pill straight
+    // back, so Undo never stuck.
+    try {
+      var sharedRaw = window.localStorage.getItem("ccq_shared_habits");
+      var sharedObj = sharedRaw ? JSON.parse(sharedRaw) : null;
+      if (sharedObj && typeof sharedObj === "object" && sharedObj[today]) {
+        delete sharedObj[today].medTaken;
+        delete sharedObj[today].medHelper;
+        window.localStorage.setItem("ccq_shared_habits", JSON.stringify(sharedObj));
+      }
+    } catch (e) { /* best-effort cross-game hint */ }
+
     if (!hadEntry) return; /* nothing to log if already absent */
 
-    try {
-      if (window.CCQ && typeof window.CCQ.logQuestCompletion === "function") {
-        window.CCQ.logQuestCompletion("pill_undone", {
-          pointsEarned: 0,
-          gameId: "pill_path",
-          data: {
-            date: today,
-            pathNum: pathNum,
-            correction: true
-          },
-          countAsCompletion: false
-        });
-      }
-    } catch (e) {
-      console.error("[PillPath] undo error:", e);
-    }
+    setup.ccq.call("logQuestCompletion", "pill_undone", {
+      pointsEarned: 0,
+      gameId: "pill_path",
+      data: {
+        date: today,
+        pathNum: pathNum,
+        correction: true
+      },
+      countAsCompletion: false
+    });
   }
 
   // Position the green-pill mascot above the most recent taken
@@ -942,6 +1006,183 @@ setup.pillPath = (function () {
     computeCelebration: computeCelebration,
     advancePath: advancePath,
     positionMascot: positionMascot
+  };
+})();
+/* twine-user-script #2: "CCQ Game Kit" */
+/*
+CardioCare Quest game kit: shared game-logic helpers (no UI, no styling).
+
+Included in every buildable game by tool/build_twine.sh. Everything lives
+under setup.ccq. The helpers come from patterns that worked well in the
+Capstone team's Zombie Chase game:
+
+  1. One safe door to Flutter      -> ccq.call()
+  2. Run-once guards that survive  -> ccq.once(), ccq.submitOnce()
+     the Back button
+  3. Tap guards for double taps    -> ccq.lock()
+  4. Timers that are always        -> ccq.after(), ccq.every(), cleaned on
+     cleaned up                       every passage change
+  5. Small telemetry snapshots     -> ccq.slimVars()
+  6. Threshold tables, not        -> ccq.band()
+     repeated if/else chains
+  7. Number safety                 -> ccq.clamp()
+
+Why "once" guards live on window and not in $variables: SugarCube restores
+$variables when the player uses Back/Forward, so a guard stored there is
+reset by history navigation. A window-level record is not.
+*/
+(function () {
+  "use strict";
+
+  var ccq = (setup.ccq = setup.ccq || {});
+
+  /* ---------- 1. Safe bridge ---------- */
+
+  // True when the Flutter bridge shim is present (false in a plain browser).
+  ccq.hasBridge = function () {
+    return !!(window.CCQ && typeof window.CCQ === "object");
+  };
+
+  // Calls window.CCQ[method](...args). Never throws. Returns the method's
+  // result, or undefined when the bridge or method is missing.
+  ccq.call = function (method) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      if (window.CCQ && typeof window.CCQ[method] === "function") {
+        return window.CCQ[method].apply(window.CCQ, args);
+      }
+    } catch (e) {
+      if (window.console) { console.warn("ccq.call(" + method + ") failed:", e); }
+    }
+    return undefined;
+  };
+
+  /* ---------- 2. Run-once guards ---------- */
+
+  var done = {};
+
+  // Runs fn only the first time this key is used. If fn throws, the key is
+  // released so a later attempt can try again. Returns true if fn ran.
+  ccq.once = function (key, fn) {
+    if (done[key]) { return false; }
+    done[key] = true;
+    try {
+      fn();
+      return true;
+    } catch (e) {
+      delete done[key];
+      if (window.console) { console.warn("ccq.once(" + key + ") failed:", e); }
+      return false;
+    }
+  };
+
+  // Forget a guard (or every guard that starts with prefix) so a new
+  // play-through can submit again.
+  ccq.resetOnce = function (prefix) {
+    Object.keys(done).forEach(function (k) {
+      if (!prefix || k.indexOf(prefix) === 0) { delete done[k]; }
+    });
+  };
+
+  // Submits a survey/game response exactly once per key. Does nothing (and
+  // keeps the key free) when the bridge is missing, so a later try works.
+  // Returns true when the response was sent.
+  ccq.submitOnce = function (key, answers, opts) {
+    if (!ccq.hasBridge() || typeof window.CCQ.submitResponse !== "function") {
+      return false;
+    }
+    return ccq.once("submit:" + key, function () {
+      window.CCQ.submitResponse(answers, opts || {});
+    });
+  };
+
+  /* ---------- 3. Tap guard ---------- */
+
+  var locks = {};
+
+  // Returns true the first time, then false until ms have passed. Use at the
+  // top of a choice handler: if (!ccq.lock("pick")) return;
+  ccq.lock = function (key, ms) {
+    var now = Date.now();
+    var hold = typeof ms === "number" ? ms : 700;
+    if (locks[key] && now - locks[key] < hold) { return false; }
+    locks[key] = now;
+    return true;
+  };
+
+  ccq.unlock = function (key) { delete locks[key]; };
+
+  /* ---------- 4. Timers that always get cleaned up ---------- */
+
+  var timeouts = [];
+  var intervals = [];
+
+  ccq.after = function (ms, fn) {
+    var id = setTimeout(function () {
+      var i = timeouts.indexOf(id);
+      if (i >= 0) { timeouts.splice(i, 1); }
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  };
+
+  ccq.every = function (ms, fn) {
+    var id = setInterval(fn, ms);
+    intervals.push(id);
+    return id;
+  };
+
+  // Stops every timer made with ccq.after / ccq.every.
+  ccq.clearTimers = function () {
+    timeouts.forEach(clearTimeout);
+    intervals.forEach(clearInterval);
+    timeouts = [];
+    intervals = [];
+  };
+
+  // Leaving a passage cancels its timers, so nothing fires on a screen that
+  // is no longer showing.
+  if (window.jQuery) {
+    jQuery(document).off(":passageinit.ccqkit").on(":passageinit.ccqkit", ccq.clearTimers);
+  }
+
+  /* ---------- 5. Small telemetry snapshot ---------- */
+
+  // Keeps only simple values (text, numbers, true/false) from a variables
+  // object. Long text is cut at maxLen. Big tables and objects are skipped,
+  // so each passage_entered event stays small.
+  ccq.slimVars = function (vars, maxLen) {
+    var limit = typeof maxLen === "number" ? maxLen : 120;
+    var out = {};
+    Object.keys(vars || {}).forEach(function (k) {
+      var v = vars[k];
+      var t = typeof v;
+      if (t === "number" || t === "boolean") { out[k] = v; }
+      else if (t === "string") { out[k] = v.length > limit ? v.slice(0, limit) : v; }
+    });
+    return out;
+  };
+
+  /* ---------- 6. Threshold tables ---------- */
+
+  // Picks a label from a list of [upperLimit, label] pairs, checked in order.
+  // The value must be BELOW the limit. Use Infinity for the last pair.
+  //   ccq.band(42, [[30, "clean"], [60, "middle"], [Infinity, "heavy"]])
+  //   -> "middle"
+  ccq.band = function (value, table) {
+    for (var i = 0; i < table.length; i++) {
+      if (value < table[i][0]) { return table[i][1]; }
+    }
+    return table.length ? table[table.length - 1][1] : undefined;
+  };
+
+  /* ---------- 7. Number safety ---------- */
+
+  ccq.clamp = function (n, min, max) {
+    var x = Number(n);
+    if (!isFinite(x)) { x = min; }
+    return Math.min(max, Math.max(min, x));
   };
 })();</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;run setup.pillPath.loadState()&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Story innit" tags="" position="225,100" size="100,100">&lt;&lt;if $entries.length gt 0&gt;&gt;&lt;&lt;goto &quot;Path&quot;&gt;&gt;&lt;&lt;else&gt;&gt;&lt;&lt;goto &quot;Welcome&quot;&gt;&gt;&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="Welcome" tags="nobr" position="350,100" size="100,100">/*
 First-time welcome. One screen, one button.
@@ -1028,20 +1269,24 @@ empty passage with that name.
 &lt;/svg&gt;
 &lt;/div&gt;
 
-&lt;div class=&quot;path-row&quot; id=&quot;path-row&quot; @style=&quot;&#39;--progress: &#39; + _progressPct + &#39;%;&#39;&quot;&gt;
+&lt;!-- Each stone says what it means in words (role=&quot;img&quot; + aria-label), so a
+     screen reader hears &quot;Day 2: taken with help&quot; instead of a tick, and the
+     meaning no longer rests on colour alone. The icons are hidden from it. --&gt;
+&lt;div class=&quot;path-row&quot; id=&quot;path-row&quot; role=&quot;group&quot; aria-label=&quot;Your 7-day path&quot; @style=&quot;&#39;--progress: &#39; + _progressPct + &#39;%;&#39;&quot;&gt;
 &lt;&lt;for _idx, _stone range _stones&gt;&gt;
+&lt;&lt;set _day to _idx + 1&gt;&gt;
 &lt;&lt;if _stone is null&gt;&gt;
 &lt;&lt;if _idx is _todaySlot and not $todayTaken&gt;&gt;
-&lt;div class=&quot;stone today&quot; data-stone=&quot;today&quot;&gt;&lt;span class=&quot;stone-icon&quot;&gt;💊&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;stone today&quot; data-stone=&quot;today&quot; role=&quot;img&quot; @aria-label=&quot;&#39;Day &#39; + _day + &#39;: today, not marked yet&#39;&quot;&gt;&lt;span class=&quot;stone-icon&quot; aria-hidden=&quot;true&quot;&gt;💊&lt;/span&gt;&lt;/div&gt;
 &lt;&lt;else&gt;&gt;
-&lt;div class=&quot;stone future&quot;&gt;&lt;span class=&quot;stone-icon future-text&quot;&gt;&lt;&lt;print _idx + 1&gt;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;stone future&quot; role=&quot;img&quot; @aria-label=&quot;&#39;Day &#39; + _day + &#39;: not reached yet&#39;&quot;&gt;&lt;span class=&quot;stone-icon future-text&quot; aria-hidden=&quot;true&quot;&gt;&lt;&lt;print _day&gt;&gt;&lt;/span&gt;&lt;/div&gt;
 &lt;&lt;/if&gt;&gt;
 &lt;&lt;elseif _stone.taken and _stone.caregiver&gt;&gt;
-&lt;div class=&quot;stone taken-helper&quot; data-stone=&quot;taken-helper&quot;&gt;&lt;span class=&quot;stone-icon&quot;&gt;✓&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;stone taken-helper&quot; data-stone=&quot;taken-helper&quot; role=&quot;img&quot; @aria-label=&quot;&#39;Day &#39; + _day + &#39;: taken with help&#39;&quot;&gt;&lt;span class=&quot;stone-icon&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/div&gt;
 &lt;&lt;elseif _stone.taken&gt;&gt;
-&lt;div class=&quot;stone taken&quot; data-stone=&quot;taken&quot;&gt;&lt;span class=&quot;stone-icon&quot;&gt;✓&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;stone taken&quot; data-stone=&quot;taken&quot; role=&quot;img&quot; @aria-label=&quot;&#39;Day &#39; + _day + &#39;: taken by yourself&#39;&quot;&gt;&lt;span class=&quot;stone-icon&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;/div&gt;
 &lt;&lt;else&gt;&gt;
-&lt;div class=&quot;stone missed&quot; data-stone=&quot;missed&quot;&gt;&lt;span class=&quot;stone-icon&quot;&gt;·&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;stone missed&quot; data-stone=&quot;missed&quot; role=&quot;img&quot; @aria-label=&quot;&#39;Day &#39; + _day + &#39;: missed&#39;&quot;&gt;&lt;span class=&quot;stone-icon&quot; aria-hidden=&quot;true&quot;&gt;·&lt;/span&gt;&lt;/div&gt;
 &lt;&lt;/if&gt;&gt;
 &lt;&lt;/for&gt;&gt;
 &lt;/div&gt;

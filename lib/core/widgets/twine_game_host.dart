@@ -196,6 +196,7 @@ class _TwineGameHostState extends State<TwineGameHost> {
             // Inject the shared stylesheet and bridge shim, then restore progress.
             await _controller.runJavaScript(kCcqGameStyleInjectionJs);
             await _injectBridge();
+            await _injectA11y();
             _loadGameState();
             if (mounted) setState(() => _loading = false);
           },
@@ -309,6 +310,17 @@ class _TwineGameHostState extends State<TwineGameHost> {
       );
     } catch (e) {
       debugPrint('${widget.gameId} bridge inject failed: $e');
+    }
+  }
+
+  // Inject ccq_a11y.js into every game, even ones that carry their own bridge:
+  // screen-change announcements, meter values, real header buttons, page language.
+  Future<void> _injectA11y() async {
+    try {
+      final js = await rootBundle.loadString('assets/game/ccq_a11y.js');
+      await _controller.runJavaScript(js);
+    } catch (e) {
+      debugPrint('${widget.gameId} a11y inject failed: $e');
     }
   }
 
