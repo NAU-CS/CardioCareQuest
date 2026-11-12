@@ -1253,3 +1253,20 @@ and the player sees just the loading text below.
 .cloud.white .cloud-svg { z-index: 2; }
 .cloud.white .cloud-text { z-index: 3; }
 .finish-early a { display: inline-block; min-height: 44px; min-width: 44px; padding: 12px 18px; box-sizing: border-box; line-height: 20px; }
+
+:: A11ytextandcontrast1819 [stylesheet]
+/* A11y text and contrast (#18, #19) */
+/* "I'm done for now" (the only way to end a walk early) was blue on
+   blue-grey, 1.07:1 and nearly invisible; it is now a clear button (8.7:1).
+   Other low-contrast text darkened or lightened against its real
+   background; all informational text is 14px+. */
+.finish-early a { color: #ffffff !important; background: #1f4e79; border-radius: 22px; font-weight: bold; text-decoration: none; }
+.scene-3 .stats-text { color: #1f4e79; }
+.info-title, .info-section li { color: #0f1c2a; }
+.scene-2 .subtitle { color: #96cde1; }
+.celebration-tip strong { color: #d9c8ea; }
+.header h1 { font-size: 14px; }
+.progress-right .label { font-size: 14px; opacity: 1; }
+.progress-right .number { font-size: 14px; }
+.celebration-grid .label { font-size: 14px; }
+.scene-1 .cloud-text { font-size: 14px; }
