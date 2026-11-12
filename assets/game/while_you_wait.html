@@ -367,7 +367,11 @@ body {
 .flipped:active {
   transform: scaleY(-1) translate(0px, -2px);
 
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "script.js" */
+}
+/* A11y names and targets (#20, #22) */
+/* The Fidget Library button was 36px tall; now 44px. */
+.flButton button, .flButton .macro-button { min-height: 44px; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "script.js" */
 setup.prevRand = -1
 setup.currentFidget = "drums"
 
@@ -518,6 +522,7 @@ setup.populateFidget = function populateFidget() {
 				newButton.addEventListener('mouseover', () => setup.bubbleRespondDrag(newButton));
 				newButton.addEventListener('click', () => setup.bubbleRespond(newButton));
 				newButton.classList.add("bubble");
+				newButton.setAttribute('aria-label', 'Bubble ' + (i + 1));
 				container.appendChild(newButton);
 			}
 
@@ -537,9 +542,11 @@ setup.populateFidget = function populateFidget() {
 			let newImg = document.createElement('img');
 			newImg.src = "../../img/measurement/switch2.png"
 			newImg.classList.add("switchImg")
+			newImg.alt = "";
 			newImg.style.transform = 'scaleY(-1)';
 
 			let newButton = document.createElement('button');
+			newButton.setAttribute('aria-label', 'Light switch');
 			newButton.addEventListener('click', () => setup.switchRespond(newButton, newImg));
 			newButton.appendChild(newImg)
 			newButton.classList.add("switch");
@@ -571,12 +578,14 @@ setup.populateFidget = function populateFidget() {
 			for (let i = 0; i < 4; i++) {
 				let newLight = document.createElement('button');
 				newLight.classList.add("light");
+				newLight.setAttribute('aria-label', 'Light ' + (i + 1) + ': play its sound');
 				setup.light[i] = [newLight, 1, 1]
 				newLight.addEventListener('click', () => setup.playLight(setup.light[i]));
 				lightRow.appendChild(newLight);
 
 				let newButton = document.createElement('button');
 				newButton.classList.add("lightButton");
+				newButton.setAttribute('aria-label', 'Light ' + (i + 1) + ': on or off');
 				newButton.addEventListener('click', () => setup.toggleLight(setup.light[i]));
 				buttonRow.appendChild(newButton);
 
@@ -590,6 +599,8 @@ setup.populateFidget = function populateFidget() {
 						let newImg = document.createElement('img');
 						newImg.src = "../../img/measurement/arrow.png"
 						newImg.classList.add("flipImg")
+						newImg.alt = "";
+						newFlip.setAttribute('aria-label', 'Light ' + (i + 1) + ': next colour');
 						newFlip.appendChild(newImg)
 						newFlip.addEventListener('click', () => setup.incLight(setup.light[i]));
 					} else {
@@ -597,6 +608,8 @@ setup.populateFidget = function populateFidget() {
 						let newImg = document.createElement('img');
 						newImg.src = "../../img/measurement/arrow.png"
 						newImg.classList.add("flipped");
+						newImg.alt = "";
+						newFlip.setAttribute('aria-label', 'Light ' + (i + 1) + ': previous colour');
 						newFlip.appendChild(newImg)
 					}
 					flipCol.appendChild(newFlip)
@@ -627,8 +640,10 @@ setup.populateFidget = function populateFidget() {
 			for (let drum in setup.instruments) {
 				let newButton = document.createElement('button');
 				newButton.classList.add(setup.instruments[drum], "drums");
+				newButton.setAttribute('aria-label', setup.drumName(setup.instruments[drum]));
 				let newImg = document.createElement('img');
 				newImg.src = "../../img/measurement/drumSnareNoTag.png"
+				newImg.alt = "";
 				newButton.appendChild(newImg)
 
 				newButton.addEventListener('click', () => {
@@ -644,10 +659,21 @@ setup.populateFidget = function populateFidget() {
 }
 
 /*For unique drum parts: bass, hihat, crash, and lowTom */
+/* Spoken name for each drum, so screen-reader and voice-control users know
+   which one they are tapping. Unknown ids are split from camelCase. */
+setup.drumName = function drumName(id) {
+	const names = { bass: "Bass drum", crash: "Crash cymbal", hihat: "Hi-hat", lowTom: "Low tom" };
+	if (names[id]) { return names[id]; }
+	const words = String(id).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+	return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 setup.createUniqueDrums = function createUniqueDrums(container, which) {
 	let drum = document.createElement('button');
 	drum.classList.add(which, "drums");
+	drum.setAttribute('aria-label', setup.drumName(which));
 	let drumImg = document.createElement('img');
+	drumImg.alt = "";
 
 	switch (which) {
 		case "bass":
@@ -787,10 +813,10 @@ setup.lightColors = {
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="3" name="Fidget Library" tags="" position="350,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Fidget Library
 Time left: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
   &lt;div class=&quot;library&quot;&gt;
-    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/bubbleWrap.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;bubbleWrap&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
-    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/lightSwitch.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;switch&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
-    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/controlPanel.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;controlPanel&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
-    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/drums.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;drums&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; alt=&#39;Bubble wrap&#39; src=&#39;../../img/measurement/bubbleWrap.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;bubbleWrap&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; alt=&#39;Light switch&#39; src=&#39;../../img/measurement/lightSwitch.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;switch&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; alt=&#39;Control panel&#39; src=&#39;../../img/measurement/controlPanel.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;controlPanel&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
+    &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; alt=&#39;Drum kit&#39; src=&#39;../../img/measurement/drums.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;drums&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
   &lt;/div&gt; 
 
 &lt;/div&gt;</tw-passagedata></tw-storydata>
