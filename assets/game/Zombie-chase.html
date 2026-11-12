@@ -687,9 +687,11 @@ setup.redeem = function redeem(stepsWalked) {
 
 	let spotsToDelete = []
 
-	for (let [key, value] of Object.entries(window.GameData.extras)) {
-		if (value.requiredSteps >= 0) {
-			value.requiredSteps -= stepsWalked
+	// Only challenges on screen count steps. Before, challenges not yet shown
+	// also counted, so they could appear already part-done or finished.
+	for (let item of setup.exposedExtras) {
+		if (item[1].requiredSteps > 0) {
+			item[1].requiredSteps -= stepsWalked
 		}
 	}
 
@@ -710,14 +712,19 @@ setup.redeem = function redeem(stepsWalked) {
 					break;
 			}
 
+			// Swap in the next challenge. If this one's element is missing, still
+			// count it as done and carry on: an early return here used to skip
+			// every other finished challenge in the same step update.
 			let theExtra = document.getElementById(item[0])
-			if (theExtra == null) { return; }
-			theExtra.classList.add('fade-out');
-
-			setTimeout(() => {
-				theExtra.remove()
+			if (theExtra) {
+				theExtra.classList.add('fade-out');
+				setTimeout(() => {
+					theExtra.remove()
+					if (container) { setup.createExtra(container) }
+				}, 1200);
+			} else if (container) {
 				setup.createExtra(container)
-			}, 1200);
+			}
 
 			let index = setup.exposedExtras.indexOf(item)
 			spotsToDelete.push(index)
@@ -742,9 +749,9 @@ setup.updateExtraProgress = function updateExtraProgress() {
 
 	for (let item of setup.exposedExtras) {
 		let extraElement = document.getElementById(item[0])
-		if (extraElement == null) { return; }
+		if (extraElement == null) { continue; } // skip this one, keep updating the rest
 		let fill = extraElement.querySelector('.progress-fill');
-		if (!fill) return;
+		if (!fill) continue;
 		let stepsCompleted = item[1].ogRequiredSteps - item[1].requiredSteps;
 		let percent = Math.min(
 			Math.max(
@@ -760,10 +767,12 @@ setup.updateExtraProgress = function updateExtraProgress() {
 
 setup.updateTotalDistance = function updateTotalDistance() {
 	let bar = document.getElementById("bar")
+	if (!bar) return;
 	let fill = bar.querySelector('.progress-fill');
 	if (!fill) return;
 	let stepsCompleted = 20000 - setup.zombieDist;
-	let percent = Math.min(Math.max((stepsCompleted / 20000) * 100, 0));
+	// Keep the bar between 0% and 100% (the upper limit was missing).
+	let percent = Math.min(Math.max((stepsCompleted / 20000) * 100, 0), 100);
 	fill.style.width = percent + '%';
 
 }
