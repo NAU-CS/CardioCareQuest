@@ -677,10 +677,13 @@ setup.createUniqueDrums = function createUniqueDrums(container, which) {
 
 setup.totalSeconds = 120;
 
+/* Two-minute wait, counting down. It used to be labelled "Time Spent",
+   kept counting below zero in the background forever, and never told the
+   player the wait was over. Now it stops at zero and says so. */
 setup.updateTimer = function updateTimer() {
+	if (setup.totalSeconds <= 0) { return; }
 	setup.totalSeconds--;
 
-	const hours = Math.floor(setup.totalSeconds / 3600);
 	const minutes = Math.floor((setup.totalSeconds % 3600) / 60);
 	const seconds = setup.totalSeconds % 60;
 
@@ -689,10 +692,12 @@ setup.updateTimer = function updateTimer() {
 		String(seconds).padStart(2, '0');
 
 	if (setup.totalSeconds <= 0) {
-		setup.formattedTime = "00:00"
+		setup.formattedTime = "Done, you can take your reading now";
+		clearInterval(setup.timerId);
+		setup.timerId = null;
 	}
-	document.getElementById('timer').textContent = setup.formattedTime;
-
+	const el = document.getElementById('timer');
+	if (el) { el.textContent = setup.formattedTime; }
 }
 /* twine-user-script #2: "variables.js" */
 /*Audio for Bubble Wrap */
@@ -769,8 +774,8 @@ setup.lightColors = {
   		4px 4px 10px rgb(238, 130, 238),
   		-4px -4px 10px rgb(238, 130, 238)`, 'violet'],
 
-}</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;run setInterval(setup.updateTimer, 1000)&gt;&gt;
-&lt;&lt;=setup.formattedTime = &quot;02:00&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Home" tags="" position="225,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Time Spent: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
+}</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;run if (!setup.timerId) { setup.timerId = setInterval(setup.updateTimer, 1000) }&gt;&gt;
+&lt;&lt;=setup.formattedTime = &quot;02:00&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Home" tags="" position="225,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Time left: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
 &lt;span id=&quot;currentFidget&quot;&gt;Switch&lt;/span&gt;
 &lt;div id=&quot;blankSpace&quot;&gt;&lt;/div&gt;
 &lt;div class=&quot;fidgetInterface&quot; id=&quot;container&quot;&gt;&lt;/div&gt;
@@ -780,7 +785,7 @@ setup.lightColors = {
     &lt;&lt;button &quot;Fidget Library&quot; &quot;Fidget Library&quot;&gt;&gt;&lt;&lt;/button&gt;&gt;
   &lt;/div&gt;
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="3" name="Fidget Library" tags="" position="350,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Fidget Library
-Time Spent: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
+Time left: &lt;span id=&quot;timer&quot;&gt;&lt;&lt;=setup.formattedTime&gt;&gt;&lt;/span&gt;
   &lt;div class=&quot;library&quot;&gt;
     &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/bubbleWrap.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;bubbleWrap&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
     &lt;&lt;button &quot;&lt;img class=&#39;fidgetIcon&#39; src=&#39;../../img/measurement/lightSwitch.png&#39;&gt;&quot;&gt;&gt;&lt;&lt;run setup.swapFidget(&quot;switch&quot;)&gt;&gt; &lt;&lt;/button&gt;&gt;
