@@ -673,6 +673,7 @@ body {
 .phone a.macro-link:not(.btn-primary):not(.btn-secondary):not(.choice-btn):not(.ingredient) {
   color: #fde725;
 }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+/* twine-user-script #1: "UserScript" */
 /* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
@@ -680,8 +681,10 @@ body {
 $(document).on(":passagestart", function (ev) {
   try {
     if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values are sent, so the food pool and current-food
+         objects no longer ride along on every passage. */
       var snap = {};
-      try { Object.assign(snap, SugarCube.State.variables); } catch (e) {}
+      try { snap = setup.ccq.slimVars(SugarCube.State.variables); } catch (e) {}
       CCQ.telemetry("passage_entered", {
         passage: ev.passage.title,
         vars: snap
@@ -1140,15 +1143,244 @@ setup.dash.pickFood = function () {
   State.variables.currentFood = chosen;
   /* Write straight away rather than at the end of the round: a player who
      closes the app mid-question should still have used up that food. */
+  setup.dash.saveDay();
+  return chosen;
+};
+
+/* Saves today's progress (foods shown, correct and wrong counts) for this
+   participant. Called when a food is drawn and again when it is answered. */
+setup.dash.saveDay = function () {
   try {
     window.localStorage.setItem("dash_day", JSON.stringify({
       date: State.variables.todayDate,
       pid: State.variables.currentPid,
-      seen: seen
+      seen: State.variables.seenFoods || [],
+      score: State.variables.score || 0,
+      wrong: State.variables.wrong || 0
     }));
   } catch (e) { /* Firestore is the canonical record */ }
-  return chosen;
-};</script><tw-passagedata pid="1" name="Story innit" tags="Important/Needed" position="100,100" size="100,100">/*
+};
+
+/* Records the player's answer to the food on screen: "lowers" or "raises".
+   Runs when the button is tapped, never when a screen draws, so showing a
+   screen again cannot count an answer twice. */
+setup.dash.answer = function (choice) {
+  var v = State.variables;
+  var f = v.currentFood;
+  v.lastFood = f.id;
+  if (f.correct === choice) {
+    v.lastCorrect = true;
+    v.score = v.score + 1;
+  } else {
+    v.lastCorrect = false;
+    v.wrong = v.wrong + 1;
+  }
+  setup.dash.saveDay();
+};
+
+/* Which round the player is on. It is the number of foods shown today, so it
+   survives quitting and coming back, and it cannot drift on a redraw. */
+setup.dash.round = function () {
+  return Math.max(1, (State.variables.seenFoods || []).length);
+};
+
+/* Meal verdict from the meal score. One table for the value sent to
+   research. (Meal Result still words the on-screen message itself.) */
+setup.dash.VERDICTS = [[0, "weak"], [10, "mixed"], [30, "moderate"], [Infinity, "strong"]];
+setup.dash.verdict = function (mealScore) {
+  return setup.ccq.band(mealScore, setup.dash.VERDICTS);
+};
+
+/* Sends the finished play to research once per participant per day (the
+   same rule as the daily gate). The guard lives outside the story history. */
+setup.dash.submitFinal = function () {
+  var v = State.variables;
+  setup.ccq.submitOnce("dash:" + v.currentPid + ":" + v.todayDate, {
+    playerName: v.playerName,
+    quizScore: v.score,
+    quizWrong: v.wrong,
+    mealScore: v.mealScore,
+    meal: v.meal,
+    verdict: setup.dash.verdict(v.mealScore)
+  }, { pointsEarned: 50, countAsCompletion: true });
+};
+/* twine-user-script #2: "CCQ Game Kit" */
+/*
+CardioCare Quest game kit: shared game-logic helpers (no UI, no styling).
+
+Included in every buildable game by tool/build_twine.sh. Everything lives
+under setup.ccq. The helpers come from patterns that worked well in the
+Capstone team's Zombie Chase game:
+
+  1. One safe door to Flutter      -> ccq.call()
+  2. Run-once guards that survive  -> ccq.once(), ccq.submitOnce()
+     the Back button
+  3. Tap guards for double taps    -> ccq.lock()
+  4. Timers that are always        -> ccq.after(), ccq.every(), cleaned on
+     cleaned up                       every passage change
+  5. Small telemetry snapshots     -> ccq.slimVars()
+  6. Threshold tables, not        -> ccq.band()
+     repeated if/else chains
+  7. Number safety                 -> ccq.clamp()
+
+Why "once" guards live on window and not in $variables: SugarCube restores
+$variables when the player uses Back/Forward, so a guard stored there is
+reset by history navigation. A window-level record is not.
+*/
+(function () {
+  "use strict";
+
+  var ccq = (setup.ccq = setup.ccq || {});
+
+  /* ---------- 1. Safe bridge ---------- */
+
+  // True when the Flutter bridge shim is present (false in a plain browser).
+  ccq.hasBridge = function () {
+    return !!(window.CCQ && typeof window.CCQ === "object");
+  };
+
+  // Calls window.CCQ[method](...args). Never throws. Returns the method's
+  // result, or undefined when the bridge or method is missing.
+  ccq.call = function (method) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      if (window.CCQ && typeof window.CCQ[method] === "function") {
+        return window.CCQ[method].apply(window.CCQ, args);
+      }
+    } catch (e) {
+      if (window.console) { console.warn("ccq.call(" + method + ") failed:", e); }
+    }
+    return undefined;
+  };
+
+  /* ---------- 2. Run-once guards ---------- */
+
+  var done = {};
+
+  // Runs fn only the first time this key is used. If fn throws, the key is
+  // released so a later attempt can try again. Returns true if fn ran.
+  ccq.once = function (key, fn) {
+    if (done[key]) { return false; }
+    done[key] = true;
+    try {
+      fn();
+      return true;
+    } catch (e) {
+      delete done[key];
+      if (window.console) { console.warn("ccq.once(" + key + ") failed:", e); }
+      return false;
+    }
+  };
+
+  // Forget a guard (or every guard that starts with prefix) so a new
+  // play-through can submit again.
+  ccq.resetOnce = function (prefix) {
+    Object.keys(done).forEach(function (k) {
+      if (!prefix || k.indexOf(prefix) === 0) { delete done[k]; }
+    });
+  };
+
+  // Submits a survey/game response exactly once per key. Does nothing (and
+  // keeps the key free) when the bridge is missing, so a later try works.
+  // Returns true when the response was sent.
+  ccq.submitOnce = function (key, answers, opts) {
+    if (!ccq.hasBridge() || typeof window.CCQ.submitResponse !== "function") {
+      return false;
+    }
+    return ccq.once("submit:" + key, function () {
+      window.CCQ.submitResponse(answers, opts || {});
+    });
+  };
+
+  /* ---------- 3. Tap guard ---------- */
+
+  var locks = {};
+
+  // Returns true the first time, then false until ms have passed. Use at the
+  // top of a choice handler: if (!ccq.lock("pick")) return;
+  ccq.lock = function (key, ms) {
+    var now = Date.now();
+    var hold = typeof ms === "number" ? ms : 700;
+    if (locks[key] && now - locks[key] < hold) { return false; }
+    locks[key] = now;
+    return true;
+  };
+
+  ccq.unlock = function (key) { delete locks[key]; };
+
+  /* ---------- 4. Timers that always get cleaned up ---------- */
+
+  var timeouts = [];
+  var intervals = [];
+
+  ccq.after = function (ms, fn) {
+    var id = setTimeout(function () {
+      var i = timeouts.indexOf(id);
+      if (i >= 0) { timeouts.splice(i, 1); }
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  };
+
+  ccq.every = function (ms, fn) {
+    var id = setInterval(fn, ms);
+    intervals.push(id);
+    return id;
+  };
+
+  // Stops every timer made with ccq.after / ccq.every.
+  ccq.clearTimers = function () {
+    timeouts.forEach(clearTimeout);
+    intervals.forEach(clearInterval);
+    timeouts = [];
+    intervals = [];
+  };
+
+  // Leaving a passage cancels its timers, so nothing fires on a screen that
+  // is no longer showing.
+  if (window.jQuery) {
+    jQuery(document).off(":passageinit.ccqkit").on(":passageinit.ccqkit", ccq.clearTimers);
+  }
+
+  /* ---------- 5. Small telemetry snapshot ---------- */
+
+  // Keeps only simple values (text, numbers, true/false) from a variables
+  // object. Long text is cut at maxLen. Big tables and objects are skipped,
+  // so each passage_entered event stays small.
+  ccq.slimVars = function (vars, maxLen) {
+    var limit = typeof maxLen === "number" ? maxLen : 120;
+    var out = {};
+    Object.keys(vars || {}).forEach(function (k) {
+      var v = vars[k];
+      var t = typeof v;
+      if (t === "number" || t === "boolean") { out[k] = v; }
+      else if (t === "string") { out[k] = v.length > limit ? v.slice(0, limit) : v; }
+    });
+    return out;
+  };
+
+  /* ---------- 6. Threshold tables ---------- */
+
+  // Picks a label from a list of [upperLimit, label] pairs, checked in order.
+  // The value must be BELOW the limit. Use Infinity for the last pair.
+  //   ccq.band(42, [[30, "clean"], [60, "middle"], [Infinity, "heavy"]])
+  //   -> "middle"
+  ccq.band = function (value, table) {
+    for (var i = 0; i < table.length; i++) {
+      if (value < table[i][0]) { return table[i][1]; }
+    }
+    return table.length ? table[table.length - 1][1] : undefined;
+  };
+
+  /* ---------- 7. Number safety ---------- */
+
+  ccq.clamp = function (n, min, max) {
+    var x = Number(n);
+    if (!isFinite(x)) { x = min; }
+    return Math.min(max, Math.max(min, x));
+  };
+})();</script><tw-passagedata pid="1" name="Story innit" tags="Important/Needed" position="100,100" size="100,100">/*
 SYSTEM CODE: runs once at the very start.
 
 Variables:
@@ -1186,10 +1418,9 @@ You do not need to edit this.
    screen right after Welcome. Foods tagged diet:&quot;meat&quot;/&quot;dairy&quot; are hidden
    for the matching diet so no one is shown food they do not eat. */
 &lt;&lt;set $playerDiet to &quot;everything&quot;&gt;&gt;
-/* One-shot guard so Meal Result&#39;s submitResponse fires exactly once
-   per play-through. Reset on Story innit so PLAY AGAIN gets a fresh
-   shot. See ::Meal Result for the submit body. */
-&lt;&lt;set $submittedThisSession to false&gt;&gt;
+/* The Meal Result submit is guarded by setup.dash.submitFinal, with one
+   submit per participant per day. That record lives outside the story
+   history, so Back and Forward cannot make it fire twice. */
 
 /* DAILY GATE: DASH is a once-per-day quest. localStorage holds the last
    calendar date the participant finished it; if that matches today,
@@ -1233,6 +1464,11 @@ try {
     var dayToday = day.date === State.variables.todayDate;
     if (dayPid &amp;&amp; dayToday &amp;&amp; day.seen instanceof Array) {
       State.variables.seenFoods = day.seen;
+      /* Bring the running tally back too. Before, a player who quit after
+         six foods came back with the right foods already used up but a
+         score and wrong count of zero, so their results were undercounted. */
+      State.variables.score = Number(day.score) || 0;
+      State.variables.wrong = Number(day.wrong) || 0;
     }
   }
 } catch (e) { /* keep $dashDone false and today&#39;s food list empty */ }
@@ -1362,7 +1598,7 @@ false. Then on to Food Result. Replaces the old hardcoded Food Card 1..6.
 */
 
 &lt;div class=&quot;phone&quot;&gt;
-&lt;div class=&quot;header&quot;&gt;&lt;span&gt;DASH Game&lt;/span&gt;&lt;span class=&quot;round-label&quot;&gt;Round $round of &lt;&lt;print setup.dash.eligibleCount()&gt;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;header&quot;&gt;&lt;span&gt;DASH Game&lt;/span&gt;&lt;span class=&quot;round-label&quot;&gt;Round &lt;&lt;print setup.dash.round()&gt;&gt; of &lt;&lt;print setup.dash.eligibleCount()&gt;&gt;&lt;/span&gt;&lt;/div&gt;
 
 &lt;div class=&quot;meters-wrap&quot;&gt;
 &lt;div class=&quot;meter-row&quot;&gt;&lt;div class=&quot;meter-label&quot;&gt;Correct&lt;/div&gt;&lt;div class=&quot;meter-bar&quot;&gt;&lt;div class=&quot;meter-bar-fill correct&quot; @style=&quot;&#39;width: &#39; + Math.min(100, ($score / 6) * 100) + &#39;%&#39;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
@@ -1382,27 +1618,17 @@ false. Then on to Food Result. Replaces the old hardcoded Food Card 1..6.
 &lt;div class=&quot;choice-row&quot;&gt;
 
 &lt;&lt;link &#39;&lt;span&gt;LOWERS BP&lt;/span&gt;&#39;&gt;&gt;
-&lt;&lt;set $lastFood to $currentFood.id&gt;&gt;
-&lt;&lt;if $currentFood.correct is &quot;lowers&quot;&gt;&gt;
-&lt;&lt;set $lastCorrect to true&gt;&gt;
-&lt;&lt;set $score to $score + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;set $lastCorrect to false&gt;&gt;
-&lt;&lt;set $wrong to $wrong + 1&gt;&gt;
-&lt;&lt;/if&gt;&gt;
+&lt;&lt;if setup.ccq.lock(&quot;dash-answer&quot;)&gt;&gt;
+&lt;&lt;run setup.dash.answer(&quot;lowers&quot;)&gt;&gt;
 &lt;&lt;goto &quot;Food Result&quot;&gt;&gt;
+&lt;&lt;/if&gt;&gt;
 &lt;&lt;/link&gt;&gt;
 
 &lt;&lt;link &#39;&lt;span&gt;RAISES BP&lt;/span&gt;&#39;&gt;&gt;
-&lt;&lt;set $lastFood to $currentFood.id&gt;&gt;
-&lt;&lt;if $currentFood.correct is &quot;raises&quot;&gt;&gt;
-&lt;&lt;set $lastCorrect to true&gt;&gt;
-&lt;&lt;set $score to $score + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;set $lastCorrect to false&gt;&gt;
-&lt;&lt;set $wrong to $wrong + 1&gt;&gt;
-&lt;&lt;/if&gt;&gt;
+&lt;&lt;if setup.ccq.lock(&quot;dash-answer&quot;)&gt;&gt;
+&lt;&lt;run setup.dash.answer(&quot;raises&quot;)&gt;&gt;
 &lt;&lt;goto &quot;Food Result&quot;&gt;&gt;
+&lt;&lt;/if&gt;&gt;
 &lt;&lt;/link&gt;&gt;
 
 &lt;/div&gt;
@@ -1422,7 +1648,7 @@ Moves to next round or meal builder after round 6.
 */
 
 &lt;div class=&quot;phone&quot;&gt;
-&lt;div class=&quot;header&quot;&gt;&lt;span&gt;DASH Game&lt;/span&gt;&lt;span class=&quot;round-label&quot;&gt;Round $round of &lt;&lt;print setup.dash.eligibleCount()&gt;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;header&quot;&gt;&lt;span&gt;DASH Game&lt;/span&gt;&lt;span class=&quot;round-label&quot;&gt;Round &lt;&lt;print setup.dash.round()&gt;&gt; of &lt;&lt;print setup.dash.eligibleCount()&gt;&gt;&lt;/span&gt;&lt;/div&gt;
 
 &lt;div class=&quot;meters-wrap&quot;&gt;
 &lt;div class=&quot;meter-row&quot;&gt;&lt;div class=&quot;meter-label&quot;&gt;Correct&lt;/div&gt;&lt;div class=&quot;meter-bar&quot;&gt;&lt;div class=&quot;meter-bar-fill correct&quot; @style=&quot;&#39;width: &#39; + Math.min(100, ($score / 6) * 100) + &#39;%&#39;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
@@ -1444,8 +1670,10 @@ Moves to next round or meal builder after round 6.
      Meal Builder Intro. So Food Result always just advances the round
      counter and hands back to Round Start for the next draw.
      Per-round &quot;BACK TO CARDIOCAREQUEST&quot; stays removed — the burger
-     menu (≡) already exposes &quot;Go to dashboard&quot; on every screen. --&gt;
-&lt;&lt;set $round to $round + 1&gt;&gt;
+     menu (≡) already exposes &quot;Go to dashboard&quot; on every screen.
+     The round number is no longer counted here. It is read from the list of
+     foods already shown (setup.dash.round), so drawing this screen again
+     cannot push the number forward. --&gt;
 &lt;a class=&quot;btn-primary&quot; data-passage=&quot;Round Start&quot;&gt;NEXT FOOD&lt;/a&gt;
 
 &lt;/div&gt;
@@ -1527,30 +1755,11 @@ no matter how many participants finish the game. Guarded by a
 session flag so PLAY AGAIN doesn&#39;t double-credit.
 */
 
-&lt;&lt;if not $submittedThisSession&gt;&gt;
-&lt;&lt;set $submittedThisSession to true&gt;&gt;
-&lt;&lt;run
-  try {
-    if (window.CCQ &amp;&amp; typeof window.CCQ.submitResponse === &quot;function&quot;) {
-      var verdict = &quot;weak&quot;;
-      if (State.variables.mealScore &gt;= 30) { verdict = &quot;strong&quot;; }
-      else if (State.variables.mealScore &gt;= 10) { verdict = &quot;moderate&quot;; }
-      else if (State.variables.mealScore &gt;= 0) { verdict = &quot;mixed&quot;; }
-      window.CCQ.submitResponse({
-        playerName: State.variables.playerName,
-        quizScore: State.variables.score,
-        quizWrong: State.variables.wrong,
-        mealScore: State.variables.mealScore,
-        meal: State.variables.meal,
-        verdict: verdict
-      }, { pointsEarned: 50, countAsCompletion: true });
-    }
-  } catch (e) { /* swallow */ }
-&gt;&gt;
-&lt;!-- DAILY GATE: stamp today so Story innit locks the game until tomorrow. --&gt;
+&lt;&lt;run setup.dash.submitFinal()&gt;&gt;
+&lt;!-- DAILY GATE: stamp today so Story innit locks the game until tomorrow.
+     Stamping again on a repeat visit is harmless. --&gt;
 &lt;&lt;run try { window.localStorage.setItem(&quot;dash_save&quot;, JSON.stringify({ dashDate: State.variables.todayDate, pid: State.variables.currentPid })); } catch (e) {} &gt;&gt;
 &lt;&lt;set $dashDone to true&gt;&gt;
-&lt;&lt;/if&gt;&gt;
 
 &lt;div class=&quot;phone&quot;&gt;
 &lt;div class=&quot;header&quot;&gt;&lt;span&gt;DASH Game&lt;/span&gt;&lt;span class=&quot;round-label&quot;&gt;Your meal&lt;/span&gt;&lt;/div&gt;

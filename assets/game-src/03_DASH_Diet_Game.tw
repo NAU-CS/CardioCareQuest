@@ -49,10 +49,9 @@ You do not need to edit this.
    screen right after Welcome. Foods tagged diet:"meat"/"dairy" are hidden
    for the matching diet so no one is shown food they do not eat. */
 <<set $playerDiet to "everything">>
-/* One-shot guard so Meal Result's submitResponse fires exactly once
-   per play-through. Reset on Story innit so PLAY AGAIN gets a fresh
-   shot. See ::Meal Result for the submit body. */
-<<set $submittedThisSession to false>>
+/* The Meal Result submit is guarded by setup.dash.submitFinal, with one
+   submit per participant per day. That record lives outside the story
+   history, so Back and Forward cannot make it fire twice. */
 
 /* DAILY GATE: DASH is a once-per-day quest. localStorage holds the last
    calendar date the participant finished it; if that matches today,
@@ -96,6 +95,11 @@ try {
     var dayToday = day.date === State.variables.todayDate;
     if (dayPid && dayToday && day.seen instanceof Array) {
       State.variables.seenFoods = day.seen;
+      /* Bring the running tally back too. Before, a player who quit after
+         six foods came back with the right foods already used up but a
+         score and wrong count of zero, so their results were undercounted. */
+      State.variables.score = Number(day.score) || 0;
+      State.variables.wrong = Number(day.wrong) || 0;
     }
   }
 } catch (e) { /* keep $dashDone false and today's food list empty */ }
@@ -243,7 +247,7 @@ false. Then on to Food Result. Replaces the old hardcoded Food Card 1..6.
 */
 
 <div class="phone">
-<div class="header"><span>DASH Game</span><span class="round-label">Round $round of <<print setup.dash.eligibleCount()>></span></div>
+<div class="header"><span>DASH Game</span><span class="round-label">Round <<print setup.dash.round()>> of <<print setup.dash.eligibleCount()>></span></div>
 
 <div class="meters-wrap">
 <div class="meter-row"><div class="meter-label">Correct</div><div class="meter-bar"><div class="meter-bar-fill correct" @style="'width: ' + Math.min(100, ($score / 6) * 100) + '%'"></div></div></div>
@@ -263,27 +267,17 @@ false. Then on to Food Result. Replaces the old hardcoded Food Card 1..6.
 <div class="choice-row">
 
 <<link '<span>LOWERS BP</span>'>>
-<<set $lastFood to $currentFood.id>>
-<<if $currentFood.correct is "lowers">>
-<<set $lastCorrect to true>>
-<<set $score to $score + 1>>
-<<else>>
-<<set $lastCorrect to false>>
-<<set $wrong to $wrong + 1>>
-<</if>>
+<<if setup.ccq.lock("dash-answer")>>
+<<run setup.dash.answer("lowers")>>
 <<goto "Food Result">>
+<</if>>
 <</link>>
 
 <<link '<span>RAISES BP</span>'>>
-<<set $lastFood to $currentFood.id>>
-<<if $currentFood.correct is "raises">>
-<<set $lastCorrect to true>>
-<<set $score to $score + 1>>
-<<else>>
-<<set $lastCorrect to false>>
-<<set $wrong to $wrong + 1>>
-<</if>>
+<<if setup.ccq.lock("dash-answer")>>
+<<run setup.dash.answer("raises")>>
 <<goto "Food Result">>
+<</if>>
 <</link>>
 
 </div>
@@ -306,7 +300,7 @@ Moves to next round or meal builder after round 6.
 */
 
 <div class="phone">
-<div class="header"><span>DASH Game</span><span class="round-label">Round $round of <<print setup.dash.eligibleCount()>></span></div>
+<div class="header"><span>DASH Game</span><span class="round-label">Round <<print setup.dash.round()>> of <<print setup.dash.eligibleCount()>></span></div>
 
 <div class="meters-wrap">
 <div class="meter-row"><div class="meter-label">Correct</div><div class="meter-bar"><div class="meter-bar-fill correct" @style="'width: ' + Math.min(100, ($score / 6) * 100) + '%'"></div></div></div>
@@ -328,8 +322,10 @@ Moves to next round or meal builder after round 6.
      Meal Builder Intro. So Food Result always just advances the round
      counter and hands back to Round Start for the next draw.
      Per-round "BACK TO CARDIOCAREQUEST" stays removed — the burger
-     menu (≡) already exposes "Go to dashboard" on every screen. -->
-<<set $round to $round + 1>>
+     menu (≡) already exposes "Go to dashboard" on every screen.
+     The round number is no longer counted here. It is read from the list of
+     foods already shown (setup.dash.round), so drawing this screen again
+     cannot push the number forward. -->
 <a class="btn-primary" data-passage="Round Start">NEXT FOOD</a>
 
 </div>
@@ -420,30 +416,11 @@ no matter how many participants finish the game. Guarded by a
 session flag so PLAY AGAIN doesn't double-credit.
 */
 
-<<if not $submittedThisSession>>
-<<set $submittedThisSession to true>>
-<<run
-  try {
-    if (window.CCQ && typeof window.CCQ.submitResponse === "function") {
-      var verdict = "weak";
-      if (State.variables.mealScore >= 30) { verdict = "strong"; }
-      else if (State.variables.mealScore >= 10) { verdict = "moderate"; }
-      else if (State.variables.mealScore >= 0) { verdict = "mixed"; }
-      window.CCQ.submitResponse({
-        playerName: State.variables.playerName,
-        quizScore: State.variables.score,
-        quizWrong: State.variables.wrong,
-        mealScore: State.variables.mealScore,
-        meal: State.variables.meal,
-        verdict: verdict
-      }, { pointsEarned: 50, countAsCompletion: true });
-    }
-  } catch (e) { /* swallow */ }
->>
-<!-- DAILY GATE: stamp today so Story innit locks the game until tomorrow. -->
+<<run setup.dash.submitFinal()>>
+<!-- DAILY GATE: stamp today so Story innit locks the game until tomorrow.
+     Stamping again on a repeat visit is harmless. -->
 <<run try { window.localStorage.setItem("dash_save", JSON.stringify({ dashDate: State.variables.todayDate, pid: State.variables.currentPid })); } catch (e) {} >>
 <<set $dashDone to true>>
-<</if>>
 
 <div class="phone">
 <div class="header"><span>DASH Game</span><span class="round-label">Your meal</span></div>
@@ -1098,8 +1075,10 @@ body {
 $(document).on(":passagestart", function (ev) {
   try {
     if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values are sent, so the food pool and current-food
+         objects no longer ride along on every passage. */
       var snap = {};
-      try { Object.assign(snap, SugarCube.State.variables); } catch (e) {}
+      try { snap = setup.ccq.slimVars(SugarCube.State.variables); } catch (e) {}
       CCQ.telemetry("passage_entered", {
         passage: ev.passage.title,
         vars: snap
@@ -1558,12 +1537,64 @@ setup.dash.pickFood = function () {
   State.variables.currentFood = chosen;
   /* Write straight away rather than at the end of the round: a player who
      closes the app mid-question should still have used up that food. */
+  setup.dash.saveDay();
+  return chosen;
+};
+
+/* Saves today's progress (foods shown, correct and wrong counts) for this
+   participant. Called when a food is drawn and again when it is answered. */
+setup.dash.saveDay = function () {
   try {
     window.localStorage.setItem("dash_day", JSON.stringify({
       date: State.variables.todayDate,
       pid: State.variables.currentPid,
-      seen: seen
+      seen: State.variables.seenFoods || [],
+      score: State.variables.score || 0,
+      wrong: State.variables.wrong || 0
     }));
   } catch (e) { /* Firestore is the canonical record */ }
-  return chosen;
+};
+
+/* Records the player's answer to the food on screen: "lowers" or "raises".
+   Runs when the button is tapped, never when a screen draws, so showing a
+   screen again cannot count an answer twice. */
+setup.dash.answer = function (choice) {
+  var v = State.variables;
+  var f = v.currentFood;
+  v.lastFood = f.id;
+  if (f.correct === choice) {
+    v.lastCorrect = true;
+    v.score = v.score + 1;
+  } else {
+    v.lastCorrect = false;
+    v.wrong = v.wrong + 1;
+  }
+  setup.dash.saveDay();
+};
+
+/* Which round the player is on. It is the number of foods shown today, so it
+   survives quitting and coming back, and it cannot drift on a redraw. */
+setup.dash.round = function () {
+  return Math.max(1, (State.variables.seenFoods || []).length);
+};
+
+/* Meal verdict from the meal score. One table for the value sent to
+   research. (Meal Result still words the on-screen message itself.) */
+setup.dash.VERDICTS = [[0, "weak"], [10, "mixed"], [30, "moderate"], [Infinity, "strong"]];
+setup.dash.verdict = function (mealScore) {
+  return setup.ccq.band(mealScore, setup.dash.VERDICTS);
+};
+
+/* Sends the finished play to research once per participant per day (the
+   same rule as the daily gate). The guard lives outside the story history. */
+setup.dash.submitFinal = function () {
+  var v = State.variables;
+  setup.ccq.submitOnce("dash:" + v.currentPid + ":" + v.todayDate, {
+    playerName: v.playerName,
+    quizScore: v.score,
+    quizWrong: v.wrong,
+    mealScore: v.mealScore,
+    meal: v.meal,
+    verdict: setup.dash.verdict(v.mealScore)
+  }, { pointsEarned: 50, countAsCompletion: true });
 };

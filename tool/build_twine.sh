@@ -56,6 +56,7 @@ if [ ! -x "$TWEEGO_BIN" ]; then
   exit 1
 fi
 
+KIT="assets/game-src/shared/ccq_game_kit.tw"
 mode="${1:-build}"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -64,8 +65,11 @@ changed=0
 for pair in "${BUILDABLE[@]}"; do
   src="assets/game-src/${pair%%:*}.tw"
   out="assets/game/${pair##*:}.html"
-  "$TWEEGO_BIN" -o "$tmp/out.html" "$src"
-  if cmp -s "$tmp/out.html" "$out"; then
+  # Every game also gets the shared logic kit (assets/game-src/shared).
+  "$TWEEGO_BIN" -o "$tmp/out.html" "$src" "$KIT"
+  # Compare with line endings ignored: Windows checkouts store CRLF, tweego
+  # writes LF, and that alone should not count as a change.
+  if cmp -s <(tr -d '\r' < "$tmp/out.html") <(tr -d '\r' < "$out"); then
     echo "unchanged  ${pair##*:}"
   elif [ "$mode" = "--check" ]; then
     echo "WOULD CHANGE  ${pair##*:}"

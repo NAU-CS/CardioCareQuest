@@ -1,0 +1,177 @@
+:: CCQ Game Kit [script]
+/*
+CardioCare Quest game kit: shared game-logic helpers (no UI, no styling).
+
+Included in every buildable game by tool/build_twine.sh. Everything lives
+under setup.ccq. The helpers come from patterns that worked well in the
+Capstone team's Zombie Chase game:
+
+  1. One safe door to Flutter      -> ccq.call()
+  2. Run-once guards that survive  -> ccq.once(), ccq.submitOnce()
+     the Back button
+  3. Tap guards for double taps    -> ccq.lock()
+  4. Timers that are always        -> ccq.after(), ccq.every(), cleaned on
+     cleaned up                       every passage change
+  5. Small telemetry snapshots     -> ccq.slimVars()
+  6. Threshold tables, not        -> ccq.band()
+     repeated if/else chains
+  7. Number safety                 -> ccq.clamp()
+
+Why "once" guards live on window and not in $variables: SugarCube restores
+$variables when the player uses Back/Forward, so a guard stored there is
+reset by history navigation. A window-level record is not.
+*/
+(function () {
+  "use strict";
+
+  var ccq = (setup.ccq = setup.ccq || {});
+
+  /* ---------- 1. Safe bridge ---------- */
+
+  // True when the Flutter bridge shim is present (false in a plain browser).
+  ccq.hasBridge = function () {
+    return !!(window.CCQ && typeof window.CCQ === "object");
+  };
+
+  // Calls window.CCQ[method](...args). Never throws. Returns the method's
+  // result, or undefined when the bridge or method is missing.
+  ccq.call = function (method) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      if (window.CCQ && typeof window.CCQ[method] === "function") {
+        return window.CCQ[method].apply(window.CCQ, args);
+      }
+    } catch (e) {
+      if (window.console) { console.warn("ccq.call(" + method + ") failed:", e); }
+    }
+    return undefined;
+  };
+
+  /* ---------- 2. Run-once guards ---------- */
+
+  var done = {};
+
+  // Runs fn only the first time this key is used. If fn throws, the key is
+  // released so a later attempt can try again. Returns true if fn ran.
+  ccq.once = function (key, fn) {
+    if (done[key]) { return false; }
+    done[key] = true;
+    try {
+      fn();
+      return true;
+    } catch (e) {
+      delete done[key];
+      if (window.console) { console.warn("ccq.once(" + key + ") failed:", e); }
+      return false;
+    }
+  };
+
+  // Forget a guard (or every guard that starts with prefix) so a new
+  // play-through can submit again.
+  ccq.resetOnce = function (prefix) {
+    Object.keys(done).forEach(function (k) {
+      if (!prefix || k.indexOf(prefix) === 0) { delete done[k]; }
+    });
+  };
+
+  // Submits a survey/game response exactly once per key. Does nothing (and
+  // keeps the key free) when the bridge is missing, so a later try works.
+  // Returns true when the response was sent.
+  ccq.submitOnce = function (key, answers, opts) {
+    if (!ccq.hasBridge() || typeof window.CCQ.submitResponse !== "function") {
+      return false;
+    }
+    return ccq.once("submit:" + key, function () {
+      window.CCQ.submitResponse(answers, opts || {});
+    });
+  };
+
+  /* ---------- 3. Tap guard ---------- */
+
+  var locks = {};
+
+  // Returns true the first time, then false until ms have passed. Use at the
+  // top of a choice handler: if (!ccq.lock("pick")) return;
+  ccq.lock = function (key, ms) {
+    var now = Date.now();
+    var hold = typeof ms === "number" ? ms : 700;
+    if (locks[key] && now - locks[key] < hold) { return false; }
+    locks[key] = now;
+    return true;
+  };
+
+  ccq.unlock = function (key) { delete locks[key]; };
+
+  /* ---------- 4. Timers that always get cleaned up ---------- */
+
+  var timeouts = [];
+  var intervals = [];
+
+  ccq.after = function (ms, fn) {
+    var id = setTimeout(function () {
+      var i = timeouts.indexOf(id);
+      if (i >= 0) { timeouts.splice(i, 1); }
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  };
+
+  ccq.every = function (ms, fn) {
+    var id = setInterval(fn, ms);
+    intervals.push(id);
+    return id;
+  };
+
+  // Stops every timer made with ccq.after / ccq.every.
+  ccq.clearTimers = function () {
+    timeouts.forEach(clearTimeout);
+    intervals.forEach(clearInterval);
+    timeouts = [];
+    intervals = [];
+  };
+
+  // Leaving a passage cancels its timers, so nothing fires on a screen that
+  // is no longer showing.
+  if (window.jQuery) {
+    jQuery(document).off(":passageinit.ccqkit").on(":passageinit.ccqkit", ccq.clearTimers);
+  }
+
+  /* ---------- 5. Small telemetry snapshot ---------- */
+
+  // Keeps only simple values (text, numbers, true/false) from a variables
+  // object. Long text is cut at maxLen. Big tables and objects are skipped,
+  // so each passage_entered event stays small.
+  ccq.slimVars = function (vars, maxLen) {
+    var limit = typeof maxLen === "number" ? maxLen : 120;
+    var out = {};
+    Object.keys(vars || {}).forEach(function (k) {
+      var v = vars[k];
+      var t = typeof v;
+      if (t === "number" || t === "boolean") { out[k] = v; }
+      else if (t === "string") { out[k] = v.length > limit ? v.slice(0, limit) : v; }
+    });
+    return out;
+  };
+
+  /* ---------- 6. Threshold tables ---------- */
+
+  // Picks a label from a list of [upperLimit, label] pairs, checked in order.
+  // The value must be BELOW the limit. Use Infinity for the last pair.
+  //   ccq.band(42, [[30, "clean"], [60, "middle"], [Infinity, "heavy"]])
+  //   -> "middle"
+  ccq.band = function (value, table) {
+    for (var i = 0; i < table.length; i++) {
+      if (value < table[i][0]) { return table[i][1]; }
+    }
+    return table.length ? table[table.length - 1][1] : undefined;
+  };
+
+  /* ---------- 7. Number safety ---------- */
+
+  ccq.clamp = function (n, min, max) {
+    var x = Number(n);
+    if (!isFinite(x)) { x = min; }
+    return Math.min(max, Math.max(min, x));
+  };
+})();

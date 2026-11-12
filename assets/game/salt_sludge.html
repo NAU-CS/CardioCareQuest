@@ -528,6 +528,7 @@ body {
 .phone a.macro-link:not(.btn-primary):not(.btn-secondary):not(.food-card) {
   color: #ffffff;
 }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+/* twine-user-script #1: "UserScript" */
 /* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
@@ -535,8 +536,10 @@ body {
 $(document).on(":passagestart", function (ev) {
   try {
     if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values are sent. The scenario table ($dayOrder) used to
+         ride along on every passage, which made each event large. */
       var snap = {};
-      try { Object.assign(snap, SugarCube.State.variables); } catch (e) {}
+      try { snap = setup.ccq.slimVars(SugarCube.State.variables); } catch (e) {}
       CCQ.telemetry("passage_entered", {
         passage: ev.passage.title,
         vars: snap
@@ -700,6 +703,49 @@ setup.salt.pool = [
 
 /* Return a fresh Fisher–Yates shuffle of the pool, truncated to n days.
    Operates on a COPY so setup.salt.pool keeps its authoring order. */
+/* How many days one play-through lasts. Every "5" in the game logic comes
+   from here. */
+setup.salt.DAYS = 5;
+
+/* Final-artery verdict from the sludge level. One table drives both the
+   headline on the Final Result screen and the value sent to research. */
+setup.salt.VERDICTS = [[30, "clean"], [60, "middle"], [Infinity, "heavy"]];
+setup.salt.verdict = function (sludge) {
+  return setup.ccq.band(sludge, setup.salt.VERDICTS);
+};
+
+/* Applies the player's pick for the current day, once, when the food is
+   tapped (not when a screen draws). Moves the sludge and nutrient meters,
+   remembers which day was answered ($resultDay) and then moves $day on, so
+   going Back and Forward through the story cannot skip or repeat a day. */
+setup.salt.applyChoice = function (choice) {
+  var v = State.variables;
+  var s = v.dayOrder[v.day - 1];
+  if (choice === "good") {
+    v.sludge = Math.max(0, v.sludge - s.sludgeDown);
+    v.score = v.score + s.scoreUp;
+  } else {
+    v.sludge = Math.min(100, v.sludge + s.sludgeUp);
+  }
+  v.foodChoice = choice;
+  v.resultDay = v.day;
+  if (v.day < setup.salt.DAYS) { v.day = v.day + 1; }
+};
+
+/* Sends the finished play to research (and awards the points) once per
+   play-through. The once-guard is outside the story history, so Back from
+   the Final Result and then Forward cannot credit the play twice. */
+setup.salt.submitFinal = function () {
+  var v = State.variables;
+  setup.ccq.submitOnce("salt:" + v.playId, {
+    playerName: v.playerName,
+    sludge: v.sludge,
+    score: v.score,
+    verdict: setup.salt.verdict(v.sludge),
+    daysCompleted: setup.salt.DAYS
+  }, { pointsEarned: 50, countAsCompletion: true });
+};
+
 setup.salt.pickDays = function (n) {
   var copy = setup.salt.pool.slice();
   for (var i = copy.length - 1; i > 0; i--) {
@@ -741,7 +787,184 @@ setup.salt.resolveDay = function (s) {
     out.goodExplain = s.goodExplainVegan || s.goodExplain;
   }
   return out;
-};</script><tw-passagedata pid="1" name="Story innit" tags="Important/Needed" position="100,100" size="100,100">/*
+};
+/* twine-user-script #2: "CCQ Game Kit" */
+/*
+CardioCare Quest game kit: shared game-logic helpers (no UI, no styling).
+
+Included in every buildable game by tool/build_twine.sh. Everything lives
+under setup.ccq. The helpers come from patterns that worked well in the
+Capstone team's Zombie Chase game:
+
+  1. One safe door to Flutter      -> ccq.call()
+  2. Run-once guards that survive  -> ccq.once(), ccq.submitOnce()
+     the Back button
+  3. Tap guards for double taps    -> ccq.lock()
+  4. Timers that are always        -> ccq.after(), ccq.every(), cleaned on
+     cleaned up                       every passage change
+  5. Small telemetry snapshots     -> ccq.slimVars()
+  6. Threshold tables, not        -> ccq.band()
+     repeated if/else chains
+  7. Number safety                 -> ccq.clamp()
+
+Why "once" guards live on window and not in $variables: SugarCube restores
+$variables when the player uses Back/Forward, so a guard stored there is
+reset by history navigation. A window-level record is not.
+*/
+(function () {
+  "use strict";
+
+  var ccq = (setup.ccq = setup.ccq || {});
+
+  /* ---------- 1. Safe bridge ---------- */
+
+  // True when the Flutter bridge shim is present (false in a plain browser).
+  ccq.hasBridge = function () {
+    return !!(window.CCQ && typeof window.CCQ === "object");
+  };
+
+  // Calls window.CCQ[method](...args). Never throws. Returns the method's
+  // result, or undefined when the bridge or method is missing.
+  ccq.call = function (method) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      if (window.CCQ && typeof window.CCQ[method] === "function") {
+        return window.CCQ[method].apply(window.CCQ, args);
+      }
+    } catch (e) {
+      if (window.console) { console.warn("ccq.call(" + method + ") failed:", e); }
+    }
+    return undefined;
+  };
+
+  /* ---------- 2. Run-once guards ---------- */
+
+  var done = {};
+
+  // Runs fn only the first time this key is used. If fn throws, the key is
+  // released so a later attempt can try again. Returns true if fn ran.
+  ccq.once = function (key, fn) {
+    if (done[key]) { return false; }
+    done[key] = true;
+    try {
+      fn();
+      return true;
+    } catch (e) {
+      delete done[key];
+      if (window.console) { console.warn("ccq.once(" + key + ") failed:", e); }
+      return false;
+    }
+  };
+
+  // Forget a guard (or every guard that starts with prefix) so a new
+  // play-through can submit again.
+  ccq.resetOnce = function (prefix) {
+    Object.keys(done).forEach(function (k) {
+      if (!prefix || k.indexOf(prefix) === 0) { delete done[k]; }
+    });
+  };
+
+  // Submits a survey/game response exactly once per key. Does nothing (and
+  // keeps the key free) when the bridge is missing, so a later try works.
+  // Returns true when the response was sent.
+  ccq.submitOnce = function (key, answers, opts) {
+    if (!ccq.hasBridge() || typeof window.CCQ.submitResponse !== "function") {
+      return false;
+    }
+    return ccq.once("submit:" + key, function () {
+      window.CCQ.submitResponse(answers, opts || {});
+    });
+  };
+
+  /* ---------- 3. Tap guard ---------- */
+
+  var locks = {};
+
+  // Returns true the first time, then false until ms have passed. Use at the
+  // top of a choice handler: if (!ccq.lock("pick")) return;
+  ccq.lock = function (key, ms) {
+    var now = Date.now();
+    var hold = typeof ms === "number" ? ms : 700;
+    if (locks[key] && now - locks[key] < hold) { return false; }
+    locks[key] = now;
+    return true;
+  };
+
+  ccq.unlock = function (key) { delete locks[key]; };
+
+  /* ---------- 4. Timers that always get cleaned up ---------- */
+
+  var timeouts = [];
+  var intervals = [];
+
+  ccq.after = function (ms, fn) {
+    var id = setTimeout(function () {
+      var i = timeouts.indexOf(id);
+      if (i >= 0) { timeouts.splice(i, 1); }
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  };
+
+  ccq.every = function (ms, fn) {
+    var id = setInterval(fn, ms);
+    intervals.push(id);
+    return id;
+  };
+
+  // Stops every timer made with ccq.after / ccq.every.
+  ccq.clearTimers = function () {
+    timeouts.forEach(clearTimeout);
+    intervals.forEach(clearInterval);
+    timeouts = [];
+    intervals = [];
+  };
+
+  // Leaving a passage cancels its timers, so nothing fires on a screen that
+  // is no longer showing.
+  if (window.jQuery) {
+    jQuery(document).off(":passageinit.ccqkit").on(":passageinit.ccqkit", ccq.clearTimers);
+  }
+
+  /* ---------- 5. Small telemetry snapshot ---------- */
+
+  // Keeps only simple values (text, numbers, true/false) from a variables
+  // object. Long text is cut at maxLen. Big tables and objects are skipped,
+  // so each passage_entered event stays small.
+  ccq.slimVars = function (vars, maxLen) {
+    var limit = typeof maxLen === "number" ? maxLen : 120;
+    var out = {};
+    Object.keys(vars || {}).forEach(function (k) {
+      var v = vars[k];
+      var t = typeof v;
+      if (t === "number" || t === "boolean") { out[k] = v; }
+      else if (t === "string") { out[k] = v.length > limit ? v.slice(0, limit) : v; }
+    });
+    return out;
+  };
+
+  /* ---------- 6. Threshold tables ---------- */
+
+  // Picks a label from a list of [upperLimit, label] pairs, checked in order.
+  // The value must be BELOW the limit. Use Infinity for the last pair.
+  //   ccq.band(42, [[30, "clean"], [60, "middle"], [Infinity, "heavy"]])
+  //   -> "middle"
+  ccq.band = function (value, table) {
+    for (var i = 0; i < table.length; i++) {
+      if (value < table[i][0]) { return table[i][1]; }
+    }
+    return table.length ? table[table.length - 1][1] : undefined;
+  };
+
+  /* ---------- 7. Number safety ---------- */
+
+  ccq.clamp = function (n, min, max) {
+    var x = Number(n);
+    if (!isFinite(x)) { x = min; }
+    return Math.min(max, Math.max(min, x));
+  };
+})();</script><tw-passagedata pid="1" name="Story innit" tags="Important/Needed" position="100,100" size="100,100">/*
 SYSTEM CODE: runs once at the very start.
 
 Variables:
@@ -762,16 +985,19 @@ You do not need to edit this.
 /* UPDATE9: shuffle the scenario pool and take 5 days for this
    play-through. Reset here so PLAY AGAIN reshuffles into a new order
    with (potentially) different food pairs. */
-&lt;&lt;set $dayOrder to setup.salt.pickDays(5)&gt;&gt;
+&lt;&lt;set $dayOrder to setup.salt.pickDays(setup.salt.DAYS)&gt;&gt;
+/* $resultDay is the day the player just answered. It is set when a food is
+   picked, so the result screen never has to change $day while it renders. */
+&lt;&lt;set $resultDay to 0&gt;&gt;
 /* Diet choice (everything / vegetarian / vegan), set on the Diet Choice
    screen after Welcome. setup.salt.resolveDay() reads it to swap meat and
    dairy foods for plant stand-ins so no one is shown food they do not eat. */
 &lt;&lt;set $playerDiet to &quot;everything&quot;&gt;&gt;
-/* Re-played-this-session guard for the Final Result submitResponse
-   call. Reset on every Story innit run so a participant who finishes
-   then taps PLAY AGAIN gets a fresh shot at submitting (one submit
-   per session, per play-through). */
-&lt;&lt;set $submittedThisSession to false&gt;&gt;
+/* Id of this play-through. The Final Result submit is guarded by a key built
+   from it (setup.ccq.submitOnce), and that guard lives outside the story
+   history, so Back/Forward cannot make it submit twice. A new play-through
+   gets a new id and can submit again. */
+&lt;&lt;set $playId to String(Date.now())&gt;&gt;
 
 &lt;&lt;goto &quot;Welcome&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Welcome" tags="Important/Needed nobr" position="225,100" size="100,100">/*
 INCITING MOMENT: Personal greeting. The hook. One button.
@@ -927,18 +1153,19 @@ five hardcoded Food Day 1..5 passages.
 &lt;div class=&quot;food-row&quot;&gt;
 
 &lt;&lt;link _goodLabel&gt;&gt;
-&lt;&lt;set $sludge to Math.max(0, $sludge - $dayOrder[$day - 1].sludgeDown)&gt;&gt;
-&lt;&lt;set $score to $score + $dayOrder[$day - 1].scoreUp&gt;&gt;
-&lt;&lt;set $foodChoice to &quot;good&quot;&gt;&gt;
+&lt;&lt;if setup.ccq.lock(&quot;salt-pick&quot;)&gt;&gt;
+&lt;&lt;run setup.salt.applyChoice(&quot;good&quot;)&gt;&gt;
 &lt;&lt;goto &quot;Food Result&quot;&gt;&gt;
+&lt;&lt;/if&gt;&gt;
 &lt;&lt;/link&gt;&gt;
 
 &lt;div class=&quot;or-divider&quot;&gt;or&lt;/div&gt;
 
 &lt;&lt;link _badLabel&gt;&gt;
-&lt;&lt;set $sludge to Math.min(100, $sludge + $dayOrder[$day - 1].sludgeUp)&gt;&gt;
-&lt;&lt;set $foodChoice to &quot;bad&quot;&gt;&gt;
+&lt;&lt;if setup.ccq.lock(&quot;salt-pick&quot;)&gt;&gt;
+&lt;&lt;run setup.salt.applyChoice(&quot;bad&quot;)&gt;&gt;
 &lt;&lt;goto &quot;Food Result&quot;&gt;&gt;
+&lt;&lt;/if&gt;&gt;
 &lt;&lt;/link&gt;&gt;
 
 &lt;/div&gt;
@@ -963,7 +1190,7 @@ Then moves to next day or final result after Day 5.
 */
 
 &lt;div class=&quot;phone&quot;&gt;
-&lt;div class=&quot;header&quot;&gt;&lt;span&gt;Salt Sludge&lt;/span&gt;&lt;span class=&quot;day-label&quot;&gt;Day $day of 5&lt;/span&gt;&lt;/div&gt;
+&lt;div class=&quot;header&quot;&gt;&lt;span&gt;Salt Sludge&lt;/span&gt;&lt;span class=&quot;day-label&quot;&gt;Day $resultDay of 5&lt;/span&gt;&lt;/div&gt;
 
 &lt;div class=&quot;meters-wrap&quot;&gt;
 &lt;div class=&quot;meter-row&quot;&gt;&lt;div class=&quot;meter-label&quot;&gt;Sludge&lt;/div&gt;&lt;div class=&quot;meter-bar&quot;&gt;&lt;div class=&quot;meter-bar-fill sludge&quot; @style=&quot;&#39;width: &#39; + $sludge + &#39;%&#39;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
@@ -972,7 +1199,7 @@ Then moves to next day or final result after Day 5.
 
 &lt;div class=&quot;content&quot;&gt;
 
-&lt;&lt;set _s to setup.salt.resolveDay($dayOrder[$day - 1])&gt;&gt;
+&lt;&lt;set _s to setup.salt.resolveDay($dayOrder[$resultDay - 1])&gt;&gt;
 &lt;&lt;if $foodChoice is &quot;good&quot;&gt;&gt;
 
 &lt;div class=&quot;result-card&quot;&gt;
@@ -993,8 +1220,9 @@ Then moves to next day or final result after Day 5.
 
 &lt;&lt;/if&gt;&gt;
 
-&lt;&lt;if $day lt 5&gt;&gt;
-&lt;&lt;set $day to $day + 1&gt;&gt;
+/* $day was already moved forward when the food was picked (see
+   setup.salt.applyChoice), so showing this screen again changes nothing. */
+&lt;&lt;if $resultDay lt setup.salt.DAYS&gt;&gt;
 &lt;a class=&quot;btn-primary&quot; data-passage=&quot;Day Start&quot;&gt;ON TO DAY &lt;&lt;print $day&gt;&gt;&lt;/a&gt;
 &lt;!-- Per-day &quot;BACK TO CARDIOCAREQUEST&quot; removed — same call we made on
      DASH. The burger menu (≡) in the header already exposes &quot;Go to
@@ -1022,25 +1250,8 @@ no matter how many participants finish the game. Guarded by a
 session flag so PLAY AGAIN doesn&#39;t double-credit.
 */
 
-&lt;&lt;if not $submittedThisSession&gt;&gt;
-&lt;&lt;set $submittedThisSession to true&gt;&gt;
-&lt;&lt;run
-  try {
-    if (window.CCQ &amp;&amp; typeof window.CCQ.submitResponse === &quot;function&quot;) {
-      var verdict = &quot;heavy&quot;;
-      if (State.variables.sludge &lt; 30) { verdict = &quot;clean&quot;; }
-      else if (State.variables.sludge &lt; 60) { verdict = &quot;middle&quot;; }
-      window.CCQ.submitResponse({
-        playerName: State.variables.playerName,
-        sludge: State.variables.sludge,
-        score: State.variables.score,
-        verdict: verdict,
-        daysCompleted: 5
-      }, { pointsEarned: 50, countAsCompletion: true });
-    }
-  } catch (e) { /* swallow */ }
-&gt;&gt;
-&lt;&lt;/if&gt;&gt;
+&lt;&lt;set _verdict to setup.salt.verdict($sludge)&gt;&gt;
+&lt;&lt;run setup.salt.submitFinal()&gt;&gt;
 
 &lt;div class=&quot;phone&quot;&gt;
 &lt;div class=&quot;header&quot;&gt;&lt;span&gt;Salt Sludge&lt;/span&gt;&lt;span class=&quot;day-label&quot;&gt;5 days done&lt;/span&gt;&lt;/div&gt;
@@ -1054,14 +1265,14 @@ session flag so PLAY AGAIN doesn&#39;t double-credit.
 
 &lt;div class=&quot;final-card&quot;&gt;
 
-&lt;&lt;if $sludge lt 30&gt;&gt;
+&lt;&lt;if _verdict is &quot;clean&quot;&gt;&gt;
 &lt;div class=&quot;final-headline clean&quot;&gt;Clean artery&lt;/div&gt;
 &lt;div class=&quot;final-stats&quot;&gt;Sludge $sludge of 100.&lt;/div&gt;
 &lt;div class=&quot;final-body&quot;&gt;
 &lt;p&gt;Your potassium choices paid off. Blood is moving freely. Your blood pressure is lower right now than it was at the start of Day 1.&lt;/p&gt;
 &lt;p&gt;Five days of consistent good choices. Not dramatic. Not perfect. Just noticeably better.&lt;/p&gt;
 &lt;/div&gt;
-&lt;&lt;elseif $sludge lt 60&gt;&gt;
+&lt;&lt;elseif _verdict is &quot;middle&quot;&gt;&gt;
 &lt;div class=&quot;final-headline middle&quot;&gt;Some sludge&lt;/div&gt;
 &lt;div class=&quot;final-stats&quot;&gt;Sludge $sludge of 100.&lt;/div&gt;
 &lt;div class=&quot;final-body&quot;&gt;

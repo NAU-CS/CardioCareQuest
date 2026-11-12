@@ -32,16 +32,19 @@ You do not need to edit this.
 /* UPDATE9: shuffle the scenario pool and take 5 days for this
    play-through. Reset here so PLAY AGAIN reshuffles into a new order
    with (potentially) different food pairs. */
-<<set $dayOrder to setup.salt.pickDays(5)>>
+<<set $dayOrder to setup.salt.pickDays(setup.salt.DAYS)>>
+/* $resultDay is the day the player just answered. It is set when a food is
+   picked, so the result screen never has to change $day while it renders. */
+<<set $resultDay to 0>>
 /* Diet choice (everything / vegetarian / vegan), set on the Diet Choice
    screen after Welcome. setup.salt.resolveDay() reads it to swap meat and
    dairy foods for plant stand-ins so no one is shown food they do not eat. */
 <<set $playerDiet to "everything">>
-/* Re-played-this-session guard for the Final Result submitResponse
-   call. Reset on every Story innit run so a participant who finishes
-   then taps PLAY AGAIN gets a fresh shot at submitting (one submit
-   per session, per play-through). */
-<<set $submittedThisSession to false>>
+/* Id of this play-through. The Final Result submit is guarded by a key built
+   from it (setup.ccq.submitOnce), and that guard lives outside the story
+   history, so Back/Forward cannot make it submit twice. A new play-through
+   gets a new id and can submit again. */
+<<set $playId to String(Date.now())>>
 
 <<goto "Welcome">>
 
@@ -212,18 +215,19 @@ five hardcoded Food Day 1..5 passages.
 <div class="food-row">
 
 <<link _goodLabel>>
-<<set $sludge to Math.max(0, $sludge - $dayOrder[$day - 1].sludgeDown)>>
-<<set $score to $score + $dayOrder[$day - 1].scoreUp>>
-<<set $foodChoice to "good">>
+<<if setup.ccq.lock("salt-pick")>>
+<<run setup.salt.applyChoice("good")>>
 <<goto "Food Result">>
+<</if>>
 <</link>>
 
 <div class="or-divider">or</div>
 
 <<link _badLabel>>
-<<set $sludge to Math.min(100, $sludge + $dayOrder[$day - 1].sludgeUp)>>
-<<set $foodChoice to "bad">>
+<<if setup.ccq.lock("salt-pick")>>
+<<run setup.salt.applyChoice("bad")>>
 <<goto "Food Result">>
+<</if>>
 <</link>>
 
 </div>
@@ -251,7 +255,7 @@ Then moves to next day or final result after Day 5.
 */
 
 <div class="phone">
-<div class="header"><span>Salt Sludge</span><span class="day-label">Day $day of 5</span></div>
+<div class="header"><span>Salt Sludge</span><span class="day-label">Day $resultDay of 5</span></div>
 
 <div class="meters-wrap">
 <div class="meter-row"><div class="meter-label">Sludge</div><div class="meter-bar"><div class="meter-bar-fill sludge" @style="'width: ' + $sludge + '%'"></div></div></div>
@@ -260,7 +264,7 @@ Then moves to next day or final result after Day 5.
 
 <div class="content">
 
-<<set _s to setup.salt.resolveDay($dayOrder[$day - 1])>>
+<<set _s to setup.salt.resolveDay($dayOrder[$resultDay - 1])>>
 <<if $foodChoice is "good">>
 
 <div class="result-card">
@@ -281,8 +285,9 @@ Then moves to next day or final result after Day 5.
 
 <</if>>
 
-<<if $day lt 5>>
-<<set $day to $day + 1>>
+/* $day was already moved forward when the food was picked (see
+   setup.salt.applyChoice), so showing this screen again changes nothing. */
+<<if $resultDay lt setup.salt.DAYS>>
 <a class="btn-primary" data-passage="Day Start">ON TO DAY <<print $day>></a>
 <!-- Per-day "BACK TO CARDIOCAREQUEST" removed — same call we made on
      DASH. The burger menu (≡) in the header already exposes "Go to
@@ -313,25 +318,8 @@ no matter how many participants finish the game. Guarded by a
 session flag so PLAY AGAIN doesn't double-credit.
 */
 
-<<if not $submittedThisSession>>
-<<set $submittedThisSession to true>>
-<<run
-  try {
-    if (window.CCQ && typeof window.CCQ.submitResponse === "function") {
-      var verdict = "heavy";
-      if (State.variables.sludge < 30) { verdict = "clean"; }
-      else if (State.variables.sludge < 60) { verdict = "middle"; }
-      window.CCQ.submitResponse({
-        playerName: State.variables.playerName,
-        sludge: State.variables.sludge,
-        score: State.variables.score,
-        verdict: verdict,
-        daysCompleted: 5
-      }, { pointsEarned: 50, countAsCompletion: true });
-    }
-  } catch (e) { /* swallow */ }
->>
-<</if>>
+<<set _verdict to setup.salt.verdict($sludge)>>
+<<run setup.salt.submitFinal()>>
 
 <div class="phone">
 <div class="header"><span>Salt Sludge</span><span class="day-label">5 days done</span></div>
@@ -345,14 +333,14 @@ session flag so PLAY AGAIN doesn't double-credit.
 
 <div class="final-card">
 
-<<if $sludge lt 30>>
+<<if _verdict is "clean">>
 <div class="final-headline clean">Clean artery</div>
 <div class="final-stats">Sludge $sludge of 100.</div>
 <div class="final-body">
 <p>Your potassium choices paid off. Blood is moving freely. Your blood pressure is lower right now than it was at the start of Day 1.</p>
 <p>Five days of consistent good choices. Not dramatic. Not perfect. Just noticeably better.</p>
 </div>
-<<elseif $sludge lt 60>>
+<<elseif _verdict is "middle">>
 <div class="final-headline middle">Some sludge</div>
 <div class="final-stats">Sludge $sludge of 100.</div>
 <div class="final-body">
@@ -852,8 +840,10 @@ body {
 $(document).on(":passagestart", function (ev) {
   try {
     if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values are sent. The scenario table ($dayOrder) used to
+         ride along on every passage, which made each event large. */
       var snap = {};
-      try { Object.assign(snap, SugarCube.State.variables); } catch (e) {}
+      try { snap = setup.ccq.slimVars(SugarCube.State.variables); } catch (e) {}
       CCQ.telemetry("passage_entered", {
         passage: ev.passage.title,
         vars: snap
@@ -1017,6 +1007,49 @@ setup.salt.pool = [
 
 /* Return a fresh Fisher–Yates shuffle of the pool, truncated to n days.
    Operates on a COPY so setup.salt.pool keeps its authoring order. */
+/* How many days one play-through lasts. Every "5" in the game logic comes
+   from here. */
+setup.salt.DAYS = 5;
+
+/* Final-artery verdict from the sludge level. One table drives both the
+   headline on the Final Result screen and the value sent to research. */
+setup.salt.VERDICTS = [[30, "clean"], [60, "middle"], [Infinity, "heavy"]];
+setup.salt.verdict = function (sludge) {
+  return setup.ccq.band(sludge, setup.salt.VERDICTS);
+};
+
+/* Applies the player's pick for the current day, once, when the food is
+   tapped (not when a screen draws). Moves the sludge and nutrient meters,
+   remembers which day was answered ($resultDay) and then moves $day on, so
+   going Back and Forward through the story cannot skip or repeat a day. */
+setup.salt.applyChoice = function (choice) {
+  var v = State.variables;
+  var s = v.dayOrder[v.day - 1];
+  if (choice === "good") {
+    v.sludge = Math.max(0, v.sludge - s.sludgeDown);
+    v.score = v.score + s.scoreUp;
+  } else {
+    v.sludge = Math.min(100, v.sludge + s.sludgeUp);
+  }
+  v.foodChoice = choice;
+  v.resultDay = v.day;
+  if (v.day < setup.salt.DAYS) { v.day = v.day + 1; }
+};
+
+/* Sends the finished play to research (and awards the points) once per
+   play-through. The once-guard is outside the story history, so Back from
+   the Final Result and then Forward cannot credit the play twice. */
+setup.salt.submitFinal = function () {
+  var v = State.variables;
+  setup.ccq.submitOnce("salt:" + v.playId, {
+    playerName: v.playerName,
+    sludge: v.sludge,
+    score: v.score,
+    verdict: setup.salt.verdict(v.sludge),
+    daysCompleted: setup.salt.DAYS
+  }, { pointsEarned: 50, countAsCompletion: true });
+};
+
 setup.salt.pickDays = function (n) {
   var copy = setup.salt.pool.slice();
   for (var i = copy.length - 1; i > 0; i--) {
