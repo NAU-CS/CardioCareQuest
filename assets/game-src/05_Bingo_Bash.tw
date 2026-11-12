@@ -949,3 +949,19 @@ back to Story innit, leaving participants with no way to exit.
 
 </div>
 </div>
+
+:: A11ytextandcontrast1819 [stylesheet]
+/* A11y text and contrast (#18, #19) */
+/* Icon labels were 10px white at 85% on teal (3.6:1); now 14px on a dark
+   pill (6:1+). Marked cells were white on #21918c (3.8:1); now 5.1:1. The
+   Inspiration card's yellow headings were 4.0:1; the card is darker (7.8:1).
+   Bingo cells: 14px does not fit five columns on a phone ("Breathing" alone
+   is wider than a cell), so they go 11px -> 12px and break words with
+   hyphens instead of mid-word ("Breathin / g"). Full 14px needs a layout
+   decision (tracked in the issue). */
+.icon-with-label .icon-label { font-size: 14px; color: #ffffff; letter-spacing: 0; text-transform: none; background: rgba(0, 0, 0, 0.35); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.bingo-cell.marked:not(.free) { background-color: #1a7a76 !important; }
+.inspiration-card { background-color: rgba(0, 0, 0, 0.25); }
+.goal-edit-num { font-size: 19px; color: #ffffff; flex: 0 0 34px; }
+.edit-intro { font-size: 14px; }
+.bingo-cell { font-size: 12px !important; padding: 6px 3px !important; word-break: normal !important; overflow-wrap: normal !important; -webkit-hyphens: auto; hyphens: auto; }
