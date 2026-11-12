@@ -1,0 +1,5 @@
+package com.nau.cardiocarequest
+
+import io.flutter.embedding.android.FlutterFragmentActivity
+
+class MainActivity : FlutterFragmentActivity()

@@ -1,0 +1,165 @@
+:: UserStylesheet [stylesheet]
+/* ============================================================
+   Daily archer — visual stylesheet
+   Arial font, click handler on cells (no passage refresh on
+   click), compact phone height.
+
+   CardioCareQuest viridis palette (canonical across all games):
+     #440154  deep purple   — phone gradient stop 1
+     #3b528b  blue          — phone gradient stop 2
+     #21918c  teal          — phone gradient stop 3 / marked cell
+     #5ec962  green          — win banner / success
+     #fde725  yellow         — title / FREE / primary CTA
+     #f4f1d8  cream          — page background
+   2026-05-10: phone gradient + dark-text accent (#1a1a1a) replaced
+   to align with viridis anchor stops.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: #d1e8e8;
+  margin: 0;
+  padding: 1.5em 0;
+}
+
+#ui-bar { display: none; }
+
+#story {
+  margin: 0 auto;
+  max-width: 380px;
+  padding: 0;
+}
+
+/* Phone frame — compact, soft dark viridis teal */
+.phone {
+  background: linear-gradient(180deg, #440154	 0%, #3b528b 50%, #21918c 100%);
+  border-radius: 32px;
+  padding: 25px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  color: white;
+  position: relative;
+  min-height: 660px;
+  max-height: 100px;
+  width: 100%;
+  max-width: 100%;
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.navigation {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  height: 50px;
+  margin-left: -25px;
+  margin-right: -25px;
+  margin-bottom: -25px;
+}
+
+.navigation button {
+  flex: 1;
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid darkblue;
+  border-radius: 2px;
+  padding-bottom: 200px;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 30px;
+  padding: 5px;
+}
+
+.mainTab{
+  align-items: center;
+}
+
+.levelContainer {
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  display: flex;
+  align-self: center;
+  position: relative;
+  left: 18%;
+  flex-direction: row; /* Arranges children horizontally (left to right) */
+  align-items: center; /* Vertically aligns the content (optional, adjust as needed) */
+  justify-content: space-between; /* Creates space between goals and progress (optional) */
+  padding: 10px 20px 10px 10px;
+  max-width: 200px;
+}
+
+.levelList {
+  align-items: center;
+  width: fill;
+}
+
+.levelList button {
+  position: relative;
+  left: 14%;
+  padding: 1px;
+  border-radius: 12px;
+  min-width: 80%;
+  background-color: cornsilk;
+  color: black;
+}
+
+button {
+  position: relative;
+  left: 12%;
+  padding: 1px;
+  border-radius: 12px;
+  min-width: 80%;
+  background-color: cornsilk;
+  color: black;
+}
+
+.level {
+  position: relative;
+  left: 14%;
+  padding: 1px;
+  border-radius: 12px;
+  min-width: 80%;
+  background-color: cornsilk;
+  color: black;
+}
+/* Chase section */
+
+.extras {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.38);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  grid-auto-rows: auto;
+  align-self: center;
+  padding: 20px;
+  padding-right: 25px;
+
+}
+
+.extra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  min-width: 0;
+}
+
+
+.extraButton {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  padding: 8px 12px;
+  border-radius: 30px;
+  background-color: cornsilk;
+  color: black;
+  font-size: 16px;
+  line-height: 1.2;
+}

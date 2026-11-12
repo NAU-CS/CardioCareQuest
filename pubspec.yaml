@@ -1,0 +1,139 @@
+name: cardio_care_quest
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  device_info_plus: ^12.4.0
+  cupertino_icons: ^1.0.8
+  firebase_core: ^4.6.0
+  firebase_auth: ^6.3.0
+  cloud_firestore: ^6.2.0
+  google_fonts: ^8.0.2
+  flutter_svg: ^2.2.4
+  provider: ^6.1.5+1
+  local_auth: ^3.0.1
+  flutter_secure_storage: ^10.0.0
+  signature: ^6.3.0
+  geolocator: ^11.0.0
+  shared_preferences: ^2.5.5
+  webview_flutter: ^4.13.1
+  web: ^1.1.1
+  geoflutterfire_plus: ^0.0.34
+  latlong2: ^0.9.1
+  flutter_compass: ^0.8.0
+  get_it: ^9.2.1
+  hive_flutter: ^1.1.0
+  hive: ^2.2.3
+  uuid: ^4.5.3
+  connectivity_plus: ^7.1.1
+  fl_chart: ^0.68.0
+  image_picker: ^1.0.8
+  intl: ^0.20.2
+  # iOS HealthKit + Android Health Connect. Reads Apple Watch / wearable
+  # vitals (heart rate, steps, active energy, etc.) at BP prompt time and
+  # attaches them to the BP reading for research context. See
+  # IOS_HEALTHKIT_SETUP.md for the macOS/Xcode handoff steps.
+  # ^13.3.1 — earlier majors require intl <0.20.0 which conflicts with
+  # the project's intl ^0.20.2.
+  health: ^13.3.1
+  # NFC tag reading for auto-login. Each participant carries an NTAG
+  # card flashed with their Unique ID; tapping the card on the back of
+  # the device fills the login field and authenticates without typing.
+  # Manual ID entry stays in place as the alternative path on the same
+  # screen — `isAvailable()` gating in NfcService hides the NFC button
+  # on iPads / NFC-less devices so manual entry is the only visible
+  # option there. iOS requires Xcode capability + Info.plist key — see
+  # IOS_NFC_SETUP.md for the handoff steps.
+  nfc_manager: ^3.5.0
+  permission_handler: 12.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  rename: ^3.1.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/branding/ccq.png
+    - assets/branding/icon.png
+    - assets/branding/app_icon.png
+    - assets/game/dog_quest.html
+    - assets/game/dog_quest/dog.png
+    - assets/game/dog_quest/
+    - assets/game/fonts/
+    - assets/game/ccq_bridge.js
+    - assets/game/ccq_a11y.js
+    - assets/game/control_game.html
+    - assets/game/salt_sludge.html
+    - assets/game/bingo_bash.html
+    - assets/game/dash_diet_game.html
+    - assets/game/vascular_village.html
+    - assets/game/quiet_minute.html
+    - assets/game/post_play_survey.html
+    - assets/game/game_feedback.html
+    - assets/game/pill_path.html
+    - assets/game/quiet_landscape.html
+    - assets/game/while_you_wait.html
+    - assets/game/Zombie-chase.html
+    # Engine shell (SugarCube + shared stylesheet, passages stripped) that
+    # custom_twine_builder.dart fills in at runtime to play user-made story games.
+    - assets/game/custom_game_template.html
+    # Photos shown next to each health topic in the game catalog list.
+    - assets/game/categories/
+    #Audio files for capstone games
+    - assets/game/audio/
+    #image files for capstone games
+    - img/
+    - img/measurement/
+    - img/exercise/
+    # Twine source for the short intro story shown before each factor's games.
+    # Loaded at runtime and spliced into custom_game_template.html.
+    - assets/game-src/intro/
+    # Atkinson Hyperlegible — bundled locally so the font ships in
+    # the APK / IPA and works fully offline. The Twine games' CSS
+    # (@font-face declarations injected by `ccq_bridge.js`) loads
+    # them via relative paths at `../fonts/Atkinson_Hyperlegible/...`
+    # from each compiled HTML's location.
+    - assets/fonts/Atkinson_Hyperlegible/
+
+  fonts:
+    - family: Atkinson Hyperlegible
+      fonts:
+        - asset: assets/fonts/Atkinson_Hyperlegible/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/Atkinson_Hyperlegible/AtkinsonHyperlegible-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Atkinson_Hyperlegible/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Atkinson_Hyperlegible/AtkinsonHyperlegible-BoldItalic.ttf
+          weight: 700
+          style: italic
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/branding/launcher.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/branding/launcher.png"
+
+flutter_native_splash:
+  # ─── CHANGE THIS COLOR ───
+  color: "#ffffff" # Replace with your preferred Hex code (e.g., a green to match the logo)
+  
+  # Your logo in the center
+  image: "assets/branding/loader.png" 
+  
+  # Ensure Android 12+ (which uses a different splash API) also gets the color
+  android_12:
+   color: "#ffffff" # Same color as above for consistency
+   image: "assets/branding/loader.png"

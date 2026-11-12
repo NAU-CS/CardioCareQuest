@@ -1,0 +1,1094 @@
+:: StoryTitle
+Salt Sludge
+
+:: StoryData
+{
+  "ifid": "A1B2C3D4-E5F6-4890-A8CD-EF1234567890",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Story innit",
+  "zoom": 1
+}
+
+:: Story innit [Important/Needed] {"position": "100,100", "size": "100,100"}
+/*
+SYSTEM CODE: runs once at the very start.
+
+Variables:
+- $playerName  : pulled from sign-in
+- $sludge      : sludge level 0 to 100, starts at 0
+- $score       : nutrient points earned
+- $day         : current day 1 to 5
+- $foodChoice  : what the player just ate
+
+You do not need to edit this.
+*/
+
+<<set $playerName to "Explorer">>
+<<set $sludge to 0>>
+<<set $score to 0>>
+<<set $day to 1>>
+<<set $foodChoice to "">>
+/* UPDATE9: shuffle the scenario pool and take 5 days for this
+   play-through. Reset here so PLAY AGAIN reshuffles into a new order
+   with (potentially) different food pairs. */
+<<set $dayOrder to setup.salt.pickDays(setup.salt.DAYS)>>
+/* $resultDay is the day the player just answered. It is set when a food is
+   picked, so the result screen never has to change $day while it renders. */
+<<set $resultDay to 0>>
+/* Diet choice (everything / vegetarian / vegan), set on the Diet Choice
+   screen after Welcome. setup.salt.resolveDay() reads it to swap meat and
+   dairy foods for plant stand-ins so no one is shown food they do not eat. */
+<<set $playerDiet to "everything">>
+/* Id of this play-through. The Final Result submit is guarded by a key built
+   from it (setup.ccq.submitOnce), and that guard lives outside the story
+   history, so Back/Forward cannot make it submit twice. A new play-through
+   gets a new id and can submit again. */
+<<set $playId to String(Date.now())>>
+
+<<goto "Welcome">>
+
+:: Welcome [Important/Needed nobr] {"position": "225,100", "size": "100,100"}
+/*
+INCITING MOMENT: Personal greeting. The hook. One button.
+Card 1 of 2 before gameplay starts.
+*/
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span></div>
+<div class="content">
+
+<span class="hero-emoji">🧂</span>
+
+<h1 class="intro-title">Salt Sludge</h1>
+
+<p class="narrative center">Hey $playerName.</p>
+
+<p class="narrative">Watch your blood vessels react in real time to what you eat. Five days. Five food choices. About two minutes.</p>
+
+<div class="spacer"></div>
+
+<a class="btn-primary" data-passage="How It Works">HOW IT WORKS</a>
+
+</div>
+</div>
+
+:: How It Works [Important/Needed nobr] {"position": "350,100", "size": "100,100"}
+/*
+RULES + SCIENCE in one screen.
+Combines what salt does, what potassium does, and how to play.
+Card 2 of 2 before gameplay starts.
+*/
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span></div>
+<div class="content">
+
+<div class="duo-emoji">
+<span class="duo-emoji-bad">🧂</span>
+<span class="duo-emoji-good">🍌</span>
+</div>
+
+<h2 class="intro-title">Salt vs Potassium</h2>
+
+<p class="narrative"><strong>Salt</strong> builds orange sludge inside your blood vessels. Blood pressure climbs.</p>
+
+<p class="narrative"><strong>Potassium</strong> from foods like bananas, spinach, beans, and sweet potatoes clears the salt out. Sludge clears.</p>
+
+<p class="narrative">Each day you pick one food. Your sludge carries into tomorrow.</p>
+
+<div class="spacer"></div>
+
+<a class="btn-primary" data-passage="Diet Choice">NEXT</a>
+
+</div>
+</div>
+
+:: Diet Choice [Important/Needed nobr] {"position": "350,225", "size": "100,100"}
+/*
+DIET CHOICE: Ask once what the player eats. Sets $playerDiet, which
+setup.salt.resolveDay() reads to swap meat/dairy foods for plant
+stand-ins during the daily food choices.
+*/
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span></div>
+<div class="content">
+
+<span class="hero-emoji">🍽️</span>
+
+<h2 class="intro-title">What do you eat?</h2>
+
+<p class="narrative center">Pick one. We will only show you foods you actually eat.</p>
+
+<div class="spacer"></div>
+
+<<link '🍗  I eat everything'>><<set $playerDiet to "everything">><<goto "Day Start">><</link>>
+
+<<link '🥗  Vegetarian (no meat)'>><<set $playerDiet to "vegetarian">><<goto "Day Start">><</link>>
+
+<<link '🌱  Vegan (no meat or dairy)'>><<set $playerDiet to "vegan">><<goto "Day Start">><</link>>
+
+</div>
+</div>
+
+<<script>>
+setTimeout(function () {
+  var links = document.querySelectorAll('.content a.macro-link, .content a.link-internal');
+  for (var i = 0; i < links.length; i++) {
+    links[i].classList.add('btn-primary');
+    links[i].style.marginBottom = '12px';
+  }
+}, 0);
+<</script>>
+
+:: Day Start [Important/Needed nobr] {"position": "475,100", "size": "100,100"}
+/*
+START OF EACH DAY.
+Shows current day, current sludge level (visual + number),
+and a daily health tip. Sends player to the food choice for that day.
+*/
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span><span class="day-label">Day $day of 5</span></div>
+
+<div class="meters-wrap">
+<div class="meter-row"><div class="meter-label">Sludge</div><div class="meter-bar"><div class="meter-bar-fill sludge" @style="'width: ' + $sludge + '%'"></div></div></div>
+<div class="meter-row"><div class="meter-label">Nutrients</div><div class="meter-bar"><div class="meter-bar-fill nutrient" @style="'width: ' + Math.min(100, $score * 2) + '%'"></div></div></div>
+</div>
+
+<div class="content">
+
+<p class="day-status"><<if $sludge lt 30>>Your blood vessels are looking clean right now.<<elseif $sludge lt 60>>Some sludge is building up. Today is a chance to clear it.<<else>>That sludge is getting thick. Choose carefully today.<</if>></p>
+
+<div class="tip-card">
+<div class="tip-label">Did you know</div>
+<<if $day is 1>>Most adults eat twice as much salt as they should without realizing it.<<elseif $day is 2>>Potassium helps your body clear salt out. Most people do not eat enough of it.<<elseif $day is 3>>Canned foods are one of the biggest hidden sources of salt. One serving can have more than half a day's worth.<<elseif $day is 4>>Walking also helps lower blood pressure. Potassium is not the only tool you have.<<else>>Five days of better choices can make a real difference in your blood pressure.<</if>>
+</div>
+
+<div class="spacer"></div>
+
+<!-- UPDATE9: every day now routes to the single generic `Food Day`
+     passage, which renders $dayOrder[$day - 1].
+     UPDATE10: vary the pace. Instead of the reveal button appearing
+     instantly (constant cadence), gate it behind a randomized 0.4–2.0s
+     <<timed>> delay so choices don't arrive on a metronome. The button
+     still always appears, so the screen stays fully accessible. -->
+<<set _delay to Math.round((0.4 + Math.random() * 1.6) * 1000) + "ms">>
+<span id="reveal-slot"></span>
+<<timed _delay>><<replace "#reveal-slot">><a class="btn-primary" data-passage="Food Day">SHOW ME TODAY'S FOOD</a><</replace>><</timed>>
+
+</div>
+</div>
+
+:: Food Day [Important/Needed nobr] {"position": "600,100", "size": "100,100"}
+/*
+GENERIC DAY FOOD CHOICE (UPDATE9).
+Renders $dayOrder[$day - 1] — the shuffled scenario for today. The good
+option clears sludge + earns nutrient points; the bad option adds
+sludge. $foodChoice records only "good" / "bad"; Food Result reads the
+same scenario object to show the right emoji + explanation. Replaces the
+five hardcoded Food Day 1..5 passages.
+*/
+
+<<set _s to setup.salt.resolveDay($dayOrder[$day - 1])>>
+/* Build the two link labels up front. SugarCube's macro-argument
+   parser would split a bare `'...' + _s.x + '...'` expression into
+   several arguments, so we assemble each HTML label string into a temp
+   var and pass that single var to <<link>> (which still wikifies it,
+   rendering the span/div just like the old literal labels did). */
+<<set _goodLabel to '<span class="food-emoji">' + _s.goodFood.emoji + '</span><div class="food-name">' + _s.goodFood.name + '</div>'>>
+<<set _badLabel to '<span class="food-emoji">' + _s.badFood.emoji + '</span><div class="food-name">' + _s.badFood.name + '</div>'>>
+<div class="phone">
+<div class="header"><span>Salt Sludge</span><span class="day-label">Day $day of 5</span></div>
+
+<div class="meters-wrap">
+<div class="meter-row"><div class="meter-label">Sludge</div><div class="meter-bar"><div class="meter-bar-fill sludge" @style="'width: ' + $sludge + '%'"></div></div></div>
+<div class="meter-row"><div class="meter-label">Nutrients</div><div class="meter-bar"><div class="meter-bar-fill nutrient" @style="'width: ' + Math.min(100, $score * 2) + '%'"></div></div></div>
+</div>
+
+<div class="content">
+<p class="scene"><<print _s.scene>></p>
+
+<div class="spacer"></div>
+
+<div class="food-row">
+
+<<link _goodLabel>>
+<<if setup.ccq.lock("salt-pick")>>
+<<run setup.salt.applyChoice("good")>>
+<<goto "Food Result">>
+<</if>>
+<</link>>
+
+<div class="or-divider">or</div>
+
+<<link _badLabel>>
+<<if setup.ccq.lock("salt-pick")>>
+<<run setup.salt.applyChoice("bad")>>
+<<goto "Food Result">>
+<</if>>
+<</link>>
+
+</div>
+
+<div class="spacer"></div>
+
+</div>
+</div>
+
+<<script>>
+/* Wrap each <<link>>'s generated <a> in food-card class so it gets the white card styling.
+   This runs after the passage renders. */
+setTimeout(function () {
+  document.querySelectorAll('.food-row a.macro-link, .food-row a.link-internal').forEach(function (a) {
+    a.classList.add('food-card');
+  });
+}, 0);
+<</script>>
+
+:: Food Result [Important/Needed nobr] {"position": "725,100", "size": "100,100"}
+/*
+RESULT OF EACH FOOD CHOICE.
+Tells the player what that food did to their artery and why.
+Then moves to next day or final result after Day 5.
+*/
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span><span class="day-label">Day $resultDay of 5</span></div>
+
+<div class="meters-wrap">
+<div class="meter-row"><div class="meter-label">Sludge</div><div class="meter-bar"><div class="meter-bar-fill sludge" @style="'width: ' + $sludge + '%'"></div></div></div>
+<div class="meter-row"><div class="meter-label">Nutrients</div><div class="meter-bar"><div class="meter-bar-fill nutrient" @style="'width: ' + Math.min(100, $score * 2) + '%'"></div></div></div>
+</div>
+
+<div class="content">
+
+<<set _s to setup.salt.resolveDay($dayOrder[$resultDay - 1])>>
+<<if $foodChoice is "good">>
+
+<div class="result-card">
+<span class="result-emoji"><<print _s.goodFood.emoji>></span>
+<div class="result-verdict good">Good choice</div>
+<p class="result-explain"><<print _s.goodExplain>></p>
+<div class="result-meter-after">Sludge cleared</div>
+</div>
+
+<<else>>
+
+<div class="result-card">
+<span class="result-emoji"><<print _s.badFood.emoji>></span>
+<div class="result-verdict bad">Your blood vessels felt that</div>
+<p class="result-explain"><<print _s.badExplain>></p>
+<div class="result-meter-after">Sludge increased. Tomorrow is a chance to clear it.</div>
+</div>
+
+<</if>>
+
+/* $day was already moved forward when the food was picked (see
+   setup.salt.applyChoice), so showing this screen again changes nothing. */
+<<if $resultDay lt setup.salt.DAYS>>
+<a class="btn-primary" data-passage="Day Start">ON TO DAY <<print $day>></a>
+<!-- Per-day "BACK TO CARDIOCAREQUEST" removed — same call we made on
+     DASH. The burger menu (≡) in the header already exposes "Go to
+     dashboard" on every screen, so a second exit button after every
+     day was redundant + visually noisy. The Final Result screen at
+     the end of Day 5 still has the BACK button (it belongs there as
+     the "you finished, here's the way out" affordance). -->
+<<else>>
+<a class="btn-primary" data-passage="Final Result">SEE YOUR FINAL ARTERY</a>
+<</if>>
+
+</div>
+</div>
+
+:: Final Result [Important/Needed nobr] {"position": "850,100", "size": "100,100"}
+/*
+DENOUEMENT: End of game.
+Personalized message based on final sludge level.
+Score shown. Option to play again.
+
+The <<run>> below fires the canonical SUBMIT_RESPONSE event so
+research data sees a Salt Sludge play landing in
+`surveys/salt_sludge/responses/{auto}` and a
+`survey_response_submitted` event with surveyId='salt_sludge'.
+The Community Stats engagement-bar query keys on the surveyId,
+so without this firing the Diet category bar would stay at 0
+no matter how many participants finish the game. Guarded by a
+session flag so PLAY AGAIN doesn't double-credit.
+*/
+
+<<set _verdict to setup.salt.verdict($sludge)>>
+<<run setup.salt.submitFinal()>>
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span><span class="day-label">5 days done</span></div>
+
+<div class="meters-wrap">
+<div class="meter-row"><div class="meter-label">Sludge</div><div class="meter-bar"><div class="meter-bar-fill sludge" @style="'width: ' + $sludge + '%'"></div></div></div>
+<div class="meter-row"><div class="meter-label">Nutrients</div><div class="meter-bar"><div class="meter-bar-fill nutrient" @style="'width: ' + Math.min(100, $score * 2) + '%'"></div></div></div>
+</div>
+
+<div class="content">
+
+<div class="final-card">
+
+<<if _verdict is "clean">>
+<div class="final-headline clean">Clean artery</div>
+<div class="final-stats">Sludge $sludge of 100.</div>
+<div class="final-body">
+<p>Your potassium choices paid off. Blood is moving freely. Your blood pressure is lower right now than it was at the start of Day 1.</p>
+<p>Five days of consistent good choices. Not dramatic. Not perfect. Just noticeably better.</p>
+</div>
+<<elseif _verdict is "middle">>
+<div class="final-headline middle">Some sludge</div>
+<div class="final-stats">Sludge $sludge of 100.</div>
+<div class="final-body">
+<p>A mix of good and tough choices. Your blood vessels are managing but working harder than they need to.</p>
+<p>The good news is you already know which foods cleared it. Those are the ones to reach for more often.</p>
+</div>
+<<else>>
+<div class="final-headline heavy">Heavy sludge</div>
+<div class="final-stats">Sludge $sludge of 100.</div>
+<div class="final-body">
+<p>A tough five days. Your blood vessels have been working overtime.</p>
+<p>The salt added up faster than the potassium could clear it. That is the most common pattern. And now you can see exactly why it matters.</p>
+</div>
+<</if>>
+
+</div>
+
+<p class="scene">Every banana, every handful of spinach, every bowl of beans is clearing sludge in real blood vessels right now. Including yours.</p>
+
+<div class="spacer"></div>
+
+<!-- Single exit button. Direct goHome via .ccq-home-trigger — bridge
+     intercepts the click and fires CCQ.goHome() to pop the WebView route
+     back to the dashboard. -->
+<a class="btn-primary ccq-home-trigger" href="javascript:void(0)">BACK TO CARDIOCARE QUEST</a>
+
+</div>
+</div>
+
+:: Central Hub [Important/Needed nobr] {"position": "975,100", "size": "100,100"}
+/*
+EXIT HATCH. The visible "BACK TO CARDIOCAREQUEST" buttons now use
+`.ccq-home-trigger` and fire CCQ.goHome() directly, so this passage
+should rarely be reached anymore. Kept for safety: if any future
+flow lands here, the <<run>> below still pops the WebView back to
+the dashboard. Earlier this passage just showed "Returning..." text
+and a "PLAY SALT SLUDGE AGAIN" loop button — players who tapped
+exit got stuck on a loading-looking screen with no way out, which
+is exactly the bug the user reported.
+*/
+<<run
+  try {
+    if (window.CCQ && typeof window.CCQ.goHome === "function") {
+      window.CCQ.goHome();
+    }
+  } catch (e) { /* swallow */ }
+>>
+
+<div class="phone">
+<div class="header"><span>Salt Sludge</span></div>
+<div class="content">
+
+<h2 class="intro-title">Returning</h2>
+<p class="narrative center">Going back to CardioCareQuest.</p>
+
+<div class="spacer"></div>
+
+</div>
+</div>
+
+:: UserStylesheet [stylesheet]
+/* ============================================================
+   SALT SLUDGE — visual stylesheet
+   Phone-frame UI, large food cards.
+
+   CardioCareQuest viridis palette (canonical across all games):
+     #440154  deep purple   — phone gradient stop 1
+     #3b528b  blue          — phone gradient stop 2
+     #21918c  teal          — phone gradient stop 3 / nutrient mid
+     #5ec962  green          — nutrient bright / verdict good (#1a5a1f deep)
+     #fde725  yellow         — primary CTA / attention
+     #f4f1d8  cream          — page background
+   The sludge meter intentionally stays warm (#f0a020 → #d04020) —
+   it's a semantic clinical warning, same convention Vascular
+   Village uses for BP stage-1/2 zones. The verdict-bad text color
+   #8a2025 follows the same warm-warning convention. Everything
+   else follows viridis stops.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: #f4f1d8;
+  margin: 0;
+  padding: 1.5em 0;
+}
+
+#ui-bar { display: none; }
+
+#story {
+  margin: 0 auto;
+  max-width: 380px;
+  padding: 0;
+}
+
+.passage {
+  padding: 0;
+  margin: 0;
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+/* Phone frame */
+.phone {
+  background: linear-gradient(180deg, #440154 0%, #3b528b 50%, #21918c 100%);
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  color: #ffffff;
+  position: relative;
+  min-height: 660px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Wrap protection inside phone */
+.phone *, .phone *::before, .phone *::after {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header */
+.header {
+  padding: 16px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #ffffff;
+  font-size: 16px;
+  background-color: rgba(0,0,0,0.25);
+  flex: 0 0 auto;
+}
+.header .day-label {
+  opacity: 0.75;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+/* Twin meter section — sludge bar (bad) and nutrient bar (good) side by side */
+.meters-wrap {
+  padding: 10px 22px 6px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.meter-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  width: 72px;
+  flex-shrink: 0;
+}
+.meter-bar {
+  flex: 1;
+  height: 10px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.meter-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.meter-bar-fill.sludge {
+  /* Warm-warning gradient — matches Vascular Village's BP stage-1/2
+     bars. Semantic exception to the otherwise-viridis chrome. */
+  background: linear-gradient(90deg, #f0a020 0%, #d04020 100%);
+}
+.meter-bar-fill.nutrient {
+  /* Viridis green → teal — bright = good, mirrors the path-stone
+     gradient in Pill Path and the progress bar in Vascular Village. */
+  background: linear-gradient(90deg, #5ec962 0%, #21918c 100%);
+}
+
+/* Content area — flex column, fills remaining height */
+.content {
+  padding: 12px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Spacer that pushes content apart — grows but has no minimum so it can shrink */
+.spacer { flex: 1 1 auto; min-height: 6px; }
+
+/* Scene description text */
+.scene {
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 8px 0 10px 0;
+  opacity: 0.92;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* Title for narrative screens */
+.intro-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: normal;
+  margin: 0 0 16px 0;
+  letter-spacing: 0.02em;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* Hero emoji — big centered visual for intro and narrative screens */
+.hero-emoji {
+  font-size: 90px;
+  line-height: 1;
+  text-align: center;
+  display: block;
+  margin: 8px auto 16px auto;
+}
+
+/* Duo emoji — two emojis side by side, used to show salt vs potassium */
+.duo-emoji {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin: 8px auto 16px auto;
+}
+.duo-emoji-bad,
+.duo-emoji-good {
+  font-size: 78px;
+  line-height: 1;
+  display: inline-block;
+}
+
+/* Narrative body for story passages */
+.narrative {
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 0 0 12px 0;
+  text-align: left;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+  color: #ffffff !important;
+}
+.narrative.center { text-align: center; }
+.narrative:last-of-type { margin-bottom: 0; }
+
+/* Force ALL paragraphs and divs inside .phone to wrap */
+.phone p, .phone div {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* Food choice cards — high specificity to beat SugarCube's a.macro-link defaults */
+.food-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.food-card,
+.food-row a.food-card,
+.food-row a.macro-link,
+.food-row a.link-internal {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  border-radius: 18px !important;
+  padding: 24px 16px 20px 16px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  transition: transform 0.15s ease !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 170px !important;
+}
+.food-card:hover,
+.food-row a.food-card:hover,
+.food-row a.macro-link:hover,
+.food-row a.link-internal:hover {
+  transform: translateY(-2px) !important;
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+}
+.food-emoji {
+  font-size: 80px !important;
+  line-height: 1 !important;
+  display: block !important;
+  margin: 0 auto 14px auto !important;
+  text-align: center !important;
+}
+.food-name {
+  font-size: 22px !important;
+  font-weight: bold !important;
+  letter-spacing: 0.02em !important;
+  text-align: center !important;
+  color: #1a1a1a !important;
+  margin: 0 !important;
+}
+
+.or-divider {
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.55;
+  letter-spacing: 0.2em;
+  margin: 4px 0;
+  text-transform: uppercase;
+}
+
+/* Day Start screen — health tip card */
+.tip-card {
+  background-color: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  padding: 18px 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #ffffff;
+}
+.tip-card .tip-label {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+.day-status {
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 8px 0 18px 0;
+  opacity: 0.88;
+}
+
+/* Food Result screen */
+.result-card {
+  background-color: #ffffff;
+  border-radius: 18px;
+  padding: 22px 20px;
+  color: #1a1a1a;
+  text-align: center;
+  margin-bottom: 14px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.result-emoji {
+  font-size: 70px;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+}
+.result-verdict {
+  font-size: 26px;
+  font-weight: bold;
+  margin: 0 0 14px 0;
+}
+.result-verdict.good { color: #1a5a1f; }
+.result-verdict.bad { color: #8a2025; }
+.result-explain {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #444;
+  margin: 0;
+}
+.result-meter-after {
+  text-align: center;
+  font-size: 14px;
+  margin: 16px 0 0 0;
+  opacity: 0.85;
+  letter-spacing: 0.04em;
+}
+
+/* Buttons — high specificity and !important to beat .phone a generic rules */
+.btn-primary,
+.phone a.btn-primary,
+.phone a.btn-primary.link-internal,
+.phone a.btn-primary.macro-link {
+  display: block !important;
+  width: 100% !important;
+  padding: 18px !important;
+  background-color: #fde725 !important;
+  color: #2a1a4a !important;
+  border: none !important;
+  border-radius: 14px !important;
+  font-weight: bold !important;
+  font-size: 16px !important;
+  letter-spacing: 0.1em !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  cursor: pointer !important;
+  margin-bottom: 10px !important;
+  box-sizing: border-box !important;
+}
+.btn-secondary,
+.phone a.btn-secondary,
+.phone a.btn-secondary.link-internal,
+.phone a.btn-secondary.macro-link {
+  display: block !important;
+  width: 100% !important;
+  padding: 14px !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+  color: rgba(255,255,255,0.85) !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  letter-spacing: 0.05em !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  box-sizing: border-box !important;
+}
+
+/* Final result */
+.final-card {
+  background-color: #ffffff;
+  border-radius: 18px;
+  padding: 28px 22px;
+  color: #1a1a1a;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.final-card .final-headline {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+.final-card .final-headline.clean { color: #1a5a1f; }
+.final-card .final-headline.middle { color: #8a5a00; }
+.final-card .final-headline.heavy { color: #8a2025; }
+.final-card .final-stats {
+  font-size: 15px;
+  color: #555;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+}
+.final-card .final-body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  text-align: left;
+}
+
+/* SVG artery cross-section (for visual sludge feedback) */
+.artery-svg {
+  display: block;
+  margin: 0 auto 8px auto;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+}
+
+/* Plain in-text links inside .phone — applies ONLY to links without our custom classes */
+.phone a.link-internal:not(.btn-primary):not(.btn-secondary):not(.food-card):not(.macro-link),
+.phone a.macro-link:not(.btn-primary):not(.btn-secondary):not(.food-card) {
+  color: #ffffff;
+}
+
+:: UserScript [script]
+/* twine-user-script #1: "UserScript" */
+/* CardioCare Quest — auto passage telemetry.
+   Fires `passage_entered` for every passage entry via the FlutterBridge.
+   Snapshots SugarCube state.variables so researchers see the player's
+   path plus key in-game state. Best-effort; swallows errors. */
+$(document).on(":passagestart", function (ev) {
+  try {
+    if (window.CCQ && typeof window.CCQ.telemetry === "function") {
+      /* Only simple values are sent. The scenario table ($dayOrder) used to
+         ride along on every passage, which made each event large. */
+      var snap = {};
+      try { snap = setup.ccq.slimVars(SugarCube.State.variables); } catch (e) {}
+      CCQ.telemetry("passage_entered", {
+        passage: ev.passage.title,
+        vars: snap
+      });
+    }
+  } catch (e) { /* swallow */ }
+});
+/* twine-user-script #2: "SaltHelpers" */
+/*
+Salt Sludge — day-scenario POOL + shuffle helper (UPDATE9).
+Convention: game logic lives here in a [script] passage's setup.*
+namespace rather than inline in passages (mirrors DASH's DashHelpers).
+
+setup.salt.pool — every possible day scenario. Each object:
+  {
+    goodFood: { emoji, name },   // the potassium / low-sodium option
+    badFood:  { emoji, name },   // the high-sodium option
+    scene,                       // neutral, day-position-independent setup
+    goodExplain, badExplain,     // shown on Food Result
+    sludgeDown,                  // sludge removed when good chosen
+    sludgeUp,                    // sludge added when bad chosen
+    scoreUp                      // nutrient points when good chosen
+  }
+The first five scenarios reuse the emoji / name / scene / explain /
+number content from the old hardcoded Food Day 1..5. The Day 5 scene
+was rewritten neutral (it used to say "Last day … four days of choices"
+which only made sense in fixed position — meaningless once the order is
+shuffled). Two extra scenarios were added so a 5-of-N shuffle actually
+varies the pairs between play-throughs.
+*/
+setup.salt = setup.salt || {};
+
+setup.salt.pool = [
+  {
+    goodFood: { emoji: "🍌", name: "A banana" },
+    badFood: { emoji: "🥫", name: "A bowl of canned soup" },
+    scene: "You are home. It is late afternoon. You are hungry and need something quick.",
+    goodExplain: "That banana sent a burst of potassium to your body. It went to work right away, clearing out extra salt. Your blood vessel relaxed.",
+    badExplain: "That canned soup had almost half a whole day's salt in one bowl. Your blood vessels tightened. Sludge started forming.",
+    sludgeDown: 15,
+    sludgeUp: 25,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🥬", name: "A plate of spinach" },
+    badFood: { emoji: "🍜", name: "A packet of instant noodles" },
+    scene: "Lunchtime. You have ten minutes and two options on the counter.",
+    goodExplain: "Spinach is one of the highest-potassium foods around. Your blood vessels eased up. Blood is moving more freely right now.",
+    badExplain: "Instant noodles have about two thirds of a whole day's salt in one packet. Your blood vessels are working harder now than they were five minutes ago.",
+    sludgeDown: 20,
+    sludgeUp: 30,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🍲", name: "A bowl of beans" },
+    badFood: { emoji: "🍟", name: "A bag of potato chips" },
+    scene: "Afternoon snack time. You open the cupboard. Two things catch your eye.",
+    goodExplain: "Beans are loaded with potassium and fiber. The sludge thinned out a lot. Your blood vessel just got a proper clean.",
+    badExplain: "Potato chips sneak in a lot of salt without you noticing. Even one small serving adds up. Your blood vessels just got a little more clogged.",
+    sludgeDown: 20,
+    sludgeUp: 25,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🍠", name: "A sweet potato" },
+    badFood: { emoji: "🥓", name: "Bacon" },
+    badFoodVeg: { emoji: "🫒", name: "A handful of salted olives" },
+    scene: "Dinner. You are tired. You want something good. Two options in front of you.",
+    goodExplain: "Sweet potato is one of the best blood pressure foods. Lots of potassium. Very little salt. Your blood vessels are grateful.",
+    badExplain: "Bacon is soaked in salt. That salt went straight into your blood. The sludge built up quickly.",
+    badExplainVeg: "Salted olives are tasty but packed with salt. That salt went straight into your blood. The sludge built up quickly.",
+    sludgeDown: 20,
+    sludgeUp: 30,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🥛", name: "Yogurt" },
+    goodFoodVegan: { emoji: "🥑", name: "Half an avocado" },
+    badFood: { emoji: "🌭", name: "A hot dog" },
+    badFoodVeg: { emoji: "🥨", name: "A handful of salted pretzels" },
+    scene: "Evening. The fridge is open. Two things you could reach for.",
+    goodExplain: "Yogurt brings calcium and potassium together. Both help keep blood pressure down. Good call.",
+    goodExplainVegan: "Avocado is rich in potassium and healthy fats. Both help keep blood pressure down. Good call.",
+    badExplain: "One hot dog has a lot of salt - your heart felt the strain right away.",
+    badExplainVeg: "Salted pretzels are mostly salt and white flour - your heart felt the strain right away.",
+    sludgeDown: 20,
+    sludgeUp: 25,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🥑", name: "Half an avocado" },
+    badFood: { emoji: "🥨", name: "A handful of salted pretzels" },
+    scene: "Mid-morning. You want something to nibble on. Two choices sit on the shelf.",
+    goodExplain: "Avocado is rich in potassium and healthy fats. Your blood vessels relaxed and the sludge thinned a little.",
+    badExplain: "Salted pretzels are mostly salt and white flour. The salt crept in and the sludge thickened.",
+    sludgeDown: 15,
+    sludgeUp: 25,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🥣", name: "A bowl of oatmeal" },
+    badFood: { emoji: "🍔", name: "A fast-food burger" },
+    badFoodVeg: { emoji: "🍟", name: "A large box of fast-food fries" },
+    scene: "You need a real meal. Two very different options are in front of you.",
+    goodExplain: "Oatmeal is high in fiber and low in salt. It helps steady blood pressure over time. A calm choice for your blood vessels.",
+    badExplain: "A fast-food burger can carry more salt than you should eat in a whole day, plus unhealthy fat. Your blood vessels tightened almost at once.",
+    badExplainVeg: "A large box of fries can carry more salt than you should eat in a whole day, plus unhealthy fat. Your blood vessels tightened almost at once.",
+    sludgeDown: 15,
+    sludgeUp: 35,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🍊", name: "An orange" },
+    badFood: { emoji: "🧀", name: "A few slices of cheese" },
+    scene: "Mid-morning. You want a little something. Two choices are on the counter.",
+    goodExplain: "An orange is full of potassium and vitamin C. Your blood vessels eased up and the sludge thinned a little.",
+    badExplain: "Cheese is saltier than most people expect, and it is easy to eat a lot. The salt crept in and the sludge thickened.",
+    sludgeDown: 15,
+    sludgeUp: 25,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🐟", name: "A piece of grilled salmon" },
+    goodFoodVegan: { emoji: "🫘", name: "A bowl of lentils" },
+    badFood: { emoji: "🍖", name: "A few slices of deli ham" },
+    badFoodVeg: { emoji: "🥫", name: "A bowl of canned soup" },
+    scene: "Dinnertime. You want something filling. Two options sit in front of you.",
+    goodExplain: "Salmon has healthy fats that keep blood vessels soft. Fresh fish is low in salt. Your blood vessels relaxed.",
+    goodExplainVegan: "Lentils are packed with potassium and fiber and have almost no salt. Your blood vessels relaxed and the sludge thinned.",
+    badExplain: "Deli ham is preserved with a lot of salt. A few slices sent that salt into your blood and the sludge built up.",
+    badExplainVeg: "Canned soup often has half a day's salt in one bowl. That salt went into your blood and the sludge built up.",
+    sludgeDown: 20,
+    sludgeUp: 30,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🍅", name: "A fresh tomato salad" },
+    badFood: { emoji: "🍕", name: "A slice of frozen pizza" },
+    badFoodVeg: { emoji: "🥨", name: "A handful of salted pretzels" },
+    scene: "Lunchtime. You are hungry and two things are within reach.",
+    goodExplain: "Fresh tomatoes are low in salt and high in potassium. Your blood vessels eased and the sludge thinned out.",
+    badExplain: "Between the cheese, the meat, and the crust, one slice of frozen pizza packs a lot of salt. The sludge thickened fast.",
+    badExplainVeg: "Salted pretzels are mostly salt and white flour. The salt crept in and the sludge thickened.",
+    sludgeDown: 20,
+    sludgeUp: 30,
+    scoreUp: 10
+  },
+  {
+    goodFood: { emoji: "🫜", name: "A few roasted beets" },
+    badFood: { emoji: "🥓", name: "Two rashers of bacon" },
+    badFoodVeg: { emoji: "🥒", name: "A couple of large pickles" },
+    scene: "Evening. You reach for a side dish. Two very different choices.",
+    goodExplain: "Beets have natural nitrates that help your blood vessels open up. The sludge thinned and blood moved more freely.",
+    badExplain: "Bacon is soaked in salt. That salt went straight into your blood and the sludge built up quickly.",
+    badExplainVeg: "Pickles soak in salty brine for days. That salt went straight into your blood and the sludge built up quickly.",
+    sludgeDown: 20,
+    sludgeUp: 30,
+    scoreUp: 10
+  }
+];
+
+/* Return a fresh Fisher–Yates shuffle of the pool, truncated to n days.
+   Operates on a COPY so setup.salt.pool keeps its authoring order. */
+/* How many days one play-through lasts. Every "5" in the game logic comes
+   from here. */
+setup.salt.DAYS = 5;
+
+/* Final-artery verdict from the sludge level. One table drives both the
+   headline on the Final Result screen and the value sent to research. */
+setup.salt.VERDICTS = [[30, "clean"], [60, "middle"], [Infinity, "heavy"]];
+setup.salt.verdict = function (sludge) {
+  return setup.ccq.band(sludge, setup.salt.VERDICTS);
+};
+
+/* Applies the player's pick for the current day, once, when the food is
+   tapped (not when a screen draws). Moves the sludge and nutrient meters,
+   remembers which day was answered ($resultDay) and then moves $day on, so
+   going Back and Forward through the story cannot skip or repeat a day. */
+setup.salt.applyChoice = function (choice) {
+  var v = State.variables;
+  var s = v.dayOrder[v.day - 1];
+  if (choice === "good") {
+    v.sludge = Math.max(0, v.sludge - s.sludgeDown);
+    v.score = v.score + s.scoreUp;
+  } else {
+    v.sludge = Math.min(100, v.sludge + s.sludgeUp);
+  }
+  v.foodChoice = choice;
+  v.resultDay = v.day;
+  if (v.day < setup.salt.DAYS) { v.day = v.day + 1; }
+};
+
+/* Sends the finished play to research (and awards the points) once per
+   play-through. The once-guard is outside the story history, so Back from
+   the Final Result and then Forward cannot credit the play twice. */
+setup.salt.submitFinal = function () {
+  var v = State.variables;
+  setup.ccq.submitOnce("salt:" + v.playId, {
+    playerName: v.playerName,
+    sludge: v.sludge,
+    score: v.score,
+    verdict: setup.salt.verdict(v.sludge),
+    daysCompleted: setup.salt.DAYS
+  }, { pointsEarned: 50, countAsCompletion: true });
+};
+
+setup.salt.pickDays = function (n) {
+  var copy = setup.salt.pool.slice();
+  for (var i = copy.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = copy[i];
+    copy[i] = copy[j];
+    copy[j] = tmp;
+  }
+  return copy.slice(0, n);
+};
+
+/* Diet-aware view of one day's scenario. Vegetarian and vegan players
+   never get shown meat (hot dog, bacon) or, for vegan, dairy (yogurt):
+   the scenario carries plant stand-ins (badFoodVeg / goodFoodVegan and
+   their matching explanations) that this swaps in based on $playerDiet.
+   Returns an object with the resolved good/bad food + explanations so the
+   passages stay simple. Any scenario without a stand-in is unchanged. */
+setup.salt.resolveDay = function (s) {
+  var diet = State.variables.playerDiet || "everything";
+  var out = {
+    goodFood: s.goodFood,
+    badFood: s.badFood,
+    goodExplain: s.goodExplain,
+    badExplain: s.badExplain,
+    scene: s.scene,
+    sludgeDown: s.sludgeDown,
+    sludgeUp: s.sludgeUp,
+    scoreUp: s.scoreUp
+  };
+  var veg = (diet === "vegetarian" || diet === "vegan");
+  // Meat bad-food -> plant salty stand-in for veg AND vegan.
+  if (veg && s.badFoodVeg) {
+    out.badFood = s.badFoodVeg;
+    out.badExplain = s.badExplainVeg || s.badExplain;
+  }
+  // Dairy good-food -> vegan plant stand-in for vegan only.
+  if (diet === "vegan" && s.goodFoodVegan) {
+    out.goodFood = s.goodFoodVegan;
+    out.goodExplain = s.goodExplainVegan || s.goodExplain;
+  }
+  return out;
+};

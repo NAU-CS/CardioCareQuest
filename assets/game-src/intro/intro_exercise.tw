@@ -1,0 +1,67 @@
+:: StoryTitle
+Move Your Body
+
+:: StoryData
+{
+  "ifid": "C1A2B3D4-1111-4A11-8111-A00000000001",
+  "format": "SugarCube",
+  "format-version": "2.30.0",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: Start [nobr]
+<div class="phone">
+  <div class="header"><span>Move Your Body</span></div>
+  <h1>A little movement goes a long way</h1>
+  <p class="lead">
+    Moving your body is one of the most powerful things you can do for your
+    blood pressure. It does not take a gym or a hard workout. A gentle daily
+    walk is enough.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Why">>
+    <</button>>
+  </div>
+</div>
+
+:: Why [nobr]
+<div class="phone">
+  <div class="header"><span>Move Your Body</span></div>
+  <p class="lead">
+    When you move, your heart beats a little faster and your blood vessels open
+    up to carry oxygen to your muscles. Done often, this keeps your vessels
+    flexible, and flexible vessels let blood flow with less pressure.
+  </p>
+  <p class="lead">
+    Pick a pace and distance that feel safe for you today. Showing up matters
+    more than speed.
+  </p>
+  <div class="primary-cta">
+    <<button "Next">>
+      <<goto "Play">>
+    <</button>>
+  </div>
+</div>
+
+:: Play [nobr]
+<div class="phone">
+  <div class="header"><span>Move Your Body</span></div>
+  <h1>How to play</h1>
+  <p class="lead">🚶 <b>A short walk</b> — set a small goal you can reach.</p>
+  <p class="lead">🐕 <b>Bring a companion</b> — walk alongside a friendly guide.</p>
+  <p class="lead">📈 <b>Watch progress grow</b> — a bar fills as you go.</p>
+  <p class="lead"><i>You set a small goal, then the app follows along as you walk and fills a progress bar. Reach the goal to finish.</i></p>
+  <div class="primary-cta">
+    <<button "See the games">>
+      <<run
+        try {
+          if (window.FlutterBridge && window.FlutterBridge.postMessage) {
+            window.FlutterBridge.postMessage(JSON.stringify({ type: "CCQ_OPEN_GAMES" }));
+          }
+        } catch (e) {}
+      >>
+    <</button>>
+  </div>
+</div>
