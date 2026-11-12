@@ -135,10 +135,75 @@
     for (var j = 0; j < menus.length; j++) { makeButton(menus[j], 'Open menu'); }
   }
 
+  // ---------- 5. Reduce motion (issue #23) ----------
+  // When the phone asks for less motion, decorative animation stops. The two
+  // breathing guides (Quiet Minute, Vascular Village stretch) keep their pace
+  // but fade instead of growing and shrinking. "Breathe in / out" prompts and
+  // timer fill bars only change opacity or fill, so they keep running.
+  function addReducedMotionStyles() {
+    if (document.getElementById('ccq-reduced-motion')) { return; }
+    var css =
+      '@media (prefers-reduced-motion: reduce) {' +
+      '  *:not([class*="prompt"]):not([class*="fill"]):not([class*="Fill"]):not(.breath-circle):not(.stretch-circle),' +
+      '  *:not([class*="prompt"]):not([class*="fill"]):not([class*="Fill"]):not(.breath-circle):not(.stretch-circle)::before,' +
+      '  *:not([class*="prompt"]):not([class*="fill"]):not([class*="Fill"]):not(.breath-circle):not(.stretch-circle)::after {' +
+      '    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;' +
+      '    transition-duration: 0.01ms !important; scroll-behavior: auto !important; }' +
+      '  .breath-circle { animation: ccq-calm-fade 10s ease-in-out infinite !important; }' +
+      '  .stretch-circle { animation: ccq-calm-fade 8s ease-in-out infinite !important; }' +
+      '}' +
+      '@keyframes ccq-calm-fade { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }';
+    var style = document.createElement('style');
+    style.id = 'ccq-reduced-motion';
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  // ---------- 6. A heading on every screen (issue #21) ----------
+  // Screen-reader users jump between headings. Screens that have none get
+  // their header title marked as a level-1 heading (nothing visible changes).
+  function ensureHeading(root) {
+    var scope = root && root.querySelector ? root : document;
+    var real = scope.querySelectorAll('h1, h2, h3, [role="heading"]');
+    for (var i = 0; i < real.length; i++) { if (visible(real[i]) && cleanText(real[i].textContent)) { return; } }
+    var candidates = ['.phone .header > span', '.phone .header', '.header-title', '.title', '.q-text', '.scene'];
+    for (var j = 0; j < candidates.length; j++) {
+      var el = scope.querySelector(candidates[j]);
+      if (el && visible(el) && cleanText(el.textContent)) {
+        el.setAttribute('role', 'heading');
+        el.setAttribute('aria-level', '1');
+        return;
+      }
+    }
+    // No title on screen at all (e.g. Zombie Chase): add a hidden heading
+    // with the game's name so the screen still has a starting point.
+    var passage = document.querySelector('#passages .passage') || document.getElementById('passages');
+    if (passage && !passage.querySelector('.ccq-sr-heading') && document.title) {
+      var h = document.createElement('h1');
+      h.className = 'ccq-sr-heading';
+      h.textContent = document.title;
+      h.style.cssText = 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;' +
+        'overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;';
+      passage.insertBefore(h, passage.firstChild);
+    }
+  }
+
+  // ---------- 7. Keyboard for role="button" (issue #20) ----------
+  // Some game controls are links without href marked role="button". Native
+  // buttons react to Enter and Space; these need the same.
+  document.addEventListener('keydown', function (ev) {
+    var t = ev.target;
+    if (!t || !t.getAttribute || t.getAttribute('role') !== 'button') { return; }
+    if (t.tagName === 'BUTTON' || t.getAttribute('data-ccq-a11y') === '1') { return; } // handled already
+    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') { ev.preventDefault(); t.click(); }
+  });
+
   function enhance(root) {
     try { enhanceMeters(root || document); } catch (e) { /* never break a game */ }
     try { enhanceHeaderButtons(root || document); } catch (e) { /* never break a game */ }
+    try { ensureHeading(root || document); } catch (e) { /* never break a game */ }
   }
+  try { addReducedMotionStyles(); } catch (e) { /* never break a game */ }
 
   // Run now, after every SugarCube passage, and when the bridge adds header icons later.
   enhance(document);
