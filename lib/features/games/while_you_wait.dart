@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:cardio_care_quest/core/widgets/twine_questionnaire_host.dart';
 
-// Loads the Bingo Bash HTML game in the web-view host (no GPS needed).
+// Loads the While You Wait HTML game (fidget toys for the rest before a
+// blood pressure reading) in the questionnaire web-view host.
 class WhileYouWaitGame extends StatelessWidget {
   const WhileYouWaitGame({super.key});
 

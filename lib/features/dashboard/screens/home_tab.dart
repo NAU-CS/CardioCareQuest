@@ -400,7 +400,7 @@ class _HomeTabState extends State<HomeTab> {
                     SizedBox(height: 4),
                     Text(
                       'Live heart rate, steps, calories and more from '
-                      'your Apple Watch.',
+                      'your watch or phone.',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.subtitle,

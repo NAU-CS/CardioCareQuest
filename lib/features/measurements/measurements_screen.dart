@@ -257,7 +257,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Play any game to start logging your vitals. We capture a snapshot from your Apple Watch / wearable at the end of every game.',
+              'Play any game to start logging your vitals. We capture a snapshot from your watch or phone at the end of every game.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.subtitle, height: 1.4),
             ),
