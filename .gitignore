@@ -75,3 +75,8 @@ serviceAccountKey.json
 
 # Microsoft Office temp/lock files
 ~$*
+
+# Build reports and local tool output (never commit)
+/android/build/
+test-results/
+.claude/
