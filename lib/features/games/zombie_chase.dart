@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:cardio_care_quest/core/providers/user_data_manager.dart';
 import 'package:cardio_care_quest/core/services/health_service.dart';
 import 'package:cardio_care_quest/core/widgets/twine_game_host.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ZombieChaseGame extends StatefulWidget {
@@ -22,6 +24,19 @@ class _ZombieChaseGameState extends State<ZombieChaseGame> {
   bool _isPolling = false;
 
   TwineGameHostController? _controller;
+
+  // Saved distance is stored per participant, so two people sharing one
+  // phone no longer share (or overwrite) each other's chase progress.
+  // Worked out once while the screen is active, so a bridge message that
+  // arrives just after the screen closes never touches context.
+  String _distanceKey = 'zombie_distance_anon';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final uid = Provider.of<UserDataProvider>(context, listen: false).uid;
+    _distanceKey = 'zombie_distance_${uid.isEmpty ? 'anon' : uid}';
+  }
 
   // Called when the Twine game sends a message to Flutter.
   Future<bool> _handleBridgeMessage(
@@ -61,10 +76,11 @@ class _ZombieChaseGameState extends State<ZombieChaseGame> {
 
   // Loads the saved zombie distance and sends it back to Twine.
   Future<void> _loadZombieDistance(TwineGameHostController controller) async {
+    final key = _distanceKey;
     final prefs = await SharedPreferences.getInstance();
 
     // Use 20,000 if no saved distance exists.
-    final savedDistance = prefs.getInt('zombie_distance') ?? 20000;
+    final savedDistance = prefs.getInt(key) ?? 20000;
 
     debugPrint('Zombie Chase: Loaded distance = $savedDistance');
 
@@ -76,10 +92,11 @@ class _ZombieChaseGameState extends State<ZombieChaseGame> {
 
   // Loads the saved zombie distance and sends it back to Twine.
   Future<void> _getZombieDistance(TwineGameHostController controller) async {
+    final key = _distanceKey;
     final prefs = await SharedPreferences.getInstance();
 
     // Use 20,000 if no saved distance exists.
-    final savedDistance = prefs.getInt('zombie_distance') ?? 20000;
+    final savedDistance = prefs.getInt(key) ?? 20000;
 
     debugPrint('Zombie Chase: Loaded distance = $savedDistance');
 
@@ -98,18 +115,20 @@ class _ZombieChaseGameState extends State<ZombieChaseGame> {
       return;
     }
 
+    final key = _distanceKey;
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setInt('zombie_distance', distance);
+    await prefs.setInt(key, distance);
 
     debugPrint('Zombie Chase: Saved distance = $distance');
   }
 
   // Resets the saved distance to the starting value.
   Future<void> _resetZombieDistance() async {
+    final key = _distanceKey;
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setInt('zombie_distance', 20000);
+    await prefs.setInt(key, 20000);
 
     debugPrint('Zombie Chase: Distance reset to 20000');
   }
