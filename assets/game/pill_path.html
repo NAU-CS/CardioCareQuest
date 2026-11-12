@@ -100,7 +100,8 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://F6A7B8C9-D0E1-4345-9ABC-456789012345// --><tw-storydata name="Pill Path" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="F6A7B8C9-D0E1-4345-9ABC-456789012345" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/*
+	<!-- UUID://F6A7B8C9-D0E1-4345-9ABC-456789012345// --><tw-storydata name="Pill Path" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="F6A7B8C9-D0E1-4345-9ABC-456789012345" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* twine-user-stylesheet #1: "UserStylesheet" */
+/*
   PILL PATH
   Phone-first, accessibility-conscious medication tracker.
   Viridis palette, cream background, large tap targets, no failure states.
@@ -600,7 +601,20 @@ body {
 @media (min-width: 480px) {
   body { padding: 32px 16px; }
   .phone { min-height: 760px; }
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+}
+/* twine-user-stylesheet #2: "A11yTextAndContrast" */
+/* Accessibility (issues #18 contrast, #19 text size).
+   White text on the teal bottom of the viridis gradient is only 3.8:1, so
+   small text there gets a dark backing (6:1 or better) instead of a new
+   palette. All informational text is at least 14px. */
+.help-text { font-size: 14px; opacity: 1; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 12px; }
+.summary-card { background-color: rgba(0, 0, 0, 0.25); }
+.summary-stat-label { font-size: 14px; letter-spacing: 0.04em; opacity: 1; }
+.btn-secondary,
+.phone a.btn-secondary { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
+.header-path { font-size: 14px; }
+.path-label { font-size: 14px; opacity: 1; letter-spacing: 0.1em; }
+.legend-item { font-size: 14px; color: #ffffff; }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
 /*
   Story-load script passage. SugarCube runs this once at engine
   init, BEFORE StoryInit, so `setup.pillPath` is defined by the

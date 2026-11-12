@@ -264,7 +264,7 @@ Then moves to next day or final result after Day 5.
 
 <div class="content">
 
-<<set _s to setup.salt.resolveDay($dayOrder[$resultDay - 1])>>
+<<set _s to setup.salt.resolveDay($dayOrder[Math.max(0, $resultDay - 1)])>>
 <<if $foodChoice is "good">>
 
 <div class="result-card">
@@ -1092,3 +1092,9 @@ setup.salt.resolveDay = function (s) {
   }
   return out;
 };
+
+:: A11yTextAndContrast [stylesheet]
+/* Accessibility (issue #19 text size): labels are 14px; the meter label
+   column is widened so "NUTRIENTS" fits. */
+.meter-label { font-size: 14px; letter-spacing: 0.02em; width: 96px; }
+.tip-card .tip-label { font-size: 14px; }

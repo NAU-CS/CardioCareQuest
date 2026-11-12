@@ -1598,3 +1598,15 @@ setup.dash.submitFinal = function () {
     verdict: setup.dash.verdict(v.mealScore)
   }, { pointsEarned: 50, countAsCompletion: true });
 };
+
+:: A11yTextAndContrast [stylesheet]
+/* Accessibility (issues #18 contrast, #19 text size).
+   Meal verdict colours keep their hue but are dark enough to read on the
+   white card (all 4.5:1 or better; the old green and orange were ~2:1).
+   Labels are 14px; their column is widened so they do not overflow. */
+.meal-list-card .meal-verdict.strong { color: #1a7a76; }
+.meal-list-card .meal-verdict.moderate { color: #2e7d32; }
+.meal-list-card .meal-verdict.mixed { color: #b35c00; }
+.meter-label { font-size: 14px; letter-spacing: 0.02em; width: 96px; }
+.score-label { font-size: 14px; letter-spacing: 0.02em; width: 110px; }
+.section-label { font-size: 14px; letter-spacing: 0.06em; }

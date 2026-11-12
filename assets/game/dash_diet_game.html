@@ -100,7 +100,8 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://C3D4E5F6-A7B8-4012-9DEF-123456789012// --><tw-storydata name="DASH Diet Game" startnode="1" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="C3D4E5F6-A7B8-4012-9DEF-123456789012" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* ============================================================
+	<!-- UUID://C3D4E5F6-A7B8-4012-9DEF-123456789012// --><tw-storydata name="DASH Diet Game" startnode="1" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="C3D4E5F6-A7B8-4012-9DEF-123456789012" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* twine-user-stylesheet #1: "UserStylesheet" */
+/* ============================================================
    DASH DIET GAME — visual stylesheet
    Phone-frame UI, viridis dark gradient (purple-blue-teal-green-yellow),
    large emoji food cards. Sister game to Salt Sludge.
@@ -672,7 +673,18 @@ body {
 .phone a.link-internal:not(.btn-primary):not(.btn-secondary):not(.choice-btn):not(.ingredient):not(.macro-link),
 .phone a.macro-link:not(.btn-primary):not(.btn-secondary):not(.choice-btn):not(.ingredient) {
   color: #fde725;
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+}
+/* twine-user-stylesheet #2: "A11yTextAndContrast" */
+/* Accessibility (issues #18 contrast, #19 text size).
+   Meal verdict colours keep their hue but are dark enough to read on the
+   white card (all 4.5:1 or better; the old green and orange were ~2:1).
+   Labels are 14px; their column is widened so they do not overflow. */
+.meal-list-card .meal-verdict.strong { color: #1a7a76; }
+.meal-list-card .meal-verdict.moderate { color: #2e7d32; }
+.meal-list-card .meal-verdict.mixed { color: #b35c00; }
+.meter-label { font-size: 14px; letter-spacing: 0.02em; width: 96px; }
+.score-label { font-size: 14px; letter-spacing: 0.02em; width: 110px; }
+.section-label { font-size: 14px; letter-spacing: 0.06em; }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
 /* twine-user-script #1: "UserScript" */
 /* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.

@@ -1170,3 +1170,17 @@ setup.pillPath = (function () {
     positionMascot: positionMascot
   };
 })();
+
+:: A11yTextAndContrast [stylesheet]
+/* Accessibility (issues #18 contrast, #19 text size).
+   White text on the teal bottom of the viridis gradient is only 3.8:1, so
+   small text there gets a dark backing (6:1 or better) instead of a new
+   palette. All informational text is at least 14px. */
+.help-text { font-size: 14px; opacity: 1; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 12px; }
+.summary-card { background-color: rgba(0, 0, 0, 0.25); }
+.summary-stat-label { font-size: 14px; letter-spacing: 0.04em; opacity: 1; }
+.btn-secondary,
+.phone a.btn-secondary { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
+.header-path { font-size: 14px; }
+.path-label { font-size: 14px; opacity: 1; letter-spacing: 0.1em; }
+.legend-item { font-size: 14px; color: #ffffff; }
