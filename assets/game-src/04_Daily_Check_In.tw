@@ -619,3 +619,8 @@ $(document).on(":passagestart", function (ev) {
     }
   } catch (e) { /* swallow */ }
 });
+
+:: A11ytextandcontrast1819 [stylesheet]
+/* A11y text and contrast (#18, #19) */
+/* Lead text was 4.24:1 on the cream card; now 6.6:1. */
+p.lead { color: #4b5563; }

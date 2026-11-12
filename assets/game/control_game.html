@@ -1526,7 +1526,11 @@ p.lead {
   animation: spin 0.8s linear infinite;
   margin-top: 16px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/*
+@keyframes spin { to { transform: rotate(360deg); } }
+/* A11y text and contrast (#18, #19) */
+/* Lead text was 4.24:1 on the cream card; now 6.6:1. */
+p.lead { color: #4b5563; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">/*
 Auto passage telemetry — fires `passage_entered` for every passage
 entry via the FlutterBridge, snapshotting SugarCube state.variables.
 Same convention as the rest of the CardioCare Quest games. Best-effort,

@@ -1017,3 +1017,17 @@ setTimeout(function () {
   grid.innerHTML = html;
 }, 0);
 <</script>>
+
+:: A11ytextandcontrast1819 [stylesheet]
+/* A11y text and contrast (#18, #19) */
+/* Small white text on the teal end of the gradient gets a dark backing;
+   grey text on white is darkened (6:1); all informational text is 14px+. */
+.help-text { font-size: 14px; opacity: 1; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 12px; }
+.btn-secondary, .phone a.btn-secondary { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
+.input-unit { font-size: 14px; color: #5f6368; }
+.input-label { font-size: 14px; color: #4b5563; letter-spacing: 0; text-transform: none; }
+.breathe-timer-text { font-size: 14px; opacity: 1; letter-spacing: 0.02em; }
+.header-mini { font-size: 14px; }
+.entry-help { font-size: 14px; color: #ffffff; }
+.result-bp-units { font-size: 14px; color: #5f6368; letter-spacing: 0.04em; }
+.gallery-date { font-size: 14px; color: #5f6368; }

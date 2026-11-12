@@ -687,6 +687,23 @@ body {
 }
 /* Accessibility fix (2026-11-09): "I'm ready" gets a 44px touch area (it was 14px tall). */
 .skip-rest a { display: inline-block; min-height: 44px; min-width: 44px; padding: 12px 18px; box-sizing: border-box; line-height: 20px; }
+
+/* A11y text and contrast (#18, #19) */
+/* Small white text on the teal end of the gradient gets a dark backing;
+   grey units on white are darkened; the rejected-reading message is
+   readable (6.8:1) and announced; all informational text is 14px+. */
+.subtitle { font-size: 14px; opacity: 1; }
+.subtitle.bp-error { color: #ffb4a8; font-weight: bold; font-size: 15px; }
+.input-card .unit { font-size: 14px; color: #5f6368; }
+.input-card .label { font-size: 14px; color: #4b5563; letter-spacing: 0; text-transform: none; font-weight: bold; }
+.help-text { font-size: 14px; opacity: 1; background: rgba(0, 0, 0, 0.25); padding: 8px 12px; border-radius: 12px; }
+.why-title { font-size: 14px; letter-spacing: 0.06em; }
+.why-body { font-size: 14px; }
+.timer-text { font-size: 14px; opacity: 1; }
+.celebration-sub { font-size: 14px; color: #4b5563; }
+.skip-rest { font-size: 14px; opacity: 1; }
+.skip-rest a { color: #ffffff; background: rgba(0, 0, 0, 0.25); border-radius: 12px; text-decoration: underline; }
+.btn-secondary, .phone a.btn-secondary { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
 </style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
@@ -772,7 +789,7 @@ after just 30 seconds and the celebration shouldn&#39;t claim two minutes.
 &lt;div class=&quot;content&quot;&gt;
 &lt;h2 class=&quot;title&quot;&gt;How does it read?&lt;/h2&gt;
 &lt;p class=&quot;subtitle&quot;&gt;Take your blood pressure now. Enter the numbers from your cuff.&lt;/p&gt;
-&lt;&lt;if $bpError&gt;&gt;&lt;p class=&quot;subtitle&quot; style=&quot;color:#d04020&quot;&gt;That reading looks outside the usual range — please check and re-enter.&lt;/p&gt;&lt;&lt;/if&gt;&gt;
+&lt;&lt;if $bpError&gt;&gt;&lt;p class=&quot;subtitle bp-error&quot; role=&quot;alert&quot;&gt;That reading looks outside the usual range — please check and re-enter.&lt;/p&gt;&lt;&lt;/if&gt;&gt;
 &lt;div class=&quot;spacer&quot;&gt;&lt;/div&gt;
 &lt;div class=&quot;input-row&quot;&gt;
   &lt;div class=&quot;input-card&quot;&gt;
