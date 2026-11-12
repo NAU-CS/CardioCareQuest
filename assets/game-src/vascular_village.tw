@@ -1349,7 +1349,7 @@ setTimeout(function () {
 <p class="scene center">Tap the heart eight times in a steady rhythm. About one tap per second.</p>
 
 <div class="heart-stage">
-<a class="heart-tap-btn" id="heart-btn">💓</a>
+<a class="heart-tap-btn" id="heart-btn" role="button" tabindex="0" aria-label="Heart: tap once for each beat">💓</a>
 <div class="heart-counter" id="heart-count">0 / 8</div>
 <div class="heart-counter-label">beats</div>
 <div class="heart-rhythm" id="heart-rhythm">Tap to begin.</div>
@@ -1450,25 +1450,25 @@ setTimeout(function () {
 <p class="path-instruction">Tap all the plaque to clear the artery.</p>
 
 <div class="plaque-grid" id="plaque-grid">
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
-<a class="plaque-cell empty"></a>
-<a class="plaque-cell" data-plaque="1">🍂</a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
+<a class="plaque-cell empty" aria-hidden="true"></a>
+<a class="plaque-cell" data-plaque="1" role="button" tabindex="0" aria-label="Fatty buildup, tap to clear">🍂</a>
 </div>
 
-<div class="plaque-counter">Cleared <strong id="plaque-cleared">0</strong> of 8</div>
+<div class="plaque-counter" aria-live="polite">Cleared <strong id="plaque-cleared">0</strong> of 8</div>
 </div>
 
 <div class="spacer"></div>
@@ -1492,7 +1492,7 @@ setTimeout(function () {
       e.preventDefault();
       if (c.classList.contains('cleared')) return;
       c.classList.add('cleared');
-      c.textContent = '✓';
+      c.textContent = '✓'; c.setAttribute('aria-label', 'Cleared');
       cleared++;
       if (counter) counter.textContent = cleared;
       if (cleared === 8 && finish) finish.style.display = 'block';
@@ -1752,3 +1752,8 @@ $(document).on(":passagestart", function (ev) {
 .bp-units { font-size: 14px; opacity: 1; }
 .bp-zone { font-size: 14px; letter-spacing: 0.04em; }
 .section-title { font-size: 14px; opacity: 1; letter-spacing: 0.08em; }
+
+:: A11ynames20 [stylesheet]
+/* A11y names (#20) */
+/* Buildup cells and the heart button now have names; empty grid cells
+   are hidden from screen readers; the cleared count is announced. */

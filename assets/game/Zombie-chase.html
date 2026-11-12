@@ -356,7 +356,13 @@ img {
   pointer-events: none;
   z-index: 2;
   white-space: nowrap;
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">setup.zombieDist = 20000
+}
+/* A11y names, targets and text (#19, #20, #22) */
+/* Difficulty buttons were 25px tall; now 44px with a little space
+   between them. Challenge reward labels were 13px; now 14px. */
+.levelList button { min-height: 44px; font-size: 16px; margin: 4px 0; }
+.progress-text { font-size: 14px; }
+</style><script role="script" id="twine-user-script" type="text/twine-javascript">setup.zombieDist = 20000
 setup.zombieAmount = 100
 setup.multi = 1
 setup.gameOver = false
@@ -782,7 +788,7 @@ setup.updateTotalDistance = function updateTotalDistance() {
 Useful later:
 	newButton.addEventListener('click', () => setup.respond(name, newButton));
 */</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100"></tw-passagedata><tw-passagedata pid="2" name="Home" tags="" position="225,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Zombies are Stopped.
-  &lt;img src=&quot;../../img/exercise/zombies.png&quot;&gt;
+  &lt;img src=&quot;../../img/exercise/zombies.png&quot; alt=&quot;A crowd of zombies&quot;&gt;
   &lt;div class=&quot;mainTab&quot;&gt; &lt;div class=&quot;progress-container&quot; id=&quot;bar&quot;&gt;&lt;div class=&quot;progress-fill totalBarFill&quot;&gt; &lt;/div&gt;&lt;/div&gt;\
     &lt;span id=&quot;zombieDist&quot;&gt;&lt;/span&gt;
 
@@ -801,7 +807,7 @@ Useful later:
 
   &lt;/div&gt;
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="3" name="Chase" tags="" position="350,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Step Power: &lt;span id=&quot;multi&quot;&gt;&lt;/span&gt;
-  &lt;img src=&quot;../../img/exercise/zombies.png&quot; class=&quot;zombies&quot;&gt;
+  &lt;img src=&quot;../../img/exercise/zombies.png&quot; class=&quot;zombies&quot; alt=&quot;A crowd of zombies chasing you&quot;&gt;
   &lt;div class=&quot;progress-container totalBar&quot; id=&quot;bar&quot;&gt;&lt;div class=&quot;progress-fill totalBarFill&quot;&gt; &lt;/div&gt;&lt;/div&gt;\
   &lt;span id=&quot;zombieDist&quot;&gt;&lt;/span&gt;
   &lt;span id=&quot;yourDist&quot;&gt;You&#39;ve Walked &lt;&lt;=setup.totalWalked&gt;&gt; Steps!&lt;/span&gt;
@@ -815,14 +821,14 @@ Useful later:
   
   &lt;/div&gt;
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="4" name="You Win" tags="" position="475,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;Congratulations!
-&lt;img src=&quot;&quot; class=&quot;endImg&quot;&gt;
+&lt;img src=&quot;&quot; class=&quot;endImg&quot; alt=&quot;&quot;&gt;
 Feel free to play again at a different difficulty, and keep on going!
 You travelled: &lt;&lt;=setup.actualDistance&gt;&gt; steps
 &lt;div id=&quot;blankSpace&quot;&gt;&lt;/div&gt;
 
 &lt;&lt;button &quot;Go Again!&quot; &quot;Home&quot;&gt;&gt;&lt;&lt;run setup.reset()&gt;&gt;&lt;&lt;/button&gt;&gt;
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="You Lose" tags="" position="600,100" size="100,100">&lt;div class=&quot;phone&quot;&gt;The Zombies caught you...
-&lt;img src=&quot;&quot; class=&quot;endImg&quot;&gt;
+&lt;img src=&quot;&quot; class=&quot;endImg&quot; alt=&quot;&quot;&gt;
 But don&#39;t worry! You can always try again.
 You travelled: &lt;&lt;=setup.actualDistance&gt;&gt; steps
 &lt;div id=&quot;blankSpace&quot;&gt;&lt;/div&gt;

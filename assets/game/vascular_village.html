@@ -914,6 +914,10 @@ body {
 .bp-units { font-size: 14px; opacity: 1; }
 .bp-zone { font-size: 14px; letter-spacing: 0.04em; }
 .section-title { font-size: 14px; opacity: 1; letter-spacing: 0.08em; }
+
+/* A11y names (#20) */
+/* Buildup cells and the heart button now have names; empty grid cells
+   are hidden from screen readers; the cleared count is announced. */
 </style><script role="script" id="twine-user-script" type="text/twine-javascript">/* CardioCare Quest — auto passage telemetry.
    Fires `passage_entered` for every passage entry via the FlutterBridge.
    Snapshots SugarCube state.variables so researchers see the player's
@@ -1445,7 +1449,7 @@ setTimeout(function () {
 &lt;p class=&quot;scene center&quot;&gt;Tap the heart eight times in a steady rhythm. About one tap per second.&lt;/p&gt;
 
 &lt;div class=&quot;heart-stage&quot;&gt;
-&lt;a class=&quot;heart-tap-btn&quot; id=&quot;heart-btn&quot;&gt;💓&lt;/a&gt;
+&lt;a class=&quot;heart-tap-btn&quot; id=&quot;heart-btn&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Heart: tap once for each beat&quot;&gt;💓&lt;/a&gt;
 &lt;div class=&quot;heart-counter&quot; id=&quot;heart-count&quot;&gt;0 / 8&lt;/div&gt;
 &lt;div class=&quot;heart-counter-label&quot;&gt;beats&lt;/div&gt;
 &lt;div class=&quot;heart-rhythm&quot; id=&quot;heart-rhythm&quot;&gt;Tap to begin.&lt;/div&gt;
@@ -1537,25 +1541,25 @@ setTimeout(function () {
 &lt;p class=&quot;path-instruction&quot;&gt;Tap all the buildup to clear the blood vessel.&lt;/p&gt;
 
 &lt;div class=&quot;plaque-grid&quot; id=&quot;plaque-grid&quot;&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
-&lt;a class=&quot;plaque-cell empty&quot;&gt;&lt;/a&gt;
-&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
+&lt;a class=&quot;plaque-cell empty&quot; aria-hidden=&quot;true&quot;&gt;&lt;/a&gt;
+&lt;a class=&quot;plaque-cell&quot; data-plaque=&quot;1&quot; role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Fatty buildup, tap to clear&quot;&gt;🍂&lt;/a&gt;
 &lt;/div&gt;
 
-&lt;div class=&quot;plaque-counter&quot;&gt;Cleared &lt;strong id=&quot;plaque-cleared&quot;&gt;0&lt;/strong&gt; of 8&lt;/div&gt;
+&lt;div class=&quot;plaque-counter&quot; aria-live=&quot;polite&quot;&gt;Cleared &lt;strong id=&quot;plaque-cleared&quot;&gt;0&lt;/strong&gt; of 8&lt;/div&gt;
 &lt;/div&gt;
 
 &lt;div class=&quot;spacer&quot;&gt;&lt;/div&gt;
@@ -1579,7 +1583,7 @@ setTimeout(function () {
       e.preventDefault();
       if (c.classList.contains(&#39;cleared&#39;)) return;
       c.classList.add(&#39;cleared&#39;);
-      c.textContent = &#39;✓&#39;;
+      c.textContent = &#39;✓&#39;; c.setAttribute(&#39;aria-label&#39;, &#39;Cleared&#39;);
       cleared++;
       if (counter) counter.textContent = cleared;
       if (cleared === 8 &amp;&amp; finish) finish.style.setProperty(&#39;display&#39;, &#39;block&#39;, &#39;important&#39;);
