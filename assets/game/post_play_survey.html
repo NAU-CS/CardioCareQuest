@@ -100,7 +100,8 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://E5F6A7B8-C9D0-4234-AFAB-345678901234// --><tw-storydata name="CardioCare Quest Survey" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="E5F6A7B8-C9D0-4234-AFAB-345678901234" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/*
+	<!-- UUID://E5F6A7B8-C9D0-4234-AFAB-345678901234// --><tw-storydata name="CardioCare Quest Survey" startnode="2" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="E5F6A7B8-C9D0-4234-AFAB-345678901234" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">/* twine-user-stylesheet #1: "UserStylesheet" */
+/*
   CARDIOCARE QUEST SURVEY
   Phone-first, accessibility-conscious.
   Same family as Salt Sludge / Vascular Village / Quiet Minute.
@@ -751,7 +752,24 @@ body {
 @media (min-width: 480px) {
   body { padding: 32px 16px; }
   .phone { min-height: 760px; }
-}</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
+}
+/* twine-user-stylesheet #2: "A11yTextAndContrast" */
+/* Accessibility (#18 contrast, #19 text size, #22 targets).
+   BACK buttons were small white text on the teal (3.6:1); dark backing
+   (6:1+). Text is 14px+, except the five agree/disagree tiles: at 58px
+   wide, "Strongly disagree" cannot fit at 14px, so those labels go
+   11px -> 12px with hyphenation (full size needs a layout decision, #19).
+   The faint disabled NEXT is left as is: WCAG exempts inactive controls,
+   and the faded look is what tells people to answer first. */
+.btn-secondary,
+.phone a.btn-secondary,
+.phone a.btn-secondary.link-internal { font-size: 14px !important; color: #ffffff !important; background-color: rgba(0, 0, 0, 0.25) !important; }
+.header-progress { font-size: 14px; }
+.q-step { font-size: 14px; }
+.speak-btn { font-size: 14px !important; min-height: 44px !important; box-sizing: border-box !important; }
+.rank-hint { font-size: 14px; }
+.scale-label { font-size: 12px !important; line-height: 1.2 !important; -webkit-hyphens: auto; hyphens: auto; }
+.rank-edges span { font-size: 14px; }</style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "UserScript" */
 /* twine-user-script #1: "SetupHelpers" */
 /*
 HELPERS available before any passage renders.
