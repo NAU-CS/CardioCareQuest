@@ -4,10 +4,15 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../../core/services/health_service.dart';
 import '../../core/theme/app_colors.dart';
+
+// iPhone reads from Apple Health; Android reads from Health Connect, so the
+// help text differs by platform.
+bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
 // Screen widget; state lives in the class below.
 class HealthStatsScreen extends StatefulWidget {
@@ -215,15 +220,23 @@ class _PermissionsDeniedState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'CardioCare Quest needs permission to read health data '
-          'from your Apple Watch. Tap "Allow access" below to open '
-          'the system dialog. If the dialog doesn\'t appear, you '
-          'previously denied access and need to enable it manually:\n\n'
-          'iPhone Settings → Privacy & Security → Health → '
-          'CardioCare Quest → turn on the categories you want shared.',
+        Text(
+          _isIOS
+              ? 'CardioCare Quest needs permission to read health data '
+                  'from your Apple Watch. Tap "Allow access" below to open '
+                  'the system dialog. If the dialog doesn\'t appear, you '
+                  'previously denied access and need to enable it manually:\n\n'
+                  'iPhone Settings → Privacy & Security → Health → '
+                  'CardioCare Quest → turn on the categories you want shared.'
+              : 'CardioCare Quest needs permission to read health data '
+                  'from Health Connect (your watch or phone). Tap "Allow access" '
+                  'below to open the system dialog. If the dialog doesn\'t '
+                  'appear, you previously denied access and need to enable '
+                  'it manually:\n\n'
+                  'Settings → Apps → Health Connect → App permissions → '
+                  'CardioCare Quest → turn on the data you want shared.',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13.5,
             color: AppColors.subtitle,
             height: 1.55,
@@ -282,15 +295,23 @@ class _NotConnectedState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'We can reach the Health app, but no Apple Watch readings '
-          'are coming through right now. Common causes:\n\n'
-          '• Watch is off-wrist\n'
-          '• Watch isn\'t paired with this iPhone\n'
-          '• Watch hasn\'t synced recently - try opening the Health '
-          'app to force a sync',
+        Text(
+          _isIOS
+              ? 'We can reach the Health app, but no Apple Watch readings '
+                  'are coming through right now. Common causes:\n\n'
+                  '• Watch is off-wrist\n'
+                  '• Watch isn\'t paired with this iPhone\n'
+                  '• Watch hasn\'t synced recently - try opening the Health '
+                  'app to force a sync'
+              : 'We can reach Health Connect, but no readings are coming '
+                  'through right now. Common causes:\n\n'
+                  '• Watch is off-wrist or not paired with this phone\n'
+                  '• Your watch or fitness app is not sharing with '
+                  'Health Connect - check it in that app\'s settings\n'
+                  '• Nothing has synced yet - open your watch app to '
+                  'force a sync',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13.5,
             color: AppColors.subtitle,
             height: 1.55,
